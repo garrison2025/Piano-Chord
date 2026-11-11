@@ -1,25 +1,66 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/recording.css';
 const names=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
 const black=new Set([1,3,6,8,10]);
 let whiteIndex=0;
 const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi%12);const k={midi,black:b,note:names[midi%12]+(Math.floor(midi/12)-1),left:b?whiteIndex*42-13:whiteIndex*42};if(!b)whiteIndex++;return k;});
 ---
-<BaseLayout title="Virtual Piano – Play All 88 Keys Online" description="Play a complete 88-key virtual piano online with mouse, touch or your computer keyboard. A0 to C8, sustain and octave changes, free without signup." canonicalPath="/tools/virtual-piano/" crumbs={[{name:'Virtual Piano',href:'/tools/virtual-piano/'}]}>
-<section class="container page-hero"><span class="eyebrow">THE PLAYABLE PIANO</span><h1>88 keys.<br/><em>Unlimited expression.</em></h1><p class="lead">Play an entire A0–C8 piano from your browser. Use your computer keyboard, mouse or touchscreen—no account required.</p><div class="button-row"><a class="btn btn-primary" href="/tools/chord-library/">Browse 120 chords ↗</a><a class="btn" href="/chords/">Chord lessons</a></div></section>
+<BaseLayout title="Virtual Piano – Play, Record & Share 88 Keys Online" description="Play and record an 88-key online piano. Replay your performance, export MIDI and make vertical videos to share on TikTok, X or Shorts — free in your browser." canonicalPath="/tools/virtual-piano/" crumbs={[{name:'Virtual Piano',href:'/tools/virtual-piano/'}]}>
+<section class="container page-hero"><span class="eyebrow">THE PLAYABLE PIANO</span><h1>88 keys.<br/><em>Unlimited expression.</em></h1><p class="lead">Play an entire A0–C8 piano from your browser. Use your computer keyboard, mouse or touchscreen—no account required.</p><div class="button-row"><a class="btn btn-primary" href="/tools/chord-library/">Browse 120 chords ↗</a><a class="btn" href="/chords/">Chord lessons</a><a class="btn" href="#recording-studio">Record &amp; share ↗</a></div></section>
 <section class="container section-compact"><div id="playable-piano" class="piano-shell"><header class="piano-head"><strong>VIRTUAL PIANO · A0–C8</strong><span id="vp-readout" role="status" aria-live="polite">Touch a piano key to begin</span></header><div class="piano-controls"><span>Computer octave</span><button id="vp-down" type="button">−</button><output id="vp-oct">C4</output><button id="vp-up" type="button">+</button><button id="vp-sustain" type="button" aria-pressed="false">Sustain: Off</button><label>Volume <input id="vp-vol" type="range" min="0" max="100" value="55"/></label><button id="vp-stop" type="button">Stop</button></div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><footer class="piano-foot">52 white · 36 black · Synthesized browser audio (not acoustic samples)</footer></div></section>
+<section class="container section-compact" id="recording-studio">
+  <div id="vp-recording-studio" class="recording-shell">
+    <div class="recording-heading">
+      <div><span class="eyebrow">FREE · LOCAL-FIRST</span><h2>Record your melody. Share your moment.</h2><p>Capture what you play, listen back and create a vertical video with moving piano notes. Your performance stays on this device unless you choose to share a file.</p></div>
+      <span class="recording-privacy">✓ No account or upload</span>
+    </div>
+    <div class="recording-fields">
+      <label class="recording-title" for="vp-title">Your performance title
+        <input id="vp-title" type="text" value="My Piano Session" maxlength="60" autocomplete="off" />
+      </label>
+      <output id="vp-clock" class="recording-time" aria-label="Performance elapsed time">00:00</output>
+    </div>
+    <div class="recording-actions" role="group" aria-label="Piano performance recording controls">
+      <button id="vp-record" type="button" class="record-main">● Start recording</button>
+      <button id="vp-end-record" type="button" class="record-danger" disabled>■ Stop recording</button>
+      <button id="vp-replay" type="button" disabled>▶ Replay</button>
+      <button id="vp-midi" type="button" disabled>↓ Save MIDI</button>
+    </div>
+    <div id="vp-message" class="recording-message" role="status" aria-live="polite">Ready to record, up to 90 seconds. Press Record, then play the piano above.</div>
+    <div class="recording-stage">
+      <h3>Make a TikTok / X / Shorts video</h3>
+      <p>Create a 720 × 1280 (9:16) piano-roll video and audio in your browser. Rendering runs in real time; keep this tab open. No automatic social posting or platform authorization.</p>
+      <div class="recording-actions">
+        <button id="vp-export" type="button" class="record-main" disabled>🎬 Create 9:16 video</button>
+        <button id="vp-cancel-export" type="button" class="record-danger" hidden>Cancel export</button>
+      </div>
+      <progress id="vp-progress" min="0" max="100" value="0" aria-label="Video rendering progress"></progress>
+      <div class="recording-video-layout">
+        <video id="vp-preview" controls playsinline preload="metadata" hidden aria-label="Preview of your generated piano performance video"></video>
+        <div class="recording-video-side">
+          <p id="vp-format" class="recording-muted">Video format depends on your browser; MP4 is preferred, WebM is the fallback.</p>
+          <div class="recording-actions"><button id="vp-download" type="button" disabled>↓ Download video</button><button id="vp-share" type="button" disabled>Share via device</button></div>
+          <p class="recording-muted">If your phone doesn't support file sharing, download the video and upload it manually in TikTok, X or YouTube Shorts. You control the title, video and publication. No mandatory promotional watermark is added.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 <section class="container section"><div class="tool-grid"><div class="panel"><h2>Play with computer keys</h2><p><strong>A W S E D F T G Y H U J K O L P ;</strong> map to the chromatic notes beginning at C4. Press <strong>Z/X</strong> to shift the octave and hold <strong>Space</strong> for sustain. Play several keys together for chords.</p><p>Shortcuts are inactive while typing in form fields. Focus an on-screen key and use the arrow keys to move, then Enter or Space to play it.</p></div><div class="panel"><h2>Play with touch or mouse</h2><p>Tap a key, use multiple fingers for chords, or scroll horizontally through the entire 88-key range. Choose Low, Middle or High C to jump to a register.</p><p>This lightweight version uses synthesized tones so it does not need copyrighted piano recordings or a sample download.</p></div></div></section>
 <script>
+import {setupPianoRecorder} from '../../scripts/pianoRecorder.js';
 const app=document.getElementById('playable-piano'),scroll=document.getElementById('vp-scroll'),readout=document.getElementById('vp-readout'),keys=new Map([...app.querySelectorAll('[data-midi]')].map(n=>[+n.dataset.midi,n]));
 const codes={KeyA:0,KeyW:1,KeyS:2,KeyE:3,KeyD:4,KeyF:5,KeyT:6,KeyG:7,KeyY:8,KeyH:9,KeyU:10,KeyJ:11,KeyK:12,KeyO:13,KeyL:14,KeyP:15,Semicolon:16};
 let octave=4,ctx=null,master=null,sustain=false,space=false;
+let recorderHooks=null;
 const voices=new Map(),sources=new Map();
 function audio(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C){readout.textContent='Web Audio not supported';return false;}ctx=new C();master=ctx.createGain();master.gain.value=.25;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return true;}
 function on(midi,source){if(midi<21||midi>108||sources.has(source))return;sources.set(source,midi);keys.get(midi)?.classList.add('pressed');if(voices.has(midi))return;if(!audio())return;
 const t=ctx.currentTime,g=ctx.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+.015);g.gain.exponentialRampToValueAtTime(.04,t+.6);g.gain.exponentialRampToValueAtTime(.015,t+2.7);g.connect(master);
-const f=440*Math.pow(2,(midi-69)/12),os=[];for(const [v,type,level] of [[1,'triangle',1],[2,'sine',.18],[3,'sine',.05]]){const o=ctx.createOscillator(),a=ctx.createGain();o.type=type;o.frequency.value=f*v;a.gain.value=level;o.connect(a);a.connect(g);o.start();os.push(o);}voices.set(midi,{g,os});readout.textContent='Playing MIDI '+midi;
+const f=440*Math.pow(2,(midi-69)/12),os=[];for(const [v,type,level] of [[1,'triangle',1],[2,'sine',.18],[3,'sine',.05]]){const o=ctx.createOscillator(),a=ctx.createGain();o.type=type;o.frequency.value=f*v;a.gain.value=level;o.connect(a);a.connect(g);o.start();os.push(o);}voices.set(midi,{g,os});recorderHooks?.noteOn(midi);readout.textContent='Playing MIDI '+midi;
 }
-function release(midi){const v=voices.get(midi);if(!v||!ctx)return;voices.delete(midi);keys.get(midi)?.classList.remove('pressed');const t=ctx.currentTime;try{v.g.gain.cancelScheduledValues(t);v.g.gain.setValueAtTime(Math.max(.0001,v.g.gain.value),t);v.g.gain.exponentialRampToValueAtTime(.0001,t+.22);v.os.forEach(o=>o.stop(t+.3));}catch{}}
+function release(midi){const v=voices.get(midi);if(!v||!ctx)return;voices.delete(midi);recorderHooks?.noteOff(midi);keys.get(midi)?.classList.remove('pressed');const t=ctx.currentTime;try{v.g.gain.cancelScheduledValues(t);v.g.gain.setValueAtTime(Math.max(.0001,v.g.gain.value),t);v.g.gain.exponentialRampToValueAtTime(.0001,t+.22);v.os.forEach(o=>o.stop(t+.3));}catch{}}
 function off(source){const m=sources.get(source);if(m==null)return;sources.delete(source);if(![...sources.values()].includes(m)&&!(sustain||space))release(m);}
 function drain(){if(sustain||space)return;for(const m of [...voices.keys()])if(![...sources.values()].includes(m))release(m);}
 function stop(){sources.clear();for(const m of [...voices.keys()])release(m);readout.textContent='All notes released';}
@@ -37,6 +78,7 @@ function setOctave(v){octave=Math.max(1,Math.min(7,v));document.getElementById('
 function updateSustain(){const b=document.getElementById('vp-sustain');b.textContent='Sustain: '+(sustain||space?'On':'Off');b.setAttribute('aria-pressed',String(sustain));drain();}
 document.getElementById('vp-down').addEventListener('click',()=>setOctave(octave-1));document.getElementById('vp-up').addEventListener('click',()=>setOctave(octave+1));document.getElementById('vp-stop').addEventListener('click',stop);document.getElementById('vp-sustain').addEventListener('click',()=>{sustain=!sustain;updateSustain();});
 document.getElementById('vp-vol').addEventListener('input',e=>{if(master)master.gain.value=e.target.value/100*.45;});app.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>jump(+b.dataset.jump)));window.addEventListener('blur',()=>{space=false;stop();updateSustain();});window.addEventListener('pagehide',stop);requestAnimationFrame(()=>jump(60));
+recorderHooks=setupPianoRecorder({on:midi=>on(midi,'replay'+midi),off:midi=>off('replay'+midi),stop});
 </script>
 <style>
 .piano-shell{background:#29263e;color:#f7f5ff;border-radius:23px;padding:24px;box-shadow:0 30px 65px -37px #211a40}.piano-head,.piano-foot{display:flex;justify-content:space-between;gap:15px;align-items:center;font-size:12px;color:#d2cbed}.piano-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:19px;background:#39334f;border-radius:14px;margin:24px 0}.piano-controls button,.piano-jumps button{background:#5c5284;color:white;border:0;border-radius:9px;padding:8px 13px}.piano-controls input{accent-color:#a494ff}.piano-controls output{min-width:34px;text-align:center}.piano-jumps{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:15px 0}.piano-jumps span{font-size:11px;color:#d2cbed;margin-left:auto}.piano-scroller{overflow:auto hidden;border:6px solid #1a1728;border-radius:12px;scrollbar-color:#72688a #302b46}.piano-keybed{height:225px;position:relative;touch-action:pan-x}.piano-key{position:absolute;top:0;padding:0;touch-action:pan-x}.piano-key.white{width:42px;height:220px;background:linear-gradient(#fff,#edeaf5);border:1px solid #c9c5d5;border-bottom:5px solid #c8c2d1;border-radius:0 0 5px 5px;z-index:1}.piano-key.black{width:26px;height:135px;background:linear-gradient(100deg,#22202d,#39324e,#15131e);border:1px solid #17141c;border-bottom:5px solid black;border-radius:0 0 5px 5px;z-index:2;color:#ece8ff}.piano-key.pressed.white{background:#c6bcff}.piano-key.pressed.black{background:#8872ec}.piano-key span{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-size:10px;font-weight:bold}.piano-foot{padding:17px 3px 0}.piano-shell .panel{color:#272539}@media(max-width:600px){.piano-shell{padding:12px}.piano-head{display:block}.piano-controls{padding:12px}.piano-jumps span{width:100%;margin:0}.piano-foot{display:block}}

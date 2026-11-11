@@ -1,0 +1,30 @@
+.recording-shell{background:linear-gradient(140deg,#faf8ff,#f3f5fc 70%,#eaf4f2);border:1px solid #ddd9ef;border-radius:26px;padding:clamp(18px,4vw,36px);box-shadow:0 20px 60px -45px rgba(50,39,109,.38)}
+.recording-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.recording-heading h2{font-size:clamp(27px,3vw,38px);letter-spacing:-.045em;line-height:1.15;margin:7px 0 9px}
+.recording-heading p{margin:0;color:#585976;max-width:650px;font-size:15px}
+.recording-privacy{display:inline-flex;align-items:center;gap:7px;background:#e5f3ed;color:#256450;border-radius:100px;padding:8px 12px;font-size:12px;font-weight:700;white-space:nowrap}
+.recording-fields{display:flex;align-items:flex-end;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.recording-title{display:grid;gap:7px;color:#3c3c59;font-size:13px;font-weight:700;flex:1;min-width:210px}
+.recording-title input{width:100%;font-size:16px;border:1px solid #cbc8dc;border-radius:11px;background:#fff;color:#24203c;padding:12px 14px;min-height:46px}
+.recording-time{font-variant-numeric:tabular-nums;font-size:26px;letter-spacing:.06em;font-weight:800;color:#362b63;background:#fff;border:1px solid #e0ddf2;border-radius:12px;padding:11px 17px}
+.recording-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:20px}
+.recording-shell button{font:inherit;border:1px solid #d2cbe7;border-radius:11px;padding:11px 16px;min-height:46px;cursor:pointer;font-size:14px;font-weight:700;background:#fff;color:#33285b;transition:background-color .16s,transform .16s,box-shadow .16s}
+.recording-shell button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 9px 17px -13px #251b56}
+.recording-shell button:focus-visible{outline:3px solid #9580ff;outline-offset:3px}
+.recording-shell button:disabled{opacity:.45;cursor:not-allowed}
+.recording-shell button.record-main{background:#4d3c95;color:#fff;border-color:#4d3c95}
+.recording-shell button.record-danger{background:#fcf2f1;border-color:#f0d0cb;color:#9e382d}
+.recording-shell button.is-recording{background:#a82d37;border-color:#a82d37;color:white;animation:record-pulse 1.25s ease-in-out infinite}
+@keyframes record-pulse{50%{box-shadow:0 0 0 8px rgba(195,54,65,.12)}}
+.recording-stage{border-top:1px solid #e1ddec;margin-top:23px;padding-top:21px}
+.recording-stage h3{font-size:17px;margin:0 0 8px;color:#302c4d}
+.recording-stage p{color:#64617a;font-size:13px;margin:0 0 15px;line-height:1.6}
+.recording-stage progress{width:100%;height:8px;accent-color:#6752c1;margin:13px 0 4px}
+.recording-message{padding:13px 15px;background:rgba(255,255,255,.85);border:1px solid #e5e2ef;border-radius:11px;color:#514879;line-height:1.5;font-size:13px;min-height:46px;margin-top:15px}
+.recording-video-layout{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;margin-top:20px}
+.recording-video-layout video{width:min(100%,240px);aspect-ratio:9/16;object-fit:contain;border-radius:12px;background:#161227;box-shadow:0 14px 36px -23px #291958}
+.recording-video-side{flex:1;min-width:200px}
+.recording-muted{font-size:12px!important;color:#65647f!important;line-height:1.6}
+.recording-shell [hidden]{display:none!important}
+@media(max-width:640px){.recording-shell{border-radius:18px;padding:17px}.recording-actions button{flex:1 1 45%}.recording-time{font-size:20px}.recording-video-layout video{width:180px}.recording-title{flex-basis:100%}}
+@media(prefers-reduced-motion:reduce){.recording-shell button{transition:none}.recording-shell button.is-recording{animation:none}}
