@@ -6,11 +6,11 @@ export function setupPianoRecorder({on,off,stop}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
-  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
+  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
   let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null;
   let playing=false,playFrame=0,playStart=0,playIndex=0;
-  let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null;
-  let converting=false,cancelMp4=false,ffmpegWorker=null;
+  let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null,originalWebmFile=null;
+  let converting=false,cancelMp4=false,ffmpegWorker=null,coreAbortController=null;
 
   function status(message) { controls.message.textContent=message; }
   function clock(ms) { const sec=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; }
@@ -27,12 +27,14 @@ export function setupPianoRecorder({on,off,stop}) {
     controls['convert-mp4'].hidden=!videoFile||!videoFile.type.startsWith('video/webm');
     controls['convert-mp4'].disabled=!videoFile||capturing||exporting||converting;
     controls['cancel-mp4'].hidden=!converting;
+    controls['download-webm'].hidden=!originalWebmFile||videoFile===originalWebmFile;
+    controls['download-webm'].disabled=!originalWebmFile||capturing||exporting||converting;
     controls.record.classList.toggle('is-recording',capturing);
     controls.replay.textContent=playing?'■ Stop replay':'▶ Replay';
     controls.export.textContent=exporting?'Rendering video…':'🎬 Create 9:16 video';
     controls['convert-mp4'].textContent=converting?'Converting to MP4…':'Convert to MP4 on this device';
   }
-  function resetVideo(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;videoFile=null;controls.preview.removeAttribute('src');controls.preview.hidden=true;controls.format.textContent='';controls['mp4-info'].textContent='';}
+  function resetVideo(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;videoFile=null;originalWebmFile=null;controls.preview.removeAttribute('src');controls.preview.hidden=true;controls.format.textContent='';controls['mp4-info'].textContent='';}
   function stopReplay(){
     if(!playing)return;
     playing=false;cancelAnimationFrame(playFrame);
@@ -166,7 +168,6 @@ export function setupPianoRecorder({on,off,stop}) {
       const lead=.42;
       // Normalize to 0.14 peak per voice; sum may clip for very dense chords, so use a shared master limiter.
       const gain=audioCtx.createGain();gain.gain.value=.65;gain.connect(destination);
-      scheduleAudio(audioCtx,gain,notes,audioCtx.currentTime+lead);
       const canvasStream=canvas.captureStream(24);
       stream=new MediaStream([...canvasStream.getVideoTracks(),...destination.stream.getAudioTracks()]);
       const recorderOptions={mimeType:chosen.mimeType,videoBitsPerSecond:2400000,audioBitsPerSecond:128000};
@@ -179,7 +180,9 @@ export function setupPianoRecorder({on,off,stop}) {
       });
       recorder.start(250);
       const recordingStartedAt=performance.now();
-      const begins=performance.now()+lead*1000;
+      // Schedule sound after MediaRecorder starts so visuals and audio share an origin.
+      scheduleAudio(audioCtx,gain,notes,audioCtx.currentTime+lead);
+      const begins=recordingStartedAt+lead*1000;
       const total=Math.max(3400,take.duration+900);
       await new Promise((resolve,reject)=>{
         const frame=()=>{
@@ -209,7 +212,13 @@ export function setupPianoRecorder({on,off,stop}) {
           blob=new Blob([fixed],{type:actualMime});
         }catch(error){console.warn('WebM duration metadata repair failed',error);metadataWarning=true;}
       }
+      if(extension==='mp4'){
+        // A declared MP4 MIME type alone does not prove H.264/AAC.
+        if(!isSocialMp4(new Uint8Array(await blob.arrayBuffer())))
+          throw new Error('Browser did not create a verified H.264/AAC MP4; try another browser');
+      }
       videoFile=new File([blob],safeFilename(title)+'.'+extension,{type:blob.type});
+      originalWebmFile=extension==='webm'?videoFile:null;
       previewUrl=URL.createObjectURL(videoFile);controls.preview.src=previewUrl;controls.preview.hidden=false;
       controls.format.textContent=extension==='mp4' && chosen.socialCompatible?'H.264/AAC MP4 requested; verify playback before posting.':metadataWarning?'WebM created, but duration metadata repair failed. Consider MP4 conversion.':'Seekable WebM ready. For TikTok / X, select Convert to MP4 for a more compatible format.';
       controls['mp4-info'].textContent=extension==='webm'?'Optional MP4 conversion downloads an open-source engine (~30 MB) on first use. Conversion stays on this device; it may be slow or run out of memory on phones.':'';
@@ -231,17 +240,31 @@ export function setupPianoRecorder({on,off,stop}) {
     converting=true;cancelMp4=false;controls.progress.value=0;updateUI();
     status('Preparing local MP4 converter. The engine downloads about 30 MB on first use; your video is not uploaded.');
     let ffmpeg=null;
+    const temporaryUrls=[];
+    const requestController=new AbortController();
+    coreAbortController=requestController;
+    const downloadCore=async(filename,mime)=>{
+      const response=await fetch(`${CORE_BASE}/${filename}`,{signal:requestController.signal});
+      if(!response.ok)throw new Error(`Encoder download failed (HTTP ${response.status})`);
+      const downloaded=await response.blob();
+      if(cancelMp4)throw new Error('Cancelled');
+      const url=URL.createObjectURL(new Blob([downloaded],{type:mime}));
+      temporaryUrls.push(url);
+      return url;
+    };
     try{
       // Lazy-load the worker wrapper and a pinned single-thread encoder core.
-      const [{FFmpeg},{fetchFile,toBlobURL}]=await Promise.all([import('@ffmpeg/ffmpeg'),import('@ffmpeg/util')]);
+      const [{FFmpeg},{fetchFile}]=await Promise.all([import('@ffmpeg/ffmpeg'),import('@ffmpeg/util')]);
       if(cancelMp4)return;
       ffmpeg=new FFmpeg();ffmpegWorker=ffmpeg;
       ffmpeg.on('progress',({progress})=>{
         if(Number.isFinite(progress)&&converting)controls.progress.value=Math.max(1,Math.min(99,Math.round(progress*100)));
       });
-      const coreURL=await toBlobURL(CORE_BASE+'/ffmpeg-core.js','text/javascript');
+      status('Downloading encoder (part 1 of 2)…');
+      const coreURL=await downloadCore('ffmpeg-core.js','text/javascript');
       if(cancelMp4)return;
-      const wasmURL=await toBlobURL(CORE_BASE+'/ffmpeg-core.wasm','application/wasm');
+      status('Downloading WebAssembly encoder (~30 MB). You may cancel now.');
+      const wasmURL=await downloadCore('ffmpeg-core.wasm','application/wasm');
       if(cancelMp4)return;
       await ffmpeg.load({coreURL,wasmURL});
       if(cancelMp4)return;
@@ -264,16 +287,24 @@ export function setupPianoRecorder({on,off,stop}) {
     }catch(error){
       status(cancelMp4?'Conversion cancelled. Original WebM is still available.':'MP4 conversion failed: '+error.message+'. Original WebM is still available.');
     }finally{
+      requestController.abort();
+      temporaryUrls.forEach(url=>URL.revokeObjectURL(url));
       try{ffmpeg?.terminate();}catch{}
-      ffmpegWorker=null;converting=false;cancelMp4=false;updateUI();
+      ffmpegWorker=null;coreAbortController=null;converting=false;cancelMp4=false;updateUI();
     }
   }
   function cancelMp4Conversion(){
     if(!converting)return;
     cancelMp4=true;status('Stopping conversion; your WebM is unchanged.');
+    coreAbortController?.abort();
     try{ffmpegWorker?.terminate();}catch{}
   }
   function downloadVideo(){if(!videoFile)return;downloadBlob(videoFile,videoFile.name);status('Video downloaded. Upload it manually in TikTok, X or Shorts.');}
+  function downloadOriginalWebm(){
+    if(!originalWebmFile)return;
+    downloadBlob(originalWebmFile,originalWebmFile.name);
+    status('Original WebM downloaded; converted MP4 is also available.');
+  }
   async function shareVideo(){
     if(!videoFile)return;
     if(typeof navigator.share!=='function'||typeof navigator.canShare!=='function'||!navigator.canShare({files:[videoFile]})){
@@ -289,6 +320,7 @@ export function setupPianoRecorder({on,off,stop}) {
   controls.export.addEventListener('click',exportVideo);
   controls['convert-mp4'].addEventListener('click',convertMp4);
   controls['cancel-mp4'].addEventListener('click',cancelMp4Conversion);
+  controls['download-webm'].addEventListener('click',downloadOriginalWebm);
   controls['cancel-export'].addEventListener('click',()=>{shouldCancel=true;});
   controls.share.addEventListener('click',shareVideo);
   controls.download.addEventListener('click',downloadVideo);

@@ -20,3 +20,11 @@ WebM downloads are passed through \`@fix-webm-duration/fix\` to repair omitted M
 - The single-thread @ffmpeg/core 0.12.10 is downloaded on demand from jsDelivr (~30 MB) and is GPL-2.0-or-later, including libx264. Its source/build scripts are at https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v12.15.
 - The target is 540×960 H.264/AAC MP4, yuv420p, faststart. Conversion is local, with an explicit cancel operation; no recording is uploaded. GPU/memory limits make mobile support conditional.
 - Unit tests validate the MP4 profile and reject VP9/Opus files mislabeled as MP4. An Astro build does not certify real-device codec compatibility; iOS Safari, Android and MP4 uploads still require field tests.
+
+## Local export robustness improvements — 2026-11-12
+
+- After successful MP4 conversion, the user can still download the unchanged source WebM via an independent button.
+- Downloading the FFmpeg core and WebAssembly assets now uses an AbortController. Cancel immediately aborts the outstanding HTTP request; temporary object URLs are revoked when conversion ends.
+- Audio synthesis begins scheduling after MediaRecorder starts, reducing the capture-origin offset in the timeline.
+- Native MediaRecorder MP4 output is checked for actual AVC + AAC sample entries rather than trusting a MIME label alone.
+- Validation: native FFmpeg converted a real short VP9/Opus WebM to 540×960 H.264/AAC MP4; a Chromium UI harness with simulated FFmpeg module verified download of source WebM and converted MP4 with no script errors. The browser's real ffmpeg.wasm binary, physical mobile devices, and social platform uploads remain to be validated.
