@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {coreChords,qualities} from '../../lib/coreCatalog.js';
+import {releaseChords} from '../../data/chords.js';
+const links=new Map(releaseChords.map(v=>[v.root+':'+(v.quality==='dominant7'?'7':v.quality),'/chords/'+v.slug+'/']));
+---
+<BaseLayout title="120 Piano Chords – Interactive Chord Library" description="Explore and play 120 common piano chords, with correct note spelling. Learn major, minor, seventh, sus2, sus4 and diminished chords free." canonicalPath="/tools/chord-library/" crumbs={[{name:'120 Chords',href:'/tools/chord-library/'}]}>
+<section class="container page-hero"><span class="eyebrow">THE INTERACTIVE CHORD ATLAS</span><h1>120 chords.<br/><em>One place to explore.</em></h1><p class="lead">Twelve roots, ten useful chord families. Every chord can be heard and searched instantly. Our 16 individually authored chord lessons remain available for deeper learning.</p><div class="button-row"><a class="btn btn-primary" href="/tools/virtual-piano/">Play the 88-key piano ↗</a><a class="btn" href="/chords/">Read chord lessons</a></div></section>
+<section class="container section-compact">
+<div class="panel"><div class="atlas-controls"><label>Find a chord<input id="atlas-search" class="field" type="search" placeholder="Cmaj7, Bm, Gb, sus4…" autocomplete="off"/></label><label>Chord family<select id="atlas-type" class="field"><option value="all">All ten families</option>{qualities.map(q=><option value={q.id}>{q.name}</option>)}</select></label><button class="btn" type="button" id="atlas-reset">Reset</button></div><p id="atlas-count" role="status" aria-live="polite">120 playable chords</p><div class="atlas-grid">{coreChords.map(c=><article class="atlas-card" data-quality={c.quality} data-search={(c.name+' '+c.symbol+' '+c.root+' '+c.notes.join(' ')).toLowerCase()}><div><strong>{c.symbol}</strong><small>{c.name}</small></div><p>{c.notes.map(n=>n.replaceAll('#','♯').replaceAll('b','♭')).join(' · ')}</p><div class="atlas-foot"><button type="button" class="btn btn-primary" data-play-midi={c.midi.join(',')} aria-label={'Hear '+c.name}>▶ Play</button>{links.has(c.root+':'+c.quality)?<a href={links.get(c.root+':'+c.quality)}>Lesson ↗</a>:<span>Core chord</span>}</div></article>)}</div></div>
+</section>
+<section class="container section"><div class="panel"><h2>Why 120 chords?</h2><p>These are twelve pitch-class roots multiplied by ten common formulas. Enharmonic spelling can depend on harmonic context; the displayed note names follow diatonic chord construction. Not every theoretical spelling has a separate page. Individual deep lessons are created only when useful to learners and justified by search intent.</p></div></section>
+<script>
+const s=document.getElementById('atlas-search'),t=document.getElementById('atlas-type'),c=document.getElementById('atlas-count'),cards=[...document.querySelectorAll('.atlas-card')];
+function norm(v){return String(v).toLowerCase().replaceAll('♯','#').replaceAll('♭','b').trim();}
+function render(){let n=0;for(const e of cards){const ok=(t.value==='all'||e.dataset.quality===t.value)&&norm(e.dataset.search).includes(norm(s.value));e.hidden=!ok;if(ok)n++;}c.textContent='Showing '+n+' of '+cards.length+' playable chords';}
+s.addEventListener('input',render);t.addEventListener('change',render);document.getElementById('atlas-reset').addEventListener('click',()=>{s.value='';t.value='all';render();s.focus();});
+</script>
+<style>
+.atlas-controls{display:grid;grid-template-columns:1fr 1fr auto;gap:18px;align-items:end}.atlas-controls label{font-size:12px;font-weight:750;color:#594fc2}.atlas-controls .field{margin-top:7px}.atlas-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.atlas-card{border:1px solid #e6e1ef;background:#faf9ff;padding:18px;border-radius:16px}.atlas-card[hidden]{display:none}.atlas-card strong{font-size:24px;color:#4941a4}.atlas-card small{display:block;font-size:11px;color:#7e7793}.atlas-card p{font-size:13px;margin:14px 0}.atlas-foot{border-top:1px solid #e9e4f2;padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}.atlas-foot a{font-size:12px;color:#584ac7;font-weight:bold}.atlas-foot span{font-size:11px;color:#9a94aa}.atlas-foot .btn{min-height:35px;padding:7px 13px;font-size:12px}
+@media(max-width:950px){.atlas-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.atlas-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.atlas-controls{grid-template-columns:1fr 1fr}.atlas-controls button{grid-column:1/-1}}@media(max-width:440px){.atlas-controls{grid-template-columns:1fr}.atlas-controls button{grid-column:auto}.atlas-card{padding:12px}}
+</style>
+</BaseLayout>

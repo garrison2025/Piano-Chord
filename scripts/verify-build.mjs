@@ -5,7 +5,7 @@ import { releaseChords } from '../src/data/chords.js';
 const dist = path.resolve('dist');
 const publishedPages = [
   '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
-  '/tools/chord-compare/', '/printables/piano-chord-chart/',
+  '/tools/chord-compare/', '/tools/virtual-piano/', '/tools/chord-library/', '/printables/piano-chord-chart/',
   '/guides/how-to-read-piano-chords/',
   ...releaseChords.map(chord=>`/chords/${chord.slug}/`),
 ];
@@ -15,7 +15,7 @@ const read=(p)=>fs.readFileSync(p,'utf8');
 const sitemap=read(path.join(dist,'sitemap.xml'));
 const absoluteSite=(process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev').replace(/\/$/,'');
 const canonicalURLs=new Set();
-if(publishedPages.length!==23)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
+if(publishedPages.length!==25)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
 for(const url of publishedPages){
  const target=getFile(url);
  if(!fs.existsSync(target)){errors.push(`Missing HTML: ${url}`);continue;}
@@ -44,4 +44,4 @@ if((sitemap.match(/<image:image>/g)||[]).length!==16)errors.push('Sitemap must h
 if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
-else console.log('Generated artifact verified: 23 SEO HTML URLs, 16 SVG diagrams, canonical/metadata, sitemap, image sitemap, internal links and robots.');
+else console.log('Generated artifact verified: 25 SEO HTML URLs, 16 SVG diagrams, canonical/metadata, sitemap, image sitemap, internal links and robots.');

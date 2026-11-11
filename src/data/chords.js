@@ -19,7 +19,9 @@ export const releaseChords = [
 ].map(([slug, root, quality, symbol, name, keyword])=>({ slug,root,quality,symbol,name,keyword }));
 
 export const navigation = [
-  {href:'/chords/',label:'Chord Library'},
+  {href:'/chords/',label:'Chord Lessons'},
+  {href:'/tools/virtual-piano/',label:'Virtual Piano'},
+  {href:'/tools/chord-library/',label:'120 Chords'},
   {href:'/tools/chord-finder/',label:'Chord Finder'},
   {href:'/tools/inversion-explorer/',label:'Inversions'},
   {href:'/tools/chord-compare/',label:'Compare'},
