@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {chordNotes,midiVoicing,createChord,findChordMatches,prettyNote,parseNote,allFindableChords} from '../src/lib/music.js';
 import {releaseChords} from '../src/data/chords.js';
+import {chordLessons} from '../src/data/editorials.js';
 import {keyboardSvg} from '../src/lib/pianoSvg.js';
 const CASES=[
  ['C','major',['C','E','G']],['B','minor',['B','D','F#']],['C','dominant7',['C','E','G','Bb']],
@@ -37,4 +38,10 @@ test('keyboard SVG includes original image and accessible labels',()=>{
   const svg=keyboardSvg(createChord(releaseChords[0]));
   assert.match(svg,/viewBox="0 0 692 195"/); assert.match(svg,/Highlighted piano keys/);
   assert.equal((svg.match(/<rect x=/g)||[]).length,36);
+});
+
+test('all 16 SEO chord lessons contain distinct authored exercises',()=>{
+ const lessons=releaseChords.map(x=>chordLessons[x.slug]);
+ assert(lessons.every(x=>x && x.character.length>60 && x.comparison.length>70 && x.exercise.length>70 && x.pitfall.length>50));
+ assert.equal(new Set(lessons.map(x=>x.exercise)).size,16);
 });

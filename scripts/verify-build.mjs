@@ -1,0 +1,47 @@
+// Validate the generated static artifact without introducing a test framework dependency.
+import fs from 'node:fs';
+import path from 'node:path';
+import { releaseChords } from '../src/data/chords.js';
+const dist = path.resolve('dist');
+const publishedPages = [
+  '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
+  '/tools/chord-compare/', '/printables/piano-chord-chart/',
+  '/guides/how-to-read-piano-chords/',
+  ...releaseChords.map(chord=>`/chords/${chord.slug}/`),
+];
+const errors=[];
+const getFile=(url)=>path.join(dist,url==='/'?'index.html':url.endsWith('/')?url.slice(1)+'index.html':url.slice(1));
+const read=(p)=>fs.readFileSync(p,'utf8');
+const sitemap=read(path.join(dist,'sitemap.xml'));
+const absoluteSite=(process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev').replace(/\/$/,'');
+const canonicalURLs=new Set();
+if(publishedPages.length!==23)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
+for(const url of publishedPages){
+ const target=getFile(url);
+ if(!fs.existsSync(target)){errors.push(`Missing HTML: ${url}`);continue;}
+ const html=read(target);
+ const title=html.match(/<title>([^<]*)<\/title>/)?.[1];
+ const desc=html.match(/<meta\s+name="description"\s+content="([^"]*)"/)?.[1];
+ const canonical=html.match(/<link\s+rel="canonical"\s+href="([^"]*)"/)?.[1];
+ if(!title || !desc || !html.includes('<h1'))errors.push(`Missing SEO title/description/H1: ${url}`);
+ if(!canonical || canonical!==absoluteSite+url)errors.push(`Wrong canonical: ${url} -> ${canonical}`);
+ if(canonicalURLs.has(canonical))errors.push(`Duplicate canonical: ${canonical}`);canonicalURLs.add(canonical);
+ for(const hit of html.matchAll(/(?:href|src)="(\/[^\"]+)"/g)){
+  const resource=hit[1].split('?')[0].split('#')[0];
+  const file=getFile(resource);
+  if(!fs.existsSync(file) && !fs.existsSync(path.join(dist,resource.slice(1))))errors.push(`Broken internal asset/link on ${url}: ${resource}`);
+ }
+}
+for(const {slug} of releaseChords){
+ const svgPath=path.join(dist,'diagrams',slug+'.svg');
+ if(!fs.existsSync(svgPath)){errors.push(`Missing SVG diagram: ${slug}`);continue;}
+ const svg=read(svgPath);
+ if(!svg.includes('<svg') || !svg.includes('<title') || !svg.includes('<desc'))errors.push(`Invalid SVG content: ${slug}`);
+ if(!sitemap.includes(`/diagrams/${slug}.svg`))errors.push(`SVG omitted from image sitemap: ${slug}`);
+}
+if((sitemap.match(/<url>/g)||[]).length!==23)errors.push('Sitemap must have exactly 23 HTML URLs');
+if((sitemap.match(/<image:image>/g)||[]).length!==16)errors.push('Sitemap must have exactly 16 image URLs');
+if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
+if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
+if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
+else console.log('Generated artifact verified: 23 SEO HTML URLs, 16 SVG diagrams, canonical/metadata, sitemap, image sitemap, internal links and robots.');
