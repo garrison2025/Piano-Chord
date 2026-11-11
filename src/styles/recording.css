@@ -28,3 +28,8 @@
 .recording-shell [hidden]{display:none!important}
 @media(max-width:640px){.recording-shell{border-radius:18px;padding:17px}.recording-actions button{flex:1 1 45%}.recording-time{font-size:20px}.recording-video-layout video{width:180px}.recording-title{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){.recording-shell button{transition:none}.recording-shell button.is-recording{animation:none}}
+
+/* Optional local conversion is revealed after a WebM is ready. */
+.recording-shell #vp-convert-mp4:not([hidden]){background:#2e6a63;border-color:#2e6a63;color:white}
+.recording-shell #vp-mp4-info{border-left:3px solid #aaa0de;padding-left:10px;margin-top:10px}
+@media(max-width:640px){.recording-shell #vp-convert-mp4{flex:1 1 100%}}

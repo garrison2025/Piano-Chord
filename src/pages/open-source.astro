@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Open-source & Video Codec Notices | Piano Chord Explorer" description="Attribution and source links for local video export and optional FFmpeg WebAssembly MP4 conversion." canonicalPath="/open-source/" crumbs={[{name:'Open-source notices',href:'/open-source/'}]}>
+<section class="container page-hero"><span class="eyebrow">SOFTWARE NOTICES</span><h1>Open-source components</h1><p class="lead">Our piano player and recording studio run inside your browser. These optional libraries make local video export possible. Your performance is not uploaded to our servers.</p></section>
+<section class="container section-compact"><div class="panel">
+<h2>FFmpeg WebAssembly</h2><p>Optional MP4 conversion uses <strong>@ffmpeg/core 0.12.10</strong> (GPL-2.0-or-later), including the GPL-licensed H.264 encoder libx264. The engine downloads on demand from jsDelivr only after you select Convert to MP4. It is about 30 MB; your recording stays on the device.</p>
+<p>See <a href="https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v0.12.10" rel="noopener noreferrer">corresponding source and build scripts</a>, <a href="https://github.com/ffmpegwasm/ffmpeg.wasm" rel="noopener noreferrer">project licensing</a>, and <a href="https://ffmpeg.org/download.html" rel="noopener noreferrer">FFmpeg source</a>. Codec patents may present separate obligations in some jurisdictions.</p>
+<h2>JavaScript libraries</h2><p>@ffmpeg/ffmpeg 0.12.15 and @ffmpeg/util 0.12.2 are MIT-licensed: <a href="https://github.com/ffmpegwasm/ffmpeg.wasm">source</a>. @fix-webm-duration/fix 1.0.1 is MIT-licensed: <a href="https://github.com/yusitnikov/fix-webm-duration">source</a>.</p>
+<h2>Limitations</h2><p>MP4 conversion is CPU- and memory-intensive, especially on mobile. It may fail on older devices. Your original WebM remains downloadable. The system share sheet does not automatically publish to TikTok, X or any social service.</p>
+<p><a class="btn btn-primary" href="/tools/virtual-piano/">Return to Virtual Piano ↗</a></p>
+</div></section>
+</BaseLayout>

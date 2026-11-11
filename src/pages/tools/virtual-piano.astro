@@ -39,7 +39,13 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       <div class="recording-video-layout">
         <video id="vp-preview" controls playsinline preload="metadata" hidden aria-label="Preview of your generated piano performance video"></video>
         <div class="recording-video-side">
-          <p id="vp-format" class="recording-muted">Video format depends on your browser; MP4 is preferred, WebM is the fallback.</p>
+          <p id="vp-format" class="recording-muted">Native MP4 is preferred when supported; WebM videos can be converted locally.</p>
+          <div class="recording-actions" role="group" aria-label="Optional on-device MP4 conversion">
+            <button id="vp-convert-mp4" type="button" class="record-main" hidden disabled>Convert to MP4 on this device</button>
+            <button id="vp-cancel-mp4" type="button" class="record-danger" hidden>Cancel conversion</button>
+          </div>
+          <p id="vp-mp4-info" class="recording-muted">Optional conversion downloads about 30 MB on first use; it stays on your device and can be memory-intensive.</p>
+          <p class="recording-muted">Read <a href="/open-source/">open-source, codec and privacy notices</a>.</p>
           <div class="recording-actions"><button id="vp-download" type="button" disabled>↓ Download video</button><button id="vp-share" type="button" disabled>Share via device</button></div>
           <p class="recording-muted">If your phone doesn't support file sharing, download the video and upload it manually in TikTok, X or YouTube Shorts. You control the title, video and publication. No mandatory promotional watermark is added.</p>
         </div>

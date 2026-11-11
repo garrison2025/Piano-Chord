@@ -1,39 +1,45 @@
 import {MAX_RECORDING_MS, normalizeEvents, noteIntervals, encodeMidi, safeFilename, chooseVideoFormat} from '../lib/recording.mjs';
+import { CORE_BASE, MP4_WIDTH, MP4_HEIGHT, mp4Args, isSocialMp4 } from '../lib/videoConversion.mjs';
 
 /** Browser-only recording studio; no upload, cookie, account or third-party API. */
 export function setupPianoRecorder({on,off,stop}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
-  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
+  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
   let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null;
   let playing=false,playFrame=0,playStart=0,playIndex=0;
   let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null;
+  let converting=false,cancelMp4=false,ffmpegWorker=null;
 
   function status(message) { controls.message.textContent=message; }
   function clock(ms) { const sec=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; }
   function updateUI(){
     const hasNotes=Boolean(take && noteIntervals(take).length);
-    controls.record.disabled=capturing||exporting;
+    controls.record.disabled=capturing||exporting||converting;
     controls['end-record'].disabled=!capturing;
-    controls.replay.disabled=!hasNotes||capturing||exporting;
-    controls.midi.disabled=!hasNotes||capturing||exporting;
-    controls.export.disabled=!hasNotes||capturing||exporting;
-    controls.share.disabled=!videoFile||capturing||exporting;
-    controls.download.disabled=!videoFile||capturing||exporting;
+    controls.replay.disabled=!hasNotes||capturing||exporting||converting;
+    controls.midi.disabled=!hasNotes||capturing||exporting||converting;
+    controls.export.disabled=!hasNotes||capturing||exporting||converting;
+    controls.share.disabled=!videoFile||capturing||exporting||converting;
+    controls.download.disabled=!videoFile||capturing||exporting||converting;
     controls['cancel-export'].hidden=!exporting;
+    controls['convert-mp4'].hidden=!videoFile||!videoFile.type.startsWith('video/webm');
+    controls['convert-mp4'].disabled=!videoFile||capturing||exporting||converting;
+    controls['cancel-mp4'].hidden=!converting;
     controls.record.classList.toggle('is-recording',capturing);
     controls.replay.textContent=playing?'■ Stop replay':'▶ Replay';
     controls.export.textContent=exporting?'Rendering video…':'🎬 Create 9:16 video';
+    controls['convert-mp4'].textContent=converting?'Converting to MP4…':'Convert to MP4 on this device';
   }
-  function resetVideo(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;videoFile=null;controls.preview.removeAttribute('src');controls.preview.hidden=true;controls.format.textContent='';}
+  function resetVideo(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;videoFile=null;controls.preview.removeAttribute('src');controls.preview.hidden=true;controls.format.textContent='';controls['mp4-info'].textContent='';}
   function stopReplay(){
     if(!playing)return;
     playing=false;cancelAnimationFrame(playFrame);
     stop();updateUI();
   }
   function startRecord(){
-    if(exporting)return;
+    if(exporting||converting)return;
     stopReplay();stop();resetVideo();
     captured=[];take=null;capturing=true;startedAt=performance.now();
     controls.clock.textContent='00:00';
@@ -57,7 +63,7 @@ export function setupPianoRecorder({on,off,stop}) {
   function noteOn(midi){if(capturing)captured.push({type:'on',midi,t:performance.now()-startedAt});}
   function noteOff(midi){if(capturing)captured.push({type:'off',midi,t:performance.now()-startedAt});}
   function replay(){
-    if(capturing||exporting||!take)return;
+    if(capturing||exporting||converting||!take)return;
     if(playing){stopReplay();status('Replay stopped.');return;}
     stop();playing=true;playIndex=0;playStart=performance.now();updateUI();
     const frame=()=>{
@@ -141,7 +147,7 @@ export function setupPianoRecorder({on,off,stop}) {
     }
   }
   async function exportVideo(){
-    if(!take || capturing || exporting)return;
+    if(!take || capturing || exporting || converting)return;
     const chosen=formatChoice();
     if(!chosen){status('This browser cannot record canvas video. MIDI download still works; try current Chrome, Edge or Safari for video.');return;}
     const AudioCtor=window.AudioContext||window.webkitAudioContext;
@@ -149,7 +155,7 @@ export function setupPianoRecorder({on,off,stop}) {
     const notes=noteIntervals(take);if(!notes.length)return;
     exporting=true;shouldCancel=false;stopReplay();resetVideo();updateUI();controls.progress.value=0;
     status('Rendering locally in real time. Keep this tab visible.');
-    let audioCtx=null,stream=null,recorder=null,animation=0;
+    let audioCtx=null,stream=null,recorder=null,animation=0,metadataWarning=false;
     const canvas=document.createElement('canvas');canvas.width=720;canvas.height=1280;
     try{
       const context=canvas.getContext('2d',{alpha:false});if(!context)throw new Error('Canvas unavailable');
@@ -172,6 +178,7 @@ export function setupPianoRecorder({on,off,stop}) {
         recorder.onstop=resolve;
       });
       recorder.start(250);
+      const recordingStartedAt=performance.now();
       const begins=performance.now()+lead*1000;
       const total=Math.max(3400,take.duration+900);
       await new Promise((resolve,reject)=>{
@@ -191,11 +198,21 @@ export function setupPianoRecorder({on,off,stop}) {
       if(recorderError)throw recorderError;
       const actualMime=(recorder.mimeType||chosen.mimeType).toLowerCase();
       const extension=actualMime.startsWith('video/mp4')?'mp4':'webm';
-      const blob=new Blob(pieces,{type:actualMime});
+      let blob=new Blob(pieces,{type:actualMime});
       if(!blob.size)throw new Error('No video data returned');
+      if(extension==='webm'){
+        try{
+          // MediaRecorder frequently omits the Matroska Duration element.
+          // Repairing it makes downloads seekable without any media upload.
+          const {fixWebmDuration}=await import('@fix-webm-duration/fix');
+          const fixed=await fixWebmDuration(blob,Math.max(1,Math.round(performance.now()-recordingStartedAt)),{logger:false});
+          blob=new Blob([fixed],{type:actualMime});
+        }catch(error){console.warn('WebM duration metadata repair failed',error);metadataWarning=true;}
+      }
       videoFile=new File([blob],safeFilename(title)+'.'+extension,{type:blob.type});
       previewUrl=URL.createObjectURL(videoFile);controls.preview.src=previewUrl;controls.preview.hidden=false;
-      controls.format.textContent=extension==='mp4' && chosen.socialCompatible?'H.264/AAC MP4 requested. Download or share; confirm playback in your target app.':'WebM video ready. TikTok or X may require an H.264/AAC MP4; convert the file locally if your upload is rejected.';
+      controls.format.textContent=extension==='mp4' && chosen.socialCompatible?'H.264/AAC MP4 requested; verify playback before posting.':metadataWarning?'WebM created, but duration metadata repair failed. Consider MP4 conversion.':'Seekable WebM ready. For TikTok / X, select Convert to MP4 for a more compatible format.';
+      controls['mp4-info'].textContent=extension==='webm'?'Optional MP4 conversion downloads an open-source engine (~30 MB) on first use. Conversion stays on this device; it may be slow or run out of memory on phones.':'';
       controls.progress.value=100;
       status(`Video created locally (${(blob.size/1048576).toFixed(1)} MB). Nothing was uploaded.`);
     }catch(error){status(error.message==='Cancelled'?'Video rendering cancelled.':`Video export failed: ${error.message}. MIDI download is still available.`);}
@@ -206,6 +223,55 @@ export function setupPianoRecorder({on,off,stop}) {
       try{await audioCtx?.close();}catch{}
       exporting=false;shouldCancel=false;updateUI();
     }
+  }
+
+  async function convertMp4(){
+    if(converting||exporting||capturing||!videoFile||!videoFile.type.startsWith('video/webm'))return;
+    const sourceFile=videoFile;
+    converting=true;cancelMp4=false;controls.progress.value=0;updateUI();
+    status('Preparing local MP4 converter. The engine downloads about 30 MB on first use; your video is not uploaded.');
+    let ffmpeg=null;
+    try{
+      // Lazy-load the worker wrapper and a pinned single-thread encoder core.
+      const [{FFmpeg},{fetchFile,toBlobURL}]=await Promise.all([import('@ffmpeg/ffmpeg'),import('@ffmpeg/util')]);
+      if(cancelMp4)return;
+      ffmpeg=new FFmpeg();ffmpegWorker=ffmpeg;
+      ffmpeg.on('progress',({progress})=>{
+        if(Number.isFinite(progress)&&converting)controls.progress.value=Math.max(1,Math.min(99,Math.round(progress*100)));
+      });
+      const coreURL=await toBlobURL(CORE_BASE+'/ffmpeg-core.js','text/javascript');
+      if(cancelMp4)return;
+      const wasmURL=await toBlobURL(CORE_BASE+'/ffmpeg-core.wasm','application/wasm');
+      if(cancelMp4)return;
+      await ffmpeg.load({coreURL,wasmURL});
+      if(cancelMp4)return;
+      status('Encoding H.264 video and AAC audio locally. Keep the tab open; this can be intensive on mobile.');
+      await ffmpeg.writeFile('take.webm',await fetchFile(sourceFile));
+      if(cancelMp4)return;
+      const exitCode=await ffmpeg.exec(mp4Args());
+      if(cancelMp4)return;
+      if(exitCode!==0)throw new Error('The encoder did not complete successfully');
+      const mp4=await ffmpeg.readFile('take.mp4');
+      if(!isSocialMp4(mp4))throw new Error('MP4 video or audio codec validation failed');
+      const converted=new File([mp4],safeFilename(controls.title.value)+'.mp4',{type:'video/mp4'});
+      if(previewUrl)URL.revokeObjectURL(previewUrl);
+      videoFile=converted;previewUrl=URL.createObjectURL(converted);
+      controls.preview.src=previewUrl;controls.preview.hidden=false;
+      controls.format.textContent='Verified H.264/AAC MP4 ready ('+MP4_WIDTH+' × '+MP4_HEIGHT+'). Download or share and check playback in the destination app.';
+      controls['mp4-info'].textContent='Converted on this device; no recording was uploaded.';
+      controls.progress.value=100;
+      status('MP4 ready ('+(mp4.length/1048576).toFixed(1)+' MB).');
+    }catch(error){
+      status(cancelMp4?'Conversion cancelled. Original WebM is still available.':'MP4 conversion failed: '+error.message+'. Original WebM is still available.');
+    }finally{
+      try{ffmpeg?.terminate();}catch{}
+      ffmpegWorker=null;converting=false;cancelMp4=false;updateUI();
+    }
+  }
+  function cancelMp4Conversion(){
+    if(!converting)return;
+    cancelMp4=true;status('Stopping conversion; your WebM is unchanged.');
+    try{ffmpegWorker?.terminate();}catch{}
   }
   function downloadVideo(){if(!videoFile)return;downloadBlob(videoFile,videoFile.name);status('Video downloaded. Upload it manually in TikTok, X or Shorts.');}
   async function shareVideo(){
@@ -221,10 +287,12 @@ export function setupPianoRecorder({on,off,stop}) {
   controls.replay.addEventListener('click',replay);
   controls.midi.addEventListener('click',midi);
   controls.export.addEventListener('click',exportVideo);
+  controls['convert-mp4'].addEventListener('click',convertMp4);
+  controls['cancel-mp4'].addEventListener('click',cancelMp4Conversion);
   controls['cancel-export'].addEventListener('click',()=>{shouldCancel=true;});
   controls.share.addEventListener('click',shareVideo);
   controls.download.addEventListener('click',downloadVideo);
-  window.addEventListener('pagehide',()=>{clearTimeout(timeout);clearInterval(timer);cancelAnimationFrame(playFrame);shouldCancel=true;resetVideo();});
+  window.addEventListener('pagehide',()=>{clearTimeout(timeout);clearInterval(timer);cancelAnimationFrame(playFrame);shouldCancel=true;cancelMp4Conversion();resetVideo();});
   window.addEventListener('blur',()=>{if(playing){stopReplay();status('Replay paused when window lost focus.');}});
   const initialFormat=formatChoice();
   if(!initialFormat)controls.format.textContent='Video export is unavailable in this browser; MIDI export remains available.';
