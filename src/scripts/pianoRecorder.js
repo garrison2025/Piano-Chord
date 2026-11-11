@@ -1,4 +1,4 @@
-import {MAX_RECORDING_MS, normalizeEvents, noteIntervals, encodeMidi, safeFilename} from '../lib/recording.mjs';
+import {MAX_RECORDING_MS, normalizeEvents, noteIntervals, encodeMidi, safeFilename, chooseVideoFormat} from '../lib/recording.mjs';
 
 /** Browser-only recording studio; no upload, cookie, account or third-party API. */
 export function setupPianoRecorder({on,off,stop}) {
@@ -78,10 +78,7 @@ export function setupPianoRecorder({on,off,stop}) {
 
   function formatChoice(){
     if(typeof MediaRecorder==='undefined' || typeof HTMLCanvasElement.prototype.captureStream!=='function')return null;
-    for(const m of ['video/mp4;codecs="avc1.42E01E,mp4a.40.2"','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']){
-      if(MediaRecorder.isTypeSupported(m))return m;
-    }
-    return null;
+    return chooseVideoFormat(type=>MediaRecorder.isTypeSupported(type));
   }
   function drawFrame(ctx,elapsed,notes,title){
     const w=720,h=1280;
@@ -166,7 +163,7 @@ export function setupPianoRecorder({on,off,stop}) {
       scheduleAudio(audioCtx,gain,notes,audioCtx.currentTime+lead);
       const canvasStream=canvas.captureStream(24);
       stream=new MediaStream([...canvasStream.getVideoTracks(),...destination.stream.getAudioTracks()]);
-      const recorderOptions={mimeType:chosen,videoBitsPerSecond:2400000,audioBitsPerSecond:128000};
+      const recorderOptions={mimeType:chosen.mimeType,videoBitsPerSecond:2400000,audioBitsPerSecond:128000};
       recorder=new MediaRecorder(stream,recorderOptions);
       const pieces=[];let recorderError=null;
       const settled=new Promise(resolve=>{
@@ -192,12 +189,13 @@ export function setupPianoRecorder({on,off,stop}) {
       if(recorder.state!=='inactive')recorder.stop();
       await settled;
       if(recorderError)throw recorderError;
-      const extension=chosen.startsWith('video/mp4')?'mp4':'webm';
-      const blob=new Blob(pieces,{type:recorder.mimeType||chosen});
+      const actualMime=(recorder.mimeType||chosen.mimeType).toLowerCase();
+      const extension=actualMime.startsWith('video/mp4')?'mp4':'webm';
+      const blob=new Blob(pieces,{type:actualMime});
       if(!blob.size)throw new Error('No video data returned');
       videoFile=new File([blob],safeFilename(title)+'.'+extension,{type:blob.type});
       previewUrl=URL.createObjectURL(videoFile);controls.preview.src=previewUrl;controls.preview.hidden=false;
-      controls.format.textContent=extension==='mp4'?'MP4 ready — download or share.':'WebM ready — some social apps require MP4; upload only if the app accepts WebM.';
+      controls.format.textContent=extension==='mp4' && chosen.socialCompatible?'H.264/AAC MP4 requested. Download or share; confirm playback in your target app.':'WebM video ready. TikTok or X may require an H.264/AAC MP4; convert the file locally if your upload is rejected.';
       controls.progress.value=100;
       status(`Video created locally (${(blob.size/1048576).toFixed(1)} MB). Nothing was uploaded.`);
     }catch(error){status(error.message==='Cancelled'?'Video rendering cancelled.':`Video export failed: ${error.message}. MIDI download is still available.`);}
@@ -228,7 +226,9 @@ export function setupPianoRecorder({on,off,stop}) {
   controls.download.addEventListener('click',downloadVideo);
   window.addEventListener('pagehide',()=>{clearTimeout(timeout);clearInterval(timer);cancelAnimationFrame(playFrame);shouldCancel=true;resetVideo();});
   window.addEventListener('blur',()=>{if(playing){stopReplay();status('Replay paused when window lost focus.');}});
-  if(!formatChoice())controls.format.textContent='Video recording is not supported by this browser; MIDI export remains available.';
+  const initialFormat=formatChoice();
+  if(!initialFormat)controls.format.textContent='Video export is unavailable in this browser; MIDI export remains available.';
+  else if(initialFormat.extension==='webm')controls.format.textContent='This browser exports WebM. TikTok/X may require H.264/AAC MP4; local conversion may be needed.';
   updateUI();
   return {noteOn,noteOff};
 }

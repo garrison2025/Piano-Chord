@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeEvents, noteIntervals, encodeMidi, safeFilename, MAX_RECORDING_MS } from '../src/lib/recording.mjs';
+import { normalizeEvents, noteIntervals, encodeMidi, safeFilename, MAX_RECORDING_MS, chooseVideoFormat } from '../src/lib/recording.mjs';
 
 test('deduplicates repeated note-on, drops orphan note-off and closes held notes', () => {
   const take=normalizeEvents([
@@ -42,4 +42,23 @@ test('SMF header, track length and end track marker are valid', () => {
 test('safe download filenames', () => {
   assert.equal(safeFilename(' My #1 Song! '),'My-1-Song');
   assert.equal(safeFilename('🎹'),'piano-performance');
+});
+
+test('explicit H.264/AAC MP4 is preferred when fully supported', () => {
+  const format=chooseVideoFormat(type=>type.includes('avc1.42E01E') || type.includes('vp9'));
+  assert.equal(format.extension,'mp4');
+  assert.equal(format.socialCompatible,true);
+  assert.match(format.mimeType,/mp4a\.40\.2/);
+});
+
+test('bare MP4 support does not promise a social-compatible video', () => {
+  const format=chooseVideoFormat(type=>type==='video/mp4' || type==='video/webm;codecs=vp9,opus');
+  assert.equal(format.extension,'webm');
+  assert.equal(format.socialCompatible,false);
+  assert.match(format.mimeType,/vp9,opus/);
+});
+
+test('falls back to VP8/Opus WebM and otherwise reports unavailable', () => {
+  assert.equal(chooseVideoFormat(type=>type==='video/webm;codecs=vp8,opus').extension,'webm');
+  assert.equal(chooseVideoFormat(()=>false),null);
 });

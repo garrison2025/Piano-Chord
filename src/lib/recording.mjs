@@ -74,3 +74,21 @@ export function safeFilename(title) {
   const normalized = String(title||'').normalize('NFKD').replace(/[^a-zA-Z0-9-_ ]+/g, '').trim().replace(/[\s_-]+/g,'-').replace(/^-|-$/g,'').slice(0,64);
   return normalized || 'piano-performance';
 }
+
+/**
+ * Pick a genuinely declared audio+video recording profile. Bare `video/mp4`
+ * is deliberately excluded: Chromium can encode VP9/Opus inside an MP4
+ * container, which social uploaders may reject despite the .mp4 suffix.
+ * A supported H.264/AAC profile is preferred; otherwise use WebM.
+ */
+export function chooseVideoFormat(isSupported) {
+  if (typeof isSupported !== 'function') return null;
+  const candidates = [
+    {mimeType:'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',extension:'mp4',label:'H.264/AAC MP4',socialCompatible:true},
+    {mimeType:'video/mp4;codecs="avc1.4D401F,mp4a.40.2"',extension:'mp4',label:'H.264/AAC MP4',socialCompatible:true},
+    {mimeType:'video/webm;codecs=vp9,opus',extension:'webm',label:'VP9/Opus WebM',socialCompatible:false},
+    {mimeType:'video/webm;codecs=vp8,opus',extension:'webm',label:'VP8/Opus WebM',socialCompatible:false},
+    {mimeType:'video/webm',extension:'webm',label:'WebM',socialCompatible:false},
+  ];
+  return candidates.find(candidate => isSupported(candidate.mimeType)) || null;
+}
