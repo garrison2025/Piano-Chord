@@ -28,9 +28,9 @@ jobs:
         run: npm run build
       - name: Start site
         run: |
-          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/piano-preview.log 2>&1 &
-          for i in $(seq 1 40); do
-            if curl -sf http://127.0.0.1:4321/tools/virtual-piano/ > /dev/null; then exit 0; fi
+          python3 -m http.server 4321 --bind 127.0.0.1 --directory dist > /tmp/piano-preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --noproxy '*' -fsS http://127.0.0.1:4321/tools/virtual-piano/ > /dev/null; then exit 0; fi
             sleep 2
           done
           cat /tmp/piano-preview.log
