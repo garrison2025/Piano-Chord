@@ -1,0 +1,49 @@
+name: Video E2E (real FFmpeg WASM)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/video-browser-e2e.yml
+      - scripts/browser-video-e2e.mjs
+      - src/scripts/pianoRecorder.js
+      - src/lib/videoConversion.mjs
+      - src/pages/tools/virtual-piano.astro
+jobs:
+  chromium-ffmpeg-wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install app and test tools
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save playwright@1.56.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Build site
+        run: npm run build
+      - name: Start site
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/piano-preview.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:4321/tools/virtual-piano/ > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/piano-preview.log
+          exit 1
+      - name: Real-browser local video conversion test
+        run: node scripts/browser-video-e2e.mjs
+      - name: Save diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-browser-e2e-diagnostics
+          path: |
+            test-results/
+            /tmp/piano-preview.log
+          if-no-files-found: ignore
+          retention-days: 3
