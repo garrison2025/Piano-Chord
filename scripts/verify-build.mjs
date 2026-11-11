@@ -41,6 +41,10 @@ for(const {slug} of releaseChords){
 }
 if((sitemap.match(/<url>/g)||[]).length!==25)errors.push('Sitemap must have exactly 25 HTML URLs');
 if((sitemap.match(/<image:image>/g)||[]).length!==16)errors.push('Sitemap must have exactly 16 image URLs');
+const pianoHtml=read(path.join(dist,'tools/virtual-piano/index.html'));
+if((pianoHtml.match(/data-midi="[0-9]+"/g)||[]).length!==88)errors.push('Virtual piano must contain 88 key buttons');
+const atlasHtml=read(path.join(dist,'tools/chord-library/index.html'));
+if((atlasHtml.match(/class="atlas-card"/g)||[]).length!==120)errors.push('Chord atlas must contain 120 core chord cards');
 if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}

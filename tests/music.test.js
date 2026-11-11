@@ -45,3 +45,7 @@ test('all 16 SEO chord lessons contain distinct authored exercises',()=>{
  assert(lessons.every(x=>x && x.character.length>60 && x.comparison.length>70 && x.exercise.length>70 && x.pitfall.length>50));
  assert.equal(new Set(lessons.map(x=>x.exercise)).size,16);
 });
+
+import {coreChords,roots,qualities} from '../src/lib/coreCatalog.js';
+test('120-core-chord atlas has ten types in each of twelve roots',()=>{assert.equal(coreChords.length,120);assert.equal(roots.length,12);assert.equal(qualities.length,10);assert.equal(new Set(coreChords.map(c=>c.root+':'+c.quality)).size,120);});
+test('new chord atlas preserves theoretical spellings',()=>{const lookup=(r,q)=>coreChords.find(x=>x.root===r&&x.quality===q).notes;assert.deepEqual(lookup('C','sus2'),['C','D','G']);assert.deepEqual(lookup('C','m7b5'),['C','Eb','Gb','Bb']);assert.deepEqual(lookup('Gb','maj7'),['Gb','Bb','Db','F']);});
