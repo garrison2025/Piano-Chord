@@ -1,0 +1,5 @@
+---
+import {keyboardSvg} from '../lib/pianoSvg.js';
+const {chord,inversion=0}=Astro.props;
+---
+<div class="keyboard-frame" aria-label={`${chord.name} keyboard` } set:html={keyboardSvg(chord,{inversion})} />

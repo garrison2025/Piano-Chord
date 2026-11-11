@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify music and page contracts
+        run: npm run test
+      - name: Build Astro static website
+        run: npm run build
+      - name: Assert generated deliverables
+        run: |
+          test -f dist/index.html
+          test -f dist/chords/index.html
+          test -f dist/chords/b-minor/index.html
+          test -f dist/tools/chord-finder/index.html
+          test -f dist/diagrams/b-minor.svg
+          test -f dist/sitemap.xml

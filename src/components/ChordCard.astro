@@ -1,0 +1,11 @@
+---
+import {createChord,prettyNote} from '../lib/music.js';
+const {entry,small=false}=Astro.props;
+const chord=createChord(entry);
+---
+<a class:list={['chord-card',small && 'chord-card-small']} href={`/chords/${entry.slug}/`}>
+  <span class="chord-card-top"><span class="chord-symbol">{chord.symbol.replaceAll('b','♭')}</span><span class="mini-arrow" aria-hidden="true">↗</span></span>
+  <strong>{chord.name}</strong>
+  <span class="note-row">{chord.notes.map(n=><span class="note-pill">{prettyNote(n)}</span>)}</span>
+  <span class="card-bottom">Explore chord & inversions <span aria-hidden="true">→</span></span>
+</a>

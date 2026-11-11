@@ -1,0 +1,58 @@
+---
+import '../styles/global.css';
+import {navigation} from '../data/chords.js';
+const {title='Piano Chord Explorer',description='Learn piano chords through clear notes, interactive keyboards, inversions, and original printable diagrams.',canonicalPath=Astro.url.pathname,crumbs=[],noindex=false}=Astro.props;
+const canonical=new URL(canonicalPath,Astro.site || Astro.url).toString();
+const siteName='Piano Chord Explorer';
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f8f3" />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex,follow" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <title>{title}</title>
+    {crumbs.length>0 && <script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{ '@type':'ListItem',position:1,name:'Home',item:new URL('/',Astro.site||Astro.url).toString()},...crumbs.map((x,i)=>({'@type':'ListItem',position:i+2,name:x.name,item:new URL(x.href,Astro.site||Astro.url).toString()}))]})} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="topnote"><div class="container topnote-inner"><span>Made for curious piano learners</span><span>Free tools · No account needed</span></div></div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/" aria-label="Piano Chord Explorer home">
+          <span class="brand-mark" aria-hidden="true"><span>♩</span></span>
+          <span class="brand-type">Piano Chord <strong>Explorer<span class="brand-dot">.</span></strong></span>
+        </a>
+        <nav class="desktop-nav" aria-label="Main navigation">
+          {navigation.map((n)=><a href={n.href} class={Astro.url.pathname===n.href?'nav-active':''}>{n.label}</a>)}
+        </nav>
+        <a class="header-action" href="/chords/">Explore chords <span aria-hidden="true">↗</span></a>
+        <details class="mobile-nav"><summary aria-label="Open menu">Menu ☰</summary><nav aria-label="Mobile navigation">{navigation.map((n)=><a href={n.href}>{n.label}</a>)}</nav></details>
+      </div>
+    </header>
+    <main id="main">
+      {crumbs.length>0 && <div class="container crumb-wrap"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a>{crumbs.map(x=><><span aria-hidden="true">/</span><a href={x.href}>{x.name}</a></>)}</nav></div>}
+      <slot/>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-top">
+        <div><a href="/" class="brand footer-brand"><span class="brand-mark" aria-hidden="true">♩</span><span class="brand-type">Piano Chord <strong>Explorer.</strong></span></a><p>Understand the notes. Hear the harmony.<br/>Practice one chord at a time.</p></div>
+        <div class="footer-col"><strong>Explore</strong><a href="/chords/">All chords</a><a href="/tools/chord-finder/">Chord finder</a><a href="/tools/chord-compare/">Compare chords</a></div>
+        <div class="footer-col"><strong>Learn</strong><a href="/guides/how-to-read-piano-chords/">Reading chord diagrams</a><a href="/tools/inversion-explorer/">Chord inversions</a><a href="/printables/piano-chord-chart/">Printable chart</a></div>
+      </div>
+      <div class="container footer-bottom"><span>© {new Date().getFullYear()} Piano Chord Explorer. Original diagrams and explanations.</span><span>Music examples use 12-tone equal temperament.</span></div>
+    </footer>
+    <div class="visually-hidden" role="status" aria-live="polite" id="app-status"></div>
+    <script src="../scripts/client.js"></script>
+  </body>
+</html>

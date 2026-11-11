@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {releaseChords} from '../../data/chords.js';
+import {createChord,prettyNote} from '../../lib/music.js';
+import PianoKeyboard from '../../components/PianoKeyboard.astro';
+const starter=createChord(releaseChords[0]);
+---
+<BaseLayout title="Piano Chord Inversion Explorer | Hear Root, 1st & 2nd Inversions" description="Explore piano chord inversions with correct lowest notes, keyboard diagrams and interactive audio. Understand how voicing changes without changing chord identity." canonicalPath="/tools/inversion-explorer/" crumbs={[{name:'Inversion Explorer',href:'/tools/inversion-explorer/'}]}>
+  <div class="container page-hero"><span class="eyebrow">Free interactive tool</span><h1>Move the bass.<br/>Keep the harmony.</h1><p class="lead">An inversion keeps a chord's pitch classes but chooses a different note as the lowest voice. Select a chord, then listen to each voicing.</p></div>
+  <section class="container section-compact"><div class="two-col"><div class="panel"><label for="inversion-chord" class="input-label">Choose a chord</label><select class="field" id="inversion-chord">{releaseChords.map(e=><option value={e.slug}>{e.name} ({e.symbol})</option>)}</select><div id="inversion-tool" style="margin-top:20px" aria-live="polite"><h2>{starter.name}</h2><p>{starter.notes.map(prettyNote).join(' · ')}</p><PianoKeyboard chord={starter}/><div class="button-row"><button type="button" class="btn btn-primary" data-play-midi={starter.inversions[0].midi.join(',')}>▶ Play root position</button></div></div></div><aside class="panel"><h2>What changes?</h2><p>Root position has the chord root on the bottom. First inversion places the third on the bottom; second inversion places the fifth on the bottom. Four-note seventh chords also have a third inversion.</p><div class="note-explainer"><h3>Remember</h3><p>Bm/D is still B minor. The slash means D is the bass. The other notes remain B and F♯, arranged above D.</p></div></aside></div></section>
+</BaseLayout>

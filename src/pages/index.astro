@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PianoKeyboard from '../components/PianoKeyboard.astro';
+import ChordCard from '../components/ChordCard.astro';
+import {releaseChords} from '../data/chords.js';
+import {createChord,prettyNote} from '../lib/music.js';
+const featured=createChord(releaseChords[0]);
+---
+<BaseLayout title="Piano Chords Made Clear | Piano Chord Explorer" description="Learn the notes behind piano chords, listen to them, compare shapes and print original keyboard diagrams. 16 free chord lessons and interactive piano tools." canonicalPath="/">
+  <section class="hero"><div class="container hero-grid">
+    <div class="hero-copy"><span class="eyebrow">Piano learning, simplified</span><h1>See the notes.<br/><em>Hear the harmony.</em></h1><p>A friendlier way to learn piano chords. Explore each chord's notes, hear it played, understand its inversions, and build confidence one shape at a time.</p>
+      <div class="button-row"><a class="btn btn-primary" href="/chords/">Explore piano chords <span aria-hidden="true">↗</span></a><a class="btn btn-ghost" href="/tools/chord-finder/">Find a chord →</a></div>
+      <div class="hero-trust"><span>✓ Free to use</span><span>✓ No sign-up</span><span>✓ Clear note spellings</span></div>
+      <div class="stat-strip"><div class="stat"><strong>16</strong><span>First-release chord lessons</span></div><div class="stat"><strong>3</strong><span>Interactive practice tools</span></div><div class="stat"><strong>0</strong><span>Accounts or uploads</span></div></div>
+    </div>
+    <div class="demo-window"><div class="demo-top"><div class="demo-dots"><i></i><i></i><i></i></div><small>CHORD SPOTLIGHT</small></div>
+      <div class="demo-inner"><span class="tag">Try this chord</span><h3>{featured.symbol} <span style="font-size:14px;font-weight:500;color:#6e817c">Minor triad</span></h3><p>Notes: {featured.notes.map(prettyNote).join(' · ')}</p><PianoKeyboard chord={featured}/>
+        <div class="button-row" style="margin:17px 0 0"><button class="btn btn-primary" type="button" data-play-midi={featured.inversions[0].midi.join(',')} aria-label="Play B minor chord">▶ Hear B minor</button><a class="btn" href="/chords/b-minor/">Learn this chord ↗</a></div>
+      </div><div class="hero-note">Original diagrams · Human-readable notes · Practice at your pace</div>
+    </div>
+  </div></section>
+  <section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">Start here</span><h2>Popular chords, explained.</h2><p>Every chord has a playable example, a keyboard diagram, and easy-to-follow inversion notes.</p></div><a class="text-link" href="/chords/">Browse all 16 chords →</a></div><div class="card-grid">{releaseChords.slice(0,8).map(e=><ChordCard entry={e}/>)}</div></div></section>
+  <section class="section" style="background:#eef4ed"><div class="container"><div class="section-head"><div><span class="eyebrow">Practice with purpose</span><h2>More than a chord chart.</h2><p>Look up a chord, discover what you're playing, or compare two sounds before moving on to the next lesson.</p></div></div>
+    <div class="feature-grid">
+      <article class="feature-card"><div class="feature-icon">⌕</div><h3>Find a chord</h3><p>Select the notes you're playing. Our finder shows possible chord names and explains their spelling.</p><a href="/tools/chord-finder/">Open chord finder ↗</a></article>
+      <article class="feature-card"><div class="feature-icon">♩</div><h3>Understand inversions</h3><p>Hear how the same harmony changes shape when a different note moves to the bottom.</p><a href="/tools/inversion-explorer/">Explore inversions ↗</a></article>
+      <article class="feature-card"><div class="feature-icon">⇄</div><h3>Compare two chords</h3><p>See shared notes and moving notes side by side, then listen to each chord in context.</p><a href="/tools/chord-compare/">Compare chords ↗</a></article>
+    </div>
+  </div></section>
+  <section class="section"><div class="container"><div class="cta-band"><div><span class="eyebrow" style="color:#b6e8d2">Keep a chart nearby</span><h2>Your chords, ready to print.</h2><p>A clean reference sheet for the first 16 chords, complete with note names and original keyboard diagrams.</p></div><a class="btn" href="/printables/piano-chord-chart/">Open printable chart ↗</a></div></div></section>
+</BaseLayout>
