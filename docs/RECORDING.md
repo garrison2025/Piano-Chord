@@ -32,3 +32,13 @@ WebM downloads are passed through \`@fix-webm-duration/fix\` to repair omitted M
 
 ## MP4 track-level verification hardening (2026-11-12)
 The H.264/AAC checker now parses real MP4 video/audio track handlers and `stsd` codec entries. It no longer accepts an MP4 just because its metadata contains `avc1` or `mp4a` strings. Unit tests include false-positive metadata cases, malformed boxes, and real media samples were checked locally (H.264/AAC accepted; VP9/Opus rejected). This is structural validation only; decoding and TikTok/X uploadability are separate tests. Full real-browser ffmpeg.wasm encoding and iPhone/Android physical-device validation remain pending.
+
+
+## Real ffmpeg.wasm browser E2E verification — 2026-11-12
+
+- GitHub Actions [Video E2E (real FFmpeg WASM)](https://github.com/garrison2025/Piano-Chord/actions/runs/43122286959) completed **successfully** using actual Chromium and the downloaded FFmpeg WebAssembly core, not mocked encoder code.
+- The automated end-to-end flow presses one piano key, records a synthetic performance, exports WebM, converts in the browser using the real WASM engine, downloads both formats, and runs `ffprobe` on the converted MP4.
+- An independently inspected run artifact contains a **H.264 video + AAC audio** MP4, **540×960**, container duration **3.855011 seconds**; both MP4 tracks start at 0.000 seconds.
+- The original WebM contains VP9 video and Opus audio; its container duration is **3.836 seconds**, with track start times 0.000s (video) and 0.014s (audio). FFprobe emits a nonfatal Matroska unknown-sized-element warning for this WebM; retaining the optional MP4 conversion remains prudent.
+- These measurements verify short recordings on headless desktop Chromium. They do **not** prove exact note-animation perceptual sync, 90-second performance under load, iPhone Safari/Android compatibility, or successful TikTok/X uploads. Those items remain separate acceptance gates.
+- The checked-in test is `scripts/browser-video-e2e.mjs`; the dedicated workflow `.github/workflows/video-browser-e2e.yml` runs on relevant changes or manually. The generated test videos contain only synthetic notes and no user recordings.
