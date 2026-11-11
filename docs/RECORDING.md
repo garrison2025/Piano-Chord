@@ -17,6 +17,6 @@ Local Chromium smoke test (2026-11-12): record, replay, Standard MIDI download, 
 ## Local MP4 conversion (2026-11-12)
 WebM downloads are passed through \`@fix-webm-duration/fix\` to repair omitted Matroska Duration metadata. On browsers that support native H.264/AAC recording, explicit MediaRecorder codecs remain the preferred path. Otherwise a user can opt into local FFmpeg WebAssembly conversion after recording.
 - @ffmpeg/ffmpeg 0.12.15 and @ffmpeg/util 0.12.2 are MIT.
-- The single-thread @ffmpeg/core 0.12.10 is downloaded on demand from jsDelivr (~30 MB) and is GPL-2.0-or-later, including libx264. Its source/build scripts are at https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v0.12.10.
+- The single-thread @ffmpeg/core 0.12.10 is downloaded on demand from jsDelivr (~30 MB) and is GPL-2.0-or-later, including libx264. Its source/build scripts are at https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v12.15.
 - The target is 540×960 H.264/AAC MP4, yuv420p, faststart. Conversion is local, with an explicit cancel operation; no recording is uploaded. GPU/memory limits make mobile support conditional.
 - Unit tests validate the MP4 profile and reject VP9/Opus files mislabeled as MP4. An Astro build does not certify real-device codec compatibility; iOS Safari, Android and MP4 uploads still require field tests.
