@@ -65,12 +65,30 @@ function bindStaticInversionPanels(){
 function bindSearch(){
   const input=el('chord-search');if(!input)return;
   const cards=[...document.querySelectorAll('[data-searchable-chord]')];
-  input.addEventListener('input',()=>{
-    const query=input.value.trim().toLowerCase().replaceAll('♭','b').replaceAll('♯','#');let count=0;
-    for(const card of cards){const match=card.dataset.searchableChord.toLowerCase().includes(query);card.hidden=!match;if(match)count++;}
+  const buttons=[...document.querySelectorAll('[data-quality-filter]')];
+  const reset=el('reset-chord-filters'),clear=el('clear-chord-search'),countEl=el('chord-result-count');
+  let activeQuality='all';
+  const normalize=value=>String(value).toLowerCase().normalize('NFKD').replaceAll('♭','b').replaceAll('♯','#').replace(/[-\s]+/g,' ').trim();
+  const render=()=>{
+    const query=normalize(input.value);let visible=0;
+    for(const card of cards){
+      const inCategory=activeQuality==='all'||card.closest('[data-group]')?.dataset.group===activeQuality;
+      const match=inCategory&&normalize(card.dataset.searchableChord).includes(query);
+      card.hidden=!match;if(match)visible++;
+    }
     for(const group of document.querySelectorAll('[data-group]'))group.hidden=![...group.querySelectorAll('[data-searchable-chord]')].some(card=>!card.hidden);
-    el('no-chord-matches').hidden=!!count;
-  });
+    const empty=el('no-chord-matches');if(empty)empty.hidden=visible>0;
+    if(countEl)countEl.textContent=query||activeQuality!=='all'?`Showing ${visible} of ${cards.length} chords`:`Showing all ${cards.length} chords`;
+    if(clear)clear.hidden=input.value.length===0;
+    buttons.forEach(button=>{const isActive=button.dataset.qualityFilter===activeQuality;button.classList.toggle('is-selected',isActive);button.setAttribute('aria-pressed',String(isActive));});
+  };
+  const resetAll=()=>{input.value='';activeQuality='all';render();input.focus();};
+  input.addEventListener('input',render);
+  buttons.forEach(button=>button.addEventListener('click',()=>{activeQuality=button.dataset.qualityFilter;render();}));
+  reset?.addEventListener('click',resetAll);
+  clear?.addEventListener('click',()=>{input.value='';render();input.focus();});
+  input.addEventListener('keydown',event=>{if(event.key==='Escape'&&input.value){input.value='';render();}});
+  render();
 }
 function finder(){
   const picker=el('pitch-picker');if(!picker)return;
