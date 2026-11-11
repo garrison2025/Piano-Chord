@@ -8,31 +8,53 @@ export function mp4Args(){
     '-c:a','aac','-b:a','96k','-ar','44100','-movflags','+faststart',
     '-threads','1','take.mp4'];
 }
-/** Require a valid MP4 container with AVC video and AAC audio sample descriptors. */
+/**
+ * Check that AVC/H.264 and AAC belong to actual video/audio sample-entry tracks.
+ * Looking for codec strings anywhere in moov is unsafe: metadata can contain
+ * "avc1" and "mp4a" even when the real streams use VP9 and Opus.
+ * Structural validation is necessary but not proof of playback/upload success.
+ */
 export function isSocialMp4(bytes){
-  if(!(bytes instanceof Uint8Array)||bytes.length<40)return false;
-  const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
-  const dec=new TextDecoder('latin1');
-  let pos=0,ftyp=false,moov=false,mdat=false,avc=false,aac=false;
-  while(pos+8<=bytes.length){
-    let size=v.getUint32(pos,false);
-    const tag=dec.decode(bytes.subarray(pos+4,pos+8));
-    let header=8;
-    if(size===1){
-      if(pos+16>bytes.length)return false;
-      const large=v.getBigUint64(pos+8,false);
-      if(large>BigInt(Number.MAX_SAFE_INTEGER))return false;
-      size=Number(large);header=16;
-    }else if(size===0)size=bytes.length-pos;
-    if(!Number.isFinite(size)||size<header||pos+size>bytes.length)return false;
-    if(tag==='ftyp')ftyp=true;
-    if(tag==='mdat')mdat=true;
-    if(tag==='moov'){
-      moov=true;
-      const box=dec.decode(bytes.subarray(pos+header,pos+size));
-      avc=box.includes('avc1');aac=box.includes('mp4a');
+  if (!(bytes instanceof Uint8Array) || bytes.byteLength < 40) return false;
+  const dv = new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  const ascii = offset => String.fromCharCode(bytes[offset],bytes[offset+1],bytes[offset+2],bytes[offset+3]);
+  const boxes = (start,end) => {
+    const result=[];let pos=start;
+    while(pos+8<=end){
+      let size=dv.getUint32(pos,false),header=8;
+      if(size===1){
+        if(pos+16>end)return null;
+        const large=dv.getBigUint64(pos+8,false);
+        if(large>BigInt(Number.MAX_SAFE_INTEGER))return null;
+        size=Number(large);header=16;
+      }else if(size===0)size=end-pos;
+      if(size<header || pos+size>end)return null;
+      result.push({type:ascii(pos+4),begin:pos+header,end:pos+size});
+      pos+=size;
     }
-    pos+=size;
+    return pos===end?result:null;
+  };
+  const top=boxes(0,bytes.length);
+  if(!top || !top.some(b=>b.type==='ftyp') || !top.some(b=>b.type==='mdat'))return false;
+  const moov=top.find(b=>b.type==='moov');if(!moov)return false;
+  const tracks=boxes(moov.begin,moov.end);if(!tracks)return false;
+  let video=false,audio=false;
+  for(const trak of tracks.filter(b=>b.type==='trak')){
+    const media=(boxes(trak.begin,trak.end)||[]).find(b=>b.type==='mdia');
+    if(!media)continue;
+    const mediaBoxes=boxes(media.begin,media.end)||[];
+    const handler=mediaBoxes.find(b=>b.type==='hdlr'),minf=mediaBoxes.find(b=>b.type==='minf');
+    if(!handler || handler.begin+12>handler.end || !minf)continue;
+    const kind=ascii(handler.begin+8);
+    const stbl=(boxes(minf.begin,minf.end)||[]).find(b=>b.type==='stbl');
+    if(!stbl)continue;
+    const stsd=(boxes(stbl.begin,stbl.end)||[]).find(b=>b.type==='stsd');
+    if(!stsd || stsd.begin+8>stsd.end)continue;
+    const count=dv.getUint32(stsd.begin+4,false);
+    const entries=boxes(stsd.begin+8,stsd.end);
+    if(!entries || count!==entries.length)continue;
+    if(kind==='vide' && entries.some(b=>b.type==='avc1'||b.type==='avc3'))video=true;
+    if(kind==='soun' && entries.some(b=>b.type==='mp4a'))audio=true;
   }
-  return pos===bytes.length&&ftyp&&moov&&mdat&&avc&&aac;
+  return video&&audio;
 }

@@ -22,10 +22,32 @@ test('core URL pinned, input/output filenames local only',()=>{
   assert.equal(CORE_BASE,'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm');
   assert.deepEqual(mp4Args().filter(x=>x.endsWith('.mp4')||x.endsWith('.webm')),['take.webm','take.mp4']);
 });
-test('MP4 validation rejects a misleading VP9/Opus file',()=>{
-  const good=concat(atom('ftyp',ascii('isom')),atom('moov',ascii('avc1 xx mp4a')),atom('mdat',[1,2,3]));
-  const wrong=concat(atom('ftyp',ascii('isom')),atom('moov',ascii('vp09 xx Opus')),atom('mdat',[1,2,3]));
-  assert.equal(isSocialMp4(good),true);
-  assert.equal(isSocialMp4(wrong),false);
+const track=(kind,codec)=>{
+  const handler=atom('hdlr',[0,0,0,0,0,0,0,0,...ascii(kind)]);
+  const stsd=atom('stsd',concat(new Uint8Array([0,0,0,0,0,0,0,1]),atom(codec,[0,0,0,0])));
+  return atom('trak',atom('mdia',concat(handler,atom('minf',atom('stbl',stsd)))));
+};
+const movie=(video,audio,extras=[])=>concat(
+  atom('ftyp',ascii('isom')),
+  atom('moov',concat(track('vide',video),track('soun',audio),...extras)),
+  atom('mdat',[1,2,3])
+);
+
+test('valid MP4 has real AVC video and AAC audio sample entries',()=>{
+  assert.equal(isSocialMp4(movie('avc1','mp4a')),true);
+  assert.equal(isSocialMp4(movie('avc3','mp4a')),true);
+});
+
+test('VP9/Opus is rejected even if metadata contains avc1/mp4a strings',()=>{
+  assert.equal(isSocialMp4(movie('vp09','Opus',[atom('udta',ascii('avc1 random mp4a'))])),false);
+  assert.equal(isSocialMp4(movie('vp09','mp4a',[atom('udta',ascii('avc1'))])),false);
+  assert.equal(isSocialMp4(movie('avc1','Opus',[atom('udta',ascii('mp4a'))])),false);
+});
+
+test('rejects truncated, corrupt, or incomplete MP4 boxes',()=>{
+  const good=movie('avc1','mp4a');
+  assert.equal(isSocialMp4(good.subarray(0,good.length-1)),false);
   assert.equal(isSocialMp4(new Uint8Array([1,2,3])),false);
+  const altered=new Uint8Array(good);altered[0]=255;
+  assert.equal(isSocialMp4(altered),false);
 });

@@ -28,3 +28,7 @@ WebM downloads are passed through \`@fix-webm-duration/fix\` to repair omitted M
 - Audio synthesis begins scheduling after MediaRecorder starts, reducing the capture-origin offset in the timeline.
 - Native MediaRecorder MP4 output is checked for actual AVC + AAC sample entries rather than trusting a MIME label alone.
 - Validation: native FFmpeg converted a real short VP9/Opus WebM to 540×960 H.264/AAC MP4; a Chromium UI harness with simulated FFmpeg module verified download of source WebM and converted MP4 with no script errors. The browser's real ffmpeg.wasm binary, physical mobile devices, and social platform uploads remain to be validated.
+
+
+## MP4 track-level verification hardening (2026-11-12)
+The H.264/AAC checker now parses real MP4 video/audio track handlers and `stsd` codec entries. It no longer accepts an MP4 just because its metadata contains `avc1` or `mp4a` strings. Unit tests include false-positive metadata cases, malformed boxes, and real media samples were checked locally (H.264/AAC accepted; VP9/Opus rejected). This is structural validation only; decoding and TikTok/X uploadability are separate tests. Full real-browser ffmpeg.wasm encoding and iPhone/Android physical-device validation remain pending.
