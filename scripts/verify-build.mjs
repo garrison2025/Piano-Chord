@@ -39,7 +39,7 @@ for(const {slug} of releaseChords){
  if(!svg.includes('<svg') || !svg.includes('<title') || !svg.includes('<desc'))errors.push(`Invalid SVG content: ${slug}`);
  if(!sitemap.includes(`/diagrams/${slug}.svg`))errors.push(`SVG omitted from image sitemap: ${slug}`);
 }
-if((sitemap.match(/<url>/g)||[]).length!==23)errors.push('Sitemap must have exactly 23 HTML URLs');
+if((sitemap.match(/<url>/g)||[]).length!==25)errors.push('Sitemap must have exactly 25 HTML URLs');
 if((sitemap.match(/<image:image>/g)||[]).length!==16)errors.push('Sitemap must have exactly 16 image URLs');
 if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
