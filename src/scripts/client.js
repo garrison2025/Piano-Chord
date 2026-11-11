@@ -6,7 +6,19 @@ const el=id=>document.getElementById(id);
 const status=message=>{const target=el('app-status');if(target)target.textContent=message;};
 const escapeHtml=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 let ctx=null,voices=[];
+let visualReset=null;
+function clearPlaybackVisual(){
+  if(visualReset){clearTimeout(visualReset);visualReset=null;}
+  document.querySelectorAll('.is-playing').forEach(node=>node.classList.remove('is-playing'));
+}
+function setPlaybackVisual(button,duration=1500){
+  clearPlaybackVisual();
+  button.classList.add('is-playing');
+  button.closest('.studio-chord, .panel, .inversion-view')?.classList.add('is-playing');
+  visualReset=setTimeout(clearPlaybackVisual,duration);
+}
 function stopAudio(){
+  clearPlaybackVisual();
   for(const {osc,gain} of voices){try{gain.gain.cancelScheduledValues(ctx.currentTime);gain.gain.setTargetAtTime(.00001,ctx.currentTime,.025);osc.stop(ctx.currentTime+.18);}catch{}}
   voices=[];
 }
@@ -29,12 +41,13 @@ async function playMidi(midi, duration=1.5){
       osc.start(start);osc.stop(start+duration+.5);voices.push({osc,gain});
     }
     status('Playing chord; choose Stop to end it early.');
-  }catch(err){console.error(err);status('Could not play audio. Check your browser audio permissions.');}
+    return true;
+  }catch(err){console.error(err);status('Could not play audio. Check your browser audio permissions.');return false;}
 }
 function bindAudio(){
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('button[data-play-midi]');
-    if(button){const notes=button.dataset.playMidi.split(',').map(Number).filter(Number.isFinite);playMidi(notes);return;}
+    if(button){const notes=button.dataset.playMidi.split(',').map(Number).filter(Number.isFinite);playMidi(notes).then(ok=>{if(ok)setPlaybackVisual(button);});return;}
     if(event.target.closest?.('[data-stop-audio]')){stopAudio();status('Playback stopped.');}
   });
   window.addEventListener('pagehide',()=>{stopAudio();ctx?.close().catch(()=>{});ctx=null;});
@@ -103,6 +116,41 @@ function compare(){
  }
  a.addEventListener('change',render);b.addEventListener('change',render);render();
 }
+function setupSpotlight(){
+  const spotlight=document.querySelector('[data-spotlight]');if(!spotlight)return;
+  const buttons=[...spotlight.querySelectorAll('[data-spotlight-choice]')];
+  const views=[...spotlight.querySelectorAll('[data-spotlight-view]')];
+  for(const button of buttons){
+    button.addEventListener('click',()=>{
+      const selected=button.dataset.spotlightChoice;
+      stopAudio();
+      buttons.forEach(item=>{
+        const active=item===button;
+        item.classList.toggle('is-active',active);
+        item.setAttribute('aria-pressed',String(active));
+      });
+      views.forEach(view=>{view.hidden=view.dataset.spotlightView!==selected;});
+      const heading=views.find(view=>!view.hidden)?.querySelector('h3')?.textContent?.trim();
+      if(heading)status(`${heading} selected. Press Play chord to hear it.`);
+    });
+  }
+}
+function setupMotion(){
+  const targets=[...document.querySelectorAll('.reveal-on-scroll')];
+  if(!targets.length||!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  // Do not hide content until observer is ready to reveal it.
+  const observer=new IntersectionObserver(entries=>{
+    for(const entry of entries){if(entry.isIntersecting){entry.target.classList.add('in-view');observer.unobserve(entry.target);}}
+  },{threshold:.06,rootMargin:'0px 0px 25px 0px'});
+  targets.forEach(node=>observer.observe(node));
+  document.documentElement.classList.add('motion-ready');
+}
+function setupMobileMenu(){
+  const menu=document.querySelector('.mobile-nav');if(!menu)return;
+  menu.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>menu.open=false));
+  document.addEventListener('click',event=>{if(menu.open&&!menu.contains(event.target))menu.open=false;});
+  menu.addEventListener('keydown',event=>{if(event.key==='Escape'){menu.open=false;menu.querySelector('summary')?.focus();}});
+}
 function printChart(){el('print-charts')?.addEventListener('click',()=>window.print());}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize,{once:true});else initialize();
-function initialize(){bindAudio();bindStaticInversionPanels();bindSearch();finder();inversionExplorer();compare();printChart();}
+function initialize(){bindAudio();bindStaticInversionPanels();bindSearch();finder();inversionExplorer();compare();printChart();setupSpotlight();setupMotion();setupMobileMenu();}

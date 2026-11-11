@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/studio.css';
 import {navigation} from '../data/chords.js';
 const {title='Piano Chord Explorer',description='Learn piano chords through clear notes, interactive keyboards, inversions, and original printable diagrams.',canonicalPath=Astro.url.pathname,crumbs=[],noindex=false}=Astro.props;
 const canonical=new URL(canonicalPath,Astro.site || Astro.url).toString();
@@ -10,7 +11,7 @@ const siteName='Piano Chord Explorer';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f6f8f3" />
+    <meta name="theme-color" content="#f7f6f2" />
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex,follow" />}
     <link rel="canonical" href={canonical} />
@@ -26,7 +27,7 @@ const siteName='Piano Chord Explorer';
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <div class="topnote"><div class="container topnote-inner"><span>Made for curious piano learners</span><span>Free tools · No account needed</span></div></div>
+    <div class="topnote"><div class="container topnote-inner"><span>PLAY · LISTEN · DISCOVER</span><span>100% free piano chord lessons</span></div></div>
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="/" aria-label="Piano Chord Explorer home">
