@@ -25,3 +25,10 @@ jobs:
           test -f dist/tools/chord-finder/index.html
           test -f dist/diagrams/b-minor.svg
           test -f dist/sitemap.xml
+      - name: Upload built static website for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-chord-static-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
