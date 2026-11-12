@@ -87,8 +87,10 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       <button id="vp-end-record" type="button" class="record-danger" disabled>■ Stop recording</button>
       <button id="vp-replay" type="button" disabled>▶ Replay</button>
       <button id="vp-midi" type="button" disabled>↓ Save MIDI</button>
+      <button id="vp-clear-saved" type="button">Clear saved draft</button>
     </div>
     <div id="vp-message" class="recording-message" role="status" aria-live="polite">Ready to record, up to 90 seconds. Press Record, then play the piano above.</div>
+    <p class="recording-muted">The latest valid MIDI take is kept as a local browser draft when storage is available. Empty recordings do not erase it. Download important MIDI and video files before leaving; browser storage may be cleared. Generated video files are not backed up automatically.</p>
     <section id="vp-timeline" class="recording-timeline" aria-label="Recorded performance chord timeline" hidden>
       <div class="recording-timeline-heading"><div><span class="eyebrow">YOUR ORIGINAL PERFORMANCE</span><h3>Listen back by chord</h3><p id="vp-timeline-caption">Scrub the recording or select a recognized chord to replay from that point.</p></div><output id="vp-seek-time" aria-label="Selected replay position">00:00 / 00:00</output></div>
       <label for="vp-seek" class="recording-seek-label">Replay position</label>
@@ -146,7 +148,7 @@ const voices=new Map(),sources=new Map();
 // A finger remains active while gliding through the keybed's small gaps.
 const glidePointers=new Set();
 function updateChordDetection(){const chord=describeHeldChord([...voices.keys()]);const el=document.getElementById('vp-chord-detect');el.dataset.kind=chord.kind;document.getElementById('vp-chord-name').textContent=chord.title;document.getElementById('vp-chord-notes').textContent=chord.detail;}
-function audio(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C){readout.textContent='Web Audio not supported';return false;}ctx=new C();master=ctx.createGain();master.gain.value=.25;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return true;}
+function audio(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C){readout.textContent='Web Audio not supported';return false;}ctx=new C();master=ctx.createGain();master.gain.value=Number(document.getElementById('vp-vol').value)/100*.45;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return true;}
 function on(midi,source){if(midi<21||midi>108||sources.has(source))return;sources.set(source,midi);keys.get(midi)?.classList.add('pressed');if(voices.has(midi))return;
 if(!audio()){sources.delete(source);keys.get(midi)?.classList.remove('pressed');return;}
 // 88 playable keys, but bounded oscillator count prevents a long sustain
@@ -212,12 +214,28 @@ for(const name of ['pointerup','pointercancel'])
 
 document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,textarea,select,a,button:not(.piano-key),[contenteditable]'))return;
 const focus=e.target.closest('.piano-key');if(focus&&['ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();const next=Math.max(21,Math.min(108,+focus.dataset.midi+(e.code==='ArrowRight'?1:-1)));focus.tabIndex=-1;keys.get(next).tabIndex=0;keys.get(next).focus();return;}
-if(focus&&['Enter','Space'].includes(e.code)){e.preventDefault();if(!e.repeat)on(+focus.dataset.midi,'f'+focus.dataset.midi);return;}
+if(focus&&['Enter','Space'].includes(e.code)){
+  e.preventDefault();
+  // One source per PHYSICAL key. Focusing a different piano key while held
+  // must not change the note released by the later keyup.
+  if(!e.repeat)on(+focus.dataset.midi,'f'+e.code);
+  return;
+}
 if(e.code==='KeyZ'&&!e.repeat){e.preventDefault();setOctave(octave-1);return;}if(e.code==='KeyX'&&!e.repeat){e.preventDefault();setOctave(octave+1);return;}
 if(e.code==='Space'){e.preventDefault();space=true;updateSustain();return;}
 if(Object.hasOwn(codes,e.code)){e.preventDefault();if(!e.repeat)on(60+(octave-4)*12+codes[e.code],'k'+e.code);}
 });
-document.addEventListener('keyup',e=>{if(['Enter','Space'].includes(e.code)&&e.target.closest('.piano-key')){off('f'+e.target.dataset.midi);return;}if(e.code==='Space'){space=false;updateSustain();}off('k'+e.code);});
+document.addEventListener('keyup',e=>{
+  // Release the exact physical-key owner even if arrow navigation, Tab,
+  // or a browser focus transition moved focus before keyup.
+  if(e.code==='Enter'||e.code==='Space'){
+    const hadFocusedNote=sources.has('f'+e.code);
+    off('f'+e.code);
+    if(hadFocusedNote)return;
+  }
+  if(e.code==='Space'){space=false;updateSustain();}
+  off('k'+e.code);
+});
 function setOctave(v){octave=Math.max(1,Math.min(7,v));document.getElementById('vp-oct').textContent='C'+octave;}
 function updateSustain(){const b=document.getElementById('vp-sustain');b.textContent='Sustain: '+(sustain||space?'On':'Off');b.setAttribute('aria-pressed',String(sustain));drain();}
 document.getElementById('vp-down').addEventListener('click',()=>setOctave(octave-1));document.getElementById('vp-up').addEventListener('click',()=>setOctave(octave+1));document.getElementById('vp-stop').addEventListener('click',stop);document.getElementById('vp-sustain').addEventListener('click',()=>{sustain=!sustain;updateSustain();});

@@ -2,14 +2,15 @@ import {MAX_RECORDING_MS, normalizeEvents, noteIntervals, encodeMidi, safeFilena
 import { CORE_BASE, MP4_WIDTH, MP4_HEIGHT, mp4Args, isSocialMp4 } from '../lib/videoConversion.mjs';
 import { renderPerformanceFrame } from '../lib/performanceVideo.mjs';
 import {buildChordTimeline,soundingNotesAt,suggestCoverTime} from '../lib/recordingTimeline.mjs';
+import {loadLatestTake,saveLatestTake,clearLatestTake} from '../lib/recordingStorage.mjs';
 
 /** Browser-only recording studio; no upload, cookie, account or third-party API. */
 export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
-  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','show-chords','poster','title','message','clock','preview','progress','format','timeline','timeline-caption','timeline-track','timeline-cues','seek','seek-time','cover-controls','cover-position','cover-time','cover-download'].map(k => [k,el('vp-'+k)]));
-  let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null,videoGuide=null;
+  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','show-chords','poster','title','message','clock','preview','progress','format','timeline','timeline-caption','timeline-track','timeline-cues','seek','seek-time','cover-controls','cover-position','cover-time','cover-download','clear-saved'].map(k => [k,el('vp-'+k)]));
+  let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null,videoGuide=null,pendingGuide=null;
   let playing=false,playFrame=0,playStart=0,playIndex=0,playhead=0;
   let chordSegments=[],timelineMarkers=[],selectedCoverTime=0;
   let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null,originalWebmFile=null;
@@ -120,17 +121,18 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     updateTimelineCursor(0);
   }
   function startRecord(){
-    if(exporting||converting)return;
-    stopReplay();stop();resetVideo();controls.poster.hidden=true;
-    captured=[];take=null;videoGuide=null;chordSegments=[];timelineMarkers=[];playhead=0;selectedCoverTime=0;
-    controls.timeline.hidden=true;controls['cover-controls'].hidden=true;
+    if(capturing||exporting||converting)return;
+    stopReplay();stop();
+    // Keep the previous valid take, cover and exported video until a new take
+    // actually contains notes. This also preserves all downloads during retries.
+    captured=[];pendingGuide=null;
     capturing=true;startedAt=performance.now();
     controls.clock.textContent='00:00';
-    status('Recording locally. Play the piano; stop when finished (90-second maximum).');
+    status('Recording locally. Previous valid take and video are preserved until a new recording contains notes. Download important files before leaving.');
     timer=setInterval(()=>{controls.clock.textContent=clock(Math.min(MAX_RECORDING_MS,performance.now()-startedAt));},120);
     timeout=setTimeout(endRecord,MAX_RECORDING_MS);
     updateUI();
-    try{videoGuide=onCaptureStart?.()||null;}catch{videoGuide=null; /* Solo recording remains available. */ }
+    try{pendingGuide=onCaptureStart?.()||null;}catch{pendingGuide=null; /* Solo recording remains available. */ }
   }
   function endRecord(){
     if(!capturing)return;
@@ -138,16 +140,29 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     capturing=false;
     clearInterval(timer);clearTimeout(timeout);timer=timeout=null;
     const duration=Math.min(MAX_RECORDING_MS,Math.max(1,Math.round(performance.now()-startedAt)));
-    take=normalizeEvents(captured,duration);
-    controls.clock.textContent=clock(take.duration);
-    const count=noteIntervals(take).length;
-    status(count?`Saved ${count} notes locally (${clock(take.duration)}). Replay, export MIDI or create a video.`:'No notes captured. Press Record and play a few piano keys.');
-    updateTimeline();updatePoster();updateUI();
+    const candidate=normalizeEvents(captured,duration);
+    const count=noteIntervals(candidate).length;
+    if(count){
+      take=candidate;videoGuide=pendingGuide;
+      controls.clock.textContent=clock(take.duration);
+      updateTimeline();updatePoster();
+      const previousVideo=videoFile?' Previous exported video remains downloadable until replacement.':'';
+      status(`Saved ${count} notes locally (${clock(take.duration)}). Replay or download MIDI.`+previousVideo);
+      saveLatestTake(take,controls.title.value).catch(()=>{
+        status('Recording retained in this tab, but browser draft storage is unavailable. Download MIDI before leaving.');
+      });
+    }else{
+      controls.clock.textContent=take?clock(take.duration):'00:00';
+      status('No notes captured. The previous take, preview and video have not been replaced.');
+    }
+    updateUI();
     try{
-      if(onCaptureEnd?.(take)===false){videoGuide=null;updatePoster();}
+      // Closing a timed practice guide still matters if a user records silence.
+      // Do not replace the previous take or its video with that empty attempt.
+      const result=onCaptureEnd?.(candidate);
+      if(count&&result===false){videoGuide=null;updatePoster();}
     }catch{
-      videoGuide=null;updatePoster();
-      status('Recording saved; practice assessment unavailable. MIDI and video export still work.');
+      if(count){videoGuide=null;updatePoster();status('Recording saved; practice assessment unavailable. MIDI and video export still work.');}
     }
   }
   function noteOn(midi){if(capturing)captured.push({type:'on',midi,t:performance.now()-startedAt});}
@@ -246,7 +261,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     const AudioCtor=window.AudioContext||window.webkitAudioContext;
     if(!AudioCtor){status('This browser cannot render audio. MIDI export is still available.');return;}
     const notes=noteIntervals(take);if(!notes.length)return;
-    exporting=true;shouldCancel=false;stopReplay();resetVideo();updateUI();controls.progress.value=0;
+    exporting=true;shouldCancel=false;stopReplay();updateUI();controls.progress.value=0;
     status('Rendering locally in real time. Keep this tab visible.');
     let audioCtx=null,stream=null,recorder=null,animation=0,metadataWarning=false;
     const settings=videoSettings(); // Freeze options during rendering.
@@ -309,9 +324,14 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
         if(!isSocialMp4(new Uint8Array(await blob.arrayBuffer())))
           throw new Error('Browser did not create a verified H.264/AAC MP4; try another browser');
       }
-      videoFile=new File([blob],safeFilename(title)+'.'+extension,{type:blob.type});
-      originalWebmFile=extension==='webm'?videoFile:null;
-      previewUrl=URL.createObjectURL(videoFile);controls.preview.src=previewUrl;controls.preview.hidden=false;
+      const completedVideo=new File([blob],safeFilename(title)+'.'+extension,{type:blob.type});
+      const completedUrl=URL.createObjectURL(completedVideo);
+      // Commit only once the new video is valid; a failed/cancelled export
+      // must never discard an earlier successfully generated video.
+      if(previewUrl)URL.revokeObjectURL(previewUrl);
+      videoFile=completedVideo;
+      originalWebmFile=extension==='webm'?completedVideo:null;
+      previewUrl=completedUrl;controls.preview.src=previewUrl;controls.preview.hidden=false;
       controls.format.textContent=extension==='mp4' && chosen.socialCompatible?'H.264/AAC MP4 requested; verify playback before posting.':metadataWarning?'WebM created, but duration metadata repair failed. Consider MP4 conversion.':'Seekable WebM ready. For TikTok / X, select Convert to MP4 for a more compatible format.';
       controls['mp4-info'].textContent=extension==='webm'?'Optional MP4 conversion downloads an open-source engine (~30 MB) on first use. Conversion stays on this device; it may be slow or run out of memory on phones.':'';
       controls.progress.value=100;
@@ -421,6 +441,22 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   controls['end-record'].addEventListener('click',endRecord);
   controls.replay.addEventListener('click',replay);
   controls.midi.addEventListener('click',midi);
+  controls['clear-saved'].addEventListener('click',()=>{
+    clearLatestTake().then(()=>status('Saved browser draft cleared. Your current open take and downloads are unchanged.'))
+      .catch(()=>status('Browser draft could not be cleared. Check site data settings.'));
+  });
+  // Restore an unfinished session only when no recording has started. The
+  // browser may reject IndexedDB in private or restricted storage modes.
+  loadLatestTake().then(saved=>{
+    if(!saved||capturing||take)return;
+    const restored=normalizeEvents(saved.take?.events,saved.take?.duration);
+    if(!noteIntervals(restored).length)return;
+    take=restored;
+    if(saved.title)controls.title.value=String(saved.title).slice(0,60);
+    controls.clock.textContent=clock(take.duration);
+    updateTimeline();updatePoster();updateUI();
+    status('Restored the most recent locally saved recording. Download MIDI to keep a permanent copy.');
+  }).catch(()=>{});
   controls.export.addEventListener('click',exportVideo);
   controls['convert-mp4'].addEventListener('click',convertMp4);
   controls['cancel-mp4'].addEventListener('click',cancelMp4Conversion);
