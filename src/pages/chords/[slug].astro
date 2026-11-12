@@ -24,6 +24,7 @@ const qualityTip={major:'A major triad contains a root, major third (4 semitones
 const thirdKind=['minor','minor7'].includes(chord.quality)?'minor':'major';
 const seventhKind=chord.quality==='major7'?'major seventh':'minor seventh';
 const description=chordSearchDescriptions[entry.slug];
+const heading=`${chord.name} piano chord`;
 const invNames=['Root position','First inversion','Second inversion','Third inversion'];
 const atlasQuality={dominant7:'7',major7:'maj7',minor7:'m7'};
 const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.root)+'&quality='+encodeURIComponent(atlasQuality[chord.quality]||chord.quality);
