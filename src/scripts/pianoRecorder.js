@@ -15,6 +15,19 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   let chordSegments=[],timelineMarkers=[],selectedCoverTime=0;
   let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null,originalWebmFile=null;
   let converting=false,cancelMp4=false,ffmpegWorker=null,coreAbortController=null;
+  // Serialize saves and clears: an in-flight older save must never resurrect a
+  // draft after a later explicit clear. Stale completions must not change UI.
+  let draftQueue=Promise.resolve(),draftRevision=0;
+  function enqueueDraft(operation,onSuccess,onFailure){
+    const revision=++draftRevision;
+    const pending=draftQueue.catch(()=>{}).then(operation);
+    draftQueue=pending;
+    pending.then(()=>{
+      if(revision===draftRevision&&!capturing)onSuccess();
+    }).catch(()=>{
+      if(revision===draftRevision&&!capturing)onFailure();
+    });
+  }
 
   function status(message) { controls.message.textContent=message; }
   function clock(ms) { const sec=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; }
@@ -147,10 +160,13 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
       controls.clock.textContent=clock(take.duration);
       updateTimeline();updatePoster();
       const previousVideo=videoFile?' Previous exported video remains downloadable until replacement.':'';
-      status(`Saved ${count} notes locally (${clock(take.duration)}). Replay or download MIDI.`+previousVideo);
-      saveLatestTake(take,controls.title.value).catch(()=>{
-        status('Recording retained in this tab, but browser draft storage is unavailable. Download MIDI before leaving.');
-      });
+      status(`Recorded ${count} notes in this tab (${clock(take.duration)}). Saving browser draft… Download MIDI for a permanent copy.`+previousVideo);
+      const capturedTake=take,storedTitle=controls.title.value;
+      enqueueDraft(
+        ()=>saveLatestTake(capturedTake,storedTitle),
+        ()=>{if(take===capturedTake)status(`Saved ${count} notes to this browser's local draft after storage commit. Download MIDI for a permanent copy.`+previousVideo);},
+        ()=>{if(take===capturedTake)status('Recording retained in this tab, but browser draft storage failed. Download MIDI before leaving.');}
+      );
     }else{
       controls.clock.textContent=take?clock(take.duration):'00:00';
       status('No notes captured. The previous take, preview and video have not been replaced.');
@@ -162,7 +178,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
       const result=onCaptureEnd?.(candidate);
       if(count&&result===false){videoGuide=null;updatePoster();}
     }catch{
-      if(count){videoGuide=null;updatePoster();status('Recording saved; practice assessment unavailable. MIDI and video export still work.');}
+      if(count){videoGuide=null;updatePoster();status('Recording kept in this tab; practice assessment unavailable. MIDI and video export still work.');}
     }
   }
   function noteOn(midi){if(capturing)captured.push({type:'on',midi,t:performance.now()-startedAt});}
@@ -442,8 +458,12 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   controls.replay.addEventListener('click',replay);
   controls.midi.addEventListener('click',midi);
   controls['clear-saved'].addEventListener('click',()=>{
-    clearLatestTake().then(()=>status('Saved browser draft cleared. Your current open take and downloads are unchanged.'))
-      .catch(()=>status('Browser draft could not be cleared. Check site data settings.'));
+    status('Clearing saved browser draft… Current recording and downloads stay available.');
+    enqueueDraft(
+      ()=>clearLatestTake(),
+      ()=>status('Saved browser draft cleared after storage commit. Your current open take and downloads are unchanged.'),
+      ()=>status('Browser draft could not be cleared. Check site data settings.')
+    );
   });
   // Restore an unfinished session only when no recording has started. The
   // browser may reject IndexedDB in private or restricted storage modes.

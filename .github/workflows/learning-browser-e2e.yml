@@ -50,6 +50,7 @@ on:
       - 'tests/practiceAssessment.test.js'
       - 'src/scripts/pianoRecorder.js'
       - 'src/lib/recordingStorage.mjs'
+      - 'tests/recordingStorage.test.js'
       - 'src/lib/chordBass.mjs'
       - 'scripts/generate-printable-pdfs.mjs'
       - 'tests/chordBass.test.js'

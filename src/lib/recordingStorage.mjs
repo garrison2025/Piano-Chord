@@ -16,10 +16,19 @@ async function useStore(mode,run){
   try{
     return await new Promise((resolve,reject)=>{
       const transaction=db.transaction(STORE,mode);
-      const request=run(transaction.objectStore(STORE));
-      request.onsuccess=()=>resolve(request.result);
-      request.onerror=()=>reject(request.error||new Error('Draft storage failed'));
+      // The request may succeed even when the enclosing transaction later aborts.
+      // Only transaction.oncomplete confirms a committed write or deletion.
+      let request;
+      transaction.oncomplete=()=>resolve(request?.result);
       transaction.onabort=()=>reject(transaction.error||new Error('Storage transaction aborted'));
+      transaction.onerror=()=>reject(transaction.error||new Error('Storage transaction failed'));
+      try{
+        request=run(transaction.objectStore(STORE));
+        request.onerror=()=>reject(request.error||new Error('Draft storage failed'));
+      }catch(error){
+        try{transaction.abort();}catch{}
+        reject(error);
+      }
     });
   }finally{db.close();}
 }

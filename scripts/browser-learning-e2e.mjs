@@ -70,6 +70,8 @@ try{
   await stability.keyboard.down('Enter');
   await stability.keyboard.up('Enter');
   await stability.locator('#vp-end-record').click();
+  assert.match(await stability.locator('#vp-message').innerText(),/Saved .* browser's local draft after storage commit|Saving browser draft/);
+  await stability.locator('#vp-message').getByText(/Saved .* browser's local draft after storage commit/).waitFor({timeout:12000});
   assert.equal(await stability.locator('#vp-midi').isDisabled(),false,
     'A valid take must allow MIDI download');
   await stability.waitForFunction(async()=>{
