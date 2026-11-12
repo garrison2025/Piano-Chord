@@ -73,6 +73,15 @@ for(const p of paths){
       }
     }catch(e){issues.push('Malformed JSON-LD on '+p+': '+e.message);}
   }
+  if(p.startsWith('/chords/')&&p!=='/chords/'){
+    if(!html.includes('id="chord-quick-answer"')||
+       !html.includes('data-chord-answer')||
+       !html.includes('data-inversion-answer'))
+      issues.push('Missing self-contained visible note and inversion answers: '+p);
+    if(!html.includes('"@type":"WebPage"')||
+       !html.includes('"@type":"DefinedTerm"'))
+      issues.push('Chord page missing music term subject JSON-LD: '+p);
+  }
   if(p==='/'){
     if(!html.includes('"@type":"WebSite"')||!html.includes('"name":"Piano Chord Explorer"'))
       issues.push('Homepage missing WebSite name declaration');
