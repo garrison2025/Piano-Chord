@@ -1,4 +1,4 @@
-// Original, chord-specific editorial lessons: 24 chromatic major/minor triads and C7.
+// Original chord-specific editorial lessons: 24 major/minor triads and 5 selected seventh chords.
 // These describe concrete ways to hear/use each chord, not generic spun templates.
 export const chordLessons={
  'b-minor': {
@@ -151,5 +151,29 @@ export const chordLessons={
    comparison:"Compare B♭ minor with D♭ major (D♭–F–A♭). D♭ and F remain unchanged while B♭ moves down to A♭. The same pair of notes can support a minor or a major chord depending on the third tone.",
    exercise:"Play B♭–D♭–F separately, then as a chord. Without moving D♭ and F, change B♭ to A♭ to make D♭ major. Finish by alternating D♭ and D natural over a steady B♭–F to hear the minor/major third difference.",
    pitfall:"B♭ minor uses D♭, not D natural. Writing C♯ instead of D♭ hides the written third from B♭ and makes the notation harder to understand.",
+ }, // Four original seventh-chord ear-training lessons.
+ 'c-major-7': {
+   character: "C major seventh (C–E–G–B) builds on the familiar C major triad and adds B natural, a major seventh above C. The half-step between B and the next C makes it feel gently unfinished rather than demanding an immediate resolution.",
+   comparison: "Put Cmaj7 beside C7 (C–E–G–B♭). Both keep C, E and G; the only difference is the seventh, B versus B♭. Then compare Cm7 (C–E♭–G–B♭) to hear how changing the third adds a second, independent change.",
+   exercise: "Play the three-note C–E–G triad and hold it for two counts. Add B to make Cmaj7, then release only B. Repeat with B♭ to make C7. Next play Dm7–G7–Cmaj7 slowly, four beats per chord; notice B stays in G7 and Cmaj7.",
+   pitfall: "The word 'maj7' refers to the seventh interval as well as the major triad. Cmaj7 uses B natural; C7 has B♭. Never substitute C7 when a chart explicitly says Cmaj7.",
+ },
+ 'a-minor-7': {
+   character: "A minor seventh (A–C–E–G) consists entirely of white keys. It keeps the minor third C of the A minor triad, then adds G, which is a minor seventh (10 semitones) above A. This combination is common in smooth four-chord harmony.",
+   comparison: "Compare Am7 to Cmaj7 (C–E–G–B): C, E and G are shared, while A changes to B. With the shared notes held, the bass and one moving note are enough to hear the difference. Contrast Am7 with A7 (A–C♯–E–G), where C♯ changes the chord's third.",
+   exercise: "Start with A–C–E in a comfortable register and add G. Play Am7 in root position, then its first inversion C–E–G–A. For a four-bar loop try Cmaj7–Am7–Dm7–G7, one chord per bar; sustain C, E or G where a neighbor chord shares it.",
+   pitfall: "Am7 is not Amaj7 and not A7. Am7 has C natural and G natural; A7 changes C to C♯, while Amaj7 changes both C to C♯ and G to G♯.",
+ },
+ 'd-minor-7': {
+   character: "D minor seventh (D–F–A–C) adds C natural above a D minor triad. Its minor third F and minor seventh C matter more to its identity than the fifth A when learning basic jazz-style shell voicings.",
+   comparison: "Compare Dm7 (D–F–A–C) with G7 (G–B–D–F). They share D and F. In a C-major ii–V–I progression, you can hear how that F becomes the seventh of G7 while D becomes its fifth, before G7 resolves to Cmaj7.",
+   exercise: "Play D–F–A–C one note at a time, then together. Next move to G–B–D–F without changing D and F if your voicing allows. Finish on C–E–G–B. Set a metronome to 72 BPM and hold each chord four beats, listening for B moving to C above the final chord.",
+   pitfall: "Dm7 uses F natural and C natural. F♯ would turn the basic triad into D major, while C♯ would create Dm(maj7) instead of Dm7. A bare D7 is a different chord: D–F♯–A–C.",
+ },
+ 'g-7': {
+   character: "G7 (G–B–D–F) is the dominant seventh built on G. The B–F interval forms a tritone whose notes commonly resolve by semitone to C and E when the harmony moves to C major. It is different from Gmaj7, which would use F♯.",
+   comparison: "Compare G7 with G major (G–B–D) to hear the added F. Then compare G7 with Cmaj7 (C–E–G–B): G and B remain common tones, while F moves to E and D can move to C. This is the clear V7–Imaj7 move in C major.",
+   exercise: "Play G–B–D, add F, then stop on Cmaj7 (C–E–G–B) for four beats. Try a reduced G7 shell of B and F; move B up to C and F down to E. Finally practise the full Dm7–G7–Cmaj7 cadence at 60 BPM before speeding up.",
+   pitfall: "G7 means G–B–D–F, not G–B–D–F♯. The latter is Gmaj7. Do not interpret the plain '7' symbol as a major seventh.",
  },
 };

@@ -1,4 +1,4 @@
-// 24 major/minor roots with appropriate spellings, plus the original C7 lesson.
+// All 24 major/minor triads plus five pedagogically selected seventh chords.
 export const releaseChords = [
   ['b-minor','B','minor','Bm','B minor','Bm chord piano'],
   ['b-flat-major','Bb','major','Bb','B-flat major','bb piano chord'],
@@ -25,7 +25,12 @@ export const releaseChords = [
   ["e-flat-minor","Eb","minor","Ebm","E-flat minor","eb minor piano chord"],
   ["f-sharp-minor","F#","minor","F#m","F-sharp minor","f sharp minor piano chord"],
   ["g-sharp-minor","G#","minor","G#m","G-sharp minor","g sharp minor piano chord"],
-  ["b-flat-minor","Bb","minor","Bbm","B-flat minor","bb minor piano chord"]
+  ["b-flat-minor","Bb","minor","Bbm","B-flat minor","bb minor piano chord"],
+  // Selected seventh chords with distinct original instruction, not mass-generated SEO pages.
+  ["c-major-7","C","major7","Cmaj7","C major seventh","cmaj7 piano chord"],
+  ["a-minor-7","A","minor7","Am7","A minor seventh","am7 piano chord"],
+  ["d-minor-7","D","minor7","Dm7","D minor seventh","dm7 piano chord"],
+  ["g-7","G","dominant7","G7","G dominant seventh","g7 piano chord"]
 ].map(([slug, root, quality, symbol, name, keyword])=>({ slug,root,quality,symbol,name,keyword }));
 
 // Stable original printable selection: do not silently expand A4/Letter print layouts.
