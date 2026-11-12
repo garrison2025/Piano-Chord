@@ -35,6 +35,7 @@ import {createChord,prettyNote} from '../../lib/music.js';
 <style>
 .print-chart-heading{display:none}
 @media print {
+  :global(.printable-downloads){display:none!important}
   /* The page size is chosen in the native browser print dialog. Both A4 and
      US Letter portrait retain four compact columns within 10mm margins. */
   @page{size:auto;margin:10mm}

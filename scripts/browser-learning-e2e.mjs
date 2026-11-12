@@ -688,6 +688,10 @@ try{
   await page.screenshot({path:'test-results/learning/f-sharp-minor-inversion.png',fullPage:true});
   await go('/printables/piano-chord-chart/');
   assert.equal(await page.locator('.print-cell').count(),16,'Original starter printable should not silently grow');
+  await page.emulateMedia({media:'print'});
+  assert.equal(await page.locator('.printable-downloads').evaluate(el=>getComputedStyle(el).display),'none',
+    'Download cards must not appear in the original browser-print starter sheet');
+  await page.emulateMedia({media:'screen'});
   for(const file of [
     'piano-chord-24-triads-a4.pdf','piano-chord-24-triads-letter.pdf',
     'piano-chord-36-sevenths-a4.pdf','piano-chord-36-sevenths-letter.pdf'
@@ -695,7 +699,11 @@ try{
     const response=await page.request.get(origin+'/downloads/'+file);
     assert.equal(response.status(),200,'Printable PDF must be downloadable: '+file);
     assert.match(response.headers()['content-type']||'',/application\/pdf/i);
-    assert.equal((await response.body()).subarray(0,8).toString('ascii'),'%PDF-1.4');
+    const pdfBytes=await response.body();
+    assert.equal(pdfBytes.subarray(0,8).toString('ascii'),'%PDF-1.4');
+    const pdfText=pdfBytes.toString('latin1');
+    assert.equal((pdfText.match(/\/Type\s*\/Page\b/g)||[]).length,1,file+' must be a single-page PDF');
+    assert.match(pdfText,/\/MediaBox\s*\[0\s+0\s+[\d.]+\s+[\d.]+\]/);
     assert.equal(await page.locator('a[href="/downloads/'+file+'"][download]').count(),1);
   }
   assert.equal(await page.getByRole('heading',{name:'Major & minor piano chords'}).count(),1);
