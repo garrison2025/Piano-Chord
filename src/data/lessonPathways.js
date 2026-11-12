@@ -85,3 +85,82 @@ export const priorityEarDrills=Object.freeze({
     answer:'A natural lowers a semitone to A♭; the root F and fifth C remain. This is a parallel major-to-minor contrast.',
   },
 });
+
+
+/**
+ * Thirteen additional, individually reviewed drills mapped to each lesson's
+ * existing, specific comparison text. Not a claim of separately validated
+ * US keyword demand. This completes functional learning coverage of 29 lessons.
+ */
+export const supplementalEarDrills=Object.freeze({
+  'd-flat-major':{
+    target:'b-flat-minor',
+    prompt:'Listen to D♭–F–A♭, followed by B♭–D♭–F. Find D♭ and F on the keyboard before you begin. Can you leave those two keys down and change just the remaining note?',
+    answer:'D♭ and F are the two common tones. Move A♭ up a whole step to B♭, then put B♭ in the bass for B♭ minor in root position. The original D♭ major and its relative-minor chord are different harmonies, not inversions of one chord.',
+  },
+  'g-flat-major':{
+    target:'e-flat-minor',
+    prompt:'Start with the three black keys G♭–B♭–D♭ and listen to E♭–G♭–B♭ next. Before touching the destination chord, name the pair of keys that do not need to move.',
+    answer:'G♭ and B♭ sound in both chords. D♭ rises a whole step to E♭; placing E♭ below the shared pair gives E♭ minor in root position. This is a relative-major/minor change, not G♭ major with a different bass.',
+  },
+  'a-flat-major':{
+    target:'f-minor',
+    prompt:'Hear A♭–C–E♭ followed by F–A♭–C. Focus on the natural C: it belongs to both shapes. Try to switch while keeping A♭ and C under the same fingers.',
+    answer:'A♭ and C are shared. E♭ rises a whole step to F, yielding the pitch classes of F minor. To hear F as the root in root position, place the F below A♭ and C rather than assuming the original A♭ must remain the bass.',
+  },
+  'a-major':{
+    target:'a-minor',
+    prompt:'Alternate A–C♯–E with A–C–E. Hold the root and fifth as an anchor, then listen specifically to the middle voice. Which change is exactly one semitone?',
+    answer:'C♯ falls one semitone to C natural while A and E stay fixed. The root-position triads have the same outer notes but a different third: major A–C♯ versus minor A–C. This is a parallel-major/minor contrast.',
+  },
+  'c-sharp-minor':{
+    target:'e-major',
+    prompt:'Play C♯–E–G♯ and then E–G♯–B slowly. Keep your fingertips ready on E and G♯, and decide whether the remaining note must move up or down.',
+    answer:'E and G♯ are common tones. C♯ falls a whole step to B, completing E major. If B becomes the lowest note, the sounding chord is still E major but an inversion; place E at the bottom to hear the destination in root position.',
+  },
+  'e-flat-minor':{
+    target:'g-flat-major',
+    prompt:'Play E♭–G♭–B♭ and then G♭–B♭–D♭. Both shapes use black keys. Can you identify the two black keys that remain stationary through this change?',
+    answer:'G♭ and B♭ are shared; E♭ descends one whole step to D♭. The new chord is G♭ major, whose root-position bass is G♭. Moving only one sounding pitch may leave you in an inversion until you rearrange the notes.',
+  },
+  'f-sharp-minor':{
+    target:'a-major',
+    prompt:'Listen to F♯–A–C♯ and then A–C♯–E. Aim to keep the white-key A and black-key C♯ under the same fingers while the third note changes.',
+    answer:'A and C♯ remain as common tones. The F♯ moves down a whole step to E, giving A major. Do not mistake this for F♯ major: the minor third A remains natural throughout the first chord.',
+  },
+  'g-sharp-minor':{
+    target:'b-major',
+    prompt:'Start on G♯–B–D♯ and move to B–D♯–F♯. Look for the B and D♯ that occur in both chords, then sing the single moving voice.',
+    answer:'B and D♯ are common tones. The remaining G♯ descends one whole step to F♯, producing B major. Position B in the bass if you want the second chord to sound in root position.',
+  },
+  'b-flat-minor':{
+    target:'d-flat-major',
+    prompt:'Play B♭–D♭–F followed by D♭–F–A♭. Without lifting D♭ and F, locate which remaining black key changes; then repeat with the destination root lowest.',
+    answer:'D♭ and F remain in place. B♭ drops a whole step to A♭, so the new set of notes spells D♭ major. To hear D♭ major in root position, use D♭ as the bass rather than keeping B♭ below the chord.',
+  },
+  'c-major-7':{
+    target:'c-7',
+    prompt:'First play C–E–G–B, then C–E–G–B♭. Keep the first three voices steady; focus on the top note. Can you hear the difference between the two kinds of seventh?',
+    answer:'The root C, third E and fifth G are identical. Only the seventh changes: B natural lowers one semitone to B♭. Cmaj7 contains a major seventh above C; C7 contains a minor seventh and usually functions as a dominant chord.',
+  },
+  'a-minor-7':{
+    target:'c-major-7',
+    prompt:'Play the all-white-key Am7 (A–C–E–G) and then Cmaj7 (C–E–G–B). Listen for the three notes that stay, and find the one voice that can move by a step.',
+    answer:'C, E and G are common to both four-note chords. Moving A up one whole step to B gives Cmaj7, a different chord with C as the root. It is not enough to move the bass and call the result an inversion of Am7.',
+  },
+  'd-minor-7':{
+    target:'g-7',
+    prompt:'Compare Dm7 (D–F–A–C) with G7 (G–B–D–F). Can you keep D and F sounding while replacing the other two notes? Hear how this ii–V motion prepares C major.',
+    answer:'D and F are the common tones. A can move down a whole step to G while C falls one semitone to B. The guide is a close-voiced ii7–V7 change: Dm7 is not merely a rotated G7 because their pitch-class sets differ.',
+  },
+  'g-7':{
+    target:'c-major-7',
+    prompt:'Play G7 (G–B–D–F), then Cmaj7 (C–E–G–B). Isolate F and B as the tense pair before resolving; keep G and B where possible for a smoother transition.',
+    answer:'G and B are shared. Move F down one semitone to E and D down one whole step to C. The G7 tritone B–F can resolve by semitone to C–E in other voicings; this exact G7-to-Cmaj7 change also retains B as a common tone.',
+  },
+});
+
+export const lessonEarDrills=Object.freeze({
+  ...priorityEarDrills,
+  ...supplementalEarDrills,
+});
