@@ -39,6 +39,9 @@ for(const p of paths){
   if(canonical!==expected)issues.push('Canonical mismatch on '+p+': '+canonical);
   if(ogUrl!==canonical)issues.push('Open Graph URL mismatch on '+p);
   if(headings!==1)issues.push('Must have exactly one H1 on '+p+': '+headings);
+  if(!html.includes('rel="preconnect" href="https://fonts.googleapis.com"')||
+     !html.includes('rel="preconnect" href="https://fonts.gstatic.com"'))
+    issues.push('Missing Google Fonts resource preconnect on '+p);
   if(!/<html\b[^>]*lang="en"/i.test(html))issues.push('Missing page language on '+p);
   if(/<meta\s+name="robots"\s+content="[^"]*noindex/i.test(html))issues.push('Indexable sitemap page incorrectly noindex: '+p);
   if(title?.length>70)warnings.push('Long title '+title.length+' chars on '+p);
