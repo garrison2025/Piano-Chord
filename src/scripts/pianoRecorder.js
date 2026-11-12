@@ -1,15 +1,17 @@
 import {MAX_RECORDING_MS, normalizeEvents, noteIntervals, encodeMidi, safeFilename, chooseVideoFormat} from '../lib/recording.mjs';
 import { CORE_BASE, MP4_WIDTH, MP4_HEIGHT, mp4Args, isSocialMp4 } from '../lib/videoConversion.mjs';
 import { renderPerformanceFrame } from '../lib/performanceVideo.mjs';
+import {buildChordTimeline,soundingNotesAt,suggestCoverTime} from '../lib/recordingTimeline.mjs';
 
 /** Browser-only recording studio; no upload, cookie, account or third-party API. */
 export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
-  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','show-chords','poster','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
+  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','show-chords','poster','title','message','clock','preview','progress','format','timeline','timeline-caption','timeline-track','timeline-cues','seek','seek-time','cover-controls','cover-position','cover-time','cover-download'].map(k => [k,el('vp-'+k)]));
   let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null,videoGuide=null;
-  let playing=false,playFrame=0,playStart=0,playIndex=0;
+  let playing=false,playFrame=0,playStart=0,playIndex=0,playhead=0;
+  let chordSegments=[],timelineMarkers=[],selectedCoverTime=0;
   let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null,originalWebmFile=null;
   let converting=false,cancelMp4=false,ffmpegWorker=null,coreAbortController=null;
 
@@ -22,6 +24,9 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     controls.replay.disabled=!hasNotes||capturing||exporting||converting;
     controls.midi.disabled=!hasNotes||capturing||exporting||converting;
     controls.export.disabled=!hasNotes||capturing||exporting||converting;
+    controls.seek.disabled=!hasNotes||capturing||exporting||converting;
+    controls['cover-position'].disabled=!hasNotes||capturing||exporting||converting;
+    controls['cover-download'].disabled=!hasNotes||capturing||exporting||converting;
     controls.share.disabled=!videoFile||capturing||exporting||converting;
     controls.download.disabled=!videoFile||capturing||exporting||converting;
     controls['cancel-export'].hidden=!exporting;
@@ -41,10 +46,84 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     playing=false;cancelAnimationFrame(playFrame);
     stop();updateUI();
   }
+  function updateTimelineCursor(t=playhead){
+    if(!take)return;
+    const duration=Math.max(1,take.duration);
+    controls.seek.value=String(Math.round(Math.max(0,Math.min(duration,t))));
+    controls['seek-time'].textContent=clock(t)+' / '+clock(duration);
+    const current=chordSegments.findIndex(s=>t>=s.start&&t<s.end);
+    timelineMarkers.forEach(({marker,cue},i)=>{
+      const selected=i===current;
+      if(marker.classList.contains('is-current')!==selected){
+        marker.classList.toggle('is-current',selected);
+        cue.classList.toggle('is-current',selected);
+        cue.setAttribute('aria-current',selected?'true':'false');
+      }
+    });
+  }
+  function seekTo(ms,autoplay=false){
+    if(!take||capturing||exporting||converting)return;
+    const t=Math.max(0,Math.min(take.duration,Math.round(Number(ms)||0)));
+    if(playing)stopReplay();
+    playhead=t;
+    controls.clock.textContent=clock(t);
+    updateTimelineCursor(t);
+    if(autoplay)startReplay(t);
+    else status('Replay position: '+clock(t)+'. Press Replay, or choose a chord to play from it.');
+  }
+  function updateTimeline(){
+    chordSegments=take?buildChordTimeline(take):[];
+    timelineMarkers=[];
+    controls['timeline-cues'].replaceChildren();
+    controls['timeline-track'].replaceChildren();
+    if(!take||!noteIntervals(take).length){
+      controls.timeline.hidden=true;controls['cover-controls'].hidden=true;return;
+    }
+    const duration=Math.max(1,take.duration);
+    for(const [i,segment] of chordSegments.entries()){
+      const jump=Math.min(take.duration,segment.start+Math.min(60,(segment.end-segment.start)/2));
+      const label='Replay '+segment.symbol+' from '+clock(segment.start);
+      const marker=document.createElement('button');marker.type='button';
+      marker.className='recording-timeline-marker';marker.setAttribute('aria-label',label);
+      marker.title=label;
+      marker.style.left=(segment.start/duration*100)+'%';
+      marker.style.width=Math.max(.24,(segment.end-segment.start)/duration*100)+'%';
+      const cue=document.createElement('button');cue.type='button';
+      cue.className='recording-timeline-cue';cue.dataset.index=String(i);
+      cue.setAttribute('aria-label',label);
+      const title=document.createElement('strong');title.textContent=segment.symbol;
+      const time=document.createElement('small');time.textContent=clock(segment.start);
+      cue.append(title,time);
+      marker.addEventListener('click',()=>seekTo(jump,true));
+      cue.addEventListener('click',()=>seekTo(jump,true));
+      controls['timeline-track'].append(marker);
+      controls['timeline-cues'].append(cue);
+      timelineMarkers.push({marker,cue});
+    }
+    if(!chordSegments.length){
+      const info=document.createElement('span');info.className='recording-timeline-empty';
+      info.textContent='No stable three- or four-note chord detected. You can still scrub and replay your melody.';
+      controls['timeline-cues'].append(info);
+    }
+    controls['timeline-caption'].textContent=chordSegments.length?
+      chordSegments.length+' detected chord moment'+(chordSegments.length===1?'':'s')+
+      '. Select a chord to replay from that point.':
+      'Move the replay position slider to listen from any moment.';
+    controls.seek.max=String(Math.max(1,take.duration));
+    controls['cover-position'].max=String(Math.max(1,take.duration));
+    playhead=0;
+    selectedCoverTime=Math.round(suggestCoverTime(take,chordSegments));
+    controls['cover-position'].value=String(selectedCoverTime);
+    controls['cover-time'].textContent=clock(selectedCoverTime);
+    controls.timeline.hidden=false;controls['cover-controls'].hidden=false;
+    updateTimelineCursor(0);
+  }
   function startRecord(){
     if(exporting||converting)return;
     stopReplay();stop();resetVideo();controls.poster.hidden=true;
-    captured=[];take=null;videoGuide=null;capturing=true;startedAt=performance.now();
+    captured=[];take=null;videoGuide=null;chordSegments=[];timelineMarkers=[];playhead=0;selectedCoverTime=0;
+    controls.timeline.hidden=true;controls['cover-controls'].hidden=true;
+    capturing=true;startedAt=performance.now();
     controls.clock.textContent='00:00';
     status('Recording locally. Play the piano; stop when finished (90-second maximum).');
     timer=setInterval(()=>{controls.clock.textContent=clock(Math.min(MAX_RECORDING_MS,performance.now()-startedAt));},120);
@@ -62,7 +141,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     controls.clock.textContent=clock(take.duration);
     const count=noteIntervals(take).length;
     status(count?`Saved ${count} notes locally (${clock(take.duration)}). Replay, export MIDI or create a video.`:'No notes captured. Press Record and play a few piano keys.');
-    updatePoster();updateUI();
+    updateTimeline();updatePoster();updateUI();
     try{
       if(onCaptureEnd?.(take)===false){videoGuide=null;updatePoster();}
     }catch{
@@ -72,22 +151,41 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   }
   function noteOn(midi){if(capturing)captured.push({type:'on',midi,t:performance.now()-startedAt});}
   function noteOff(midi){if(capturing)captured.push({type:'off',midi,t:performance.now()-startedAt});}
-  function replay(){
-    if(capturing||exporting||converting||!take)return;
-    if(playing){stopReplay();status('Replay stopped.');return;}
-    stop();playing=true;playIndex=0;playStart=performance.now();updateUI();
+  function startReplay(ms=playhead){
+    if(!take||capturing||exporting||converting||playing)return;
+    if(ms>=take.duration)ms=0;
+    stop();
+    playhead=ms;playIndex=0;
+    while(playIndex<take.events.length&&take.events[playIndex].t<=ms)playIndex++;
+    // Seeking into a held note must sound that already-active note immediately,
+    // not wait for its original note-on event to come back around.
+    for(const midi of soundingNotesAt(take,ms))on(midi);
+    playing=true;playStart=performance.now()-ms;updateUI();updateTimelineCursor(ms);
     const frame=()=>{
       if(!playing)return;
       const elapsed=performance.now()-playStart;
-      while(playIndex<take.events.length && take.events[playIndex].t<=elapsed){
+      while(playIndex<take.events.length&&take.events[playIndex].t<=elapsed){
         const e=take.events[playIndex++];
-        if(e.type==='on')on(e.midi); else off(e.midi);
+        if(e.type==='on')on(e.midi);else off(e.midi);
       }
-      controls.clock.textContent=clock(Math.min(take.duration,elapsed));
-      if(elapsed>=take.duration+350){stopReplay();controls.clock.textContent=clock(take.duration);status('Replay complete.');return;}
+      playhead=Math.min(take.duration,elapsed);
+      controls.clock.textContent=clock(playhead);
+      updateTimelineCursor(playhead);
+      if(elapsed>=take.duration+350){
+        stopReplay();playhead=0;updateTimelineCursor(0);
+        controls.clock.textContent=clock(take.duration);
+        status('Replay complete. Choose a chord or press Replay to listen again.');
+        return;
+      }
       playFrame=requestAnimationFrame(frame);
     };
-    status('Playing your recorded notes locally.');playFrame=requestAnimationFrame(frame);
+    status('Replaying your recorded notes from '+clock(ms)+' (local synthesizer).');
+    playFrame=requestAnimationFrame(frame);
+  }
+  function replay(){
+    if(!take||capturing||exporting||converting)return;
+    if(playing){stopReplay();status('Replay paused at '+clock(playhead)+'.');return;}
+    startReplay(playhead);
   }
   function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.style.display='none';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
   function midi(){if(!take)return;try{downloadBlob(new Blob([encodeMidi(take)],{type:'audio/midi'}),safeFilename(controls.title.value)+'.mid');status('MIDI downloaded.');}catch{status('Could not create the MIDI file.');}}
@@ -96,19 +194,34 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     if(typeof MediaRecorder==='undefined' || typeof HTMLCanvasElement.prototype.captureStream!=='function')return null;
     return chooseVideoFormat(type=>MediaRecorder.isTypeSupported(type));
   }
-  function drawFrame(context,elapsed,notes,title){
-    renderPerformanceFrame(context,elapsed,notes,title,{
-      theme:controls.theme.value,durationMs:take?.duration||0,
-      showChordLabels:controls['show-chords'].checked,guide:videoGuide
-    });
+  function videoSettings(){
+    return {theme:controls.theme.value,durationMs:take?.duration||0,
+      showChordLabels:controls['show-chords'].checked,guide:videoGuide};
+  }
+  function drawFrame(context,elapsed,notes,title,settings=videoSettings()){
+    renderPerformanceFrame(context,elapsed,notes,title,settings);
   }
   function updatePoster(){
-    if(!take || !noteIntervals(take).length){controls.poster.hidden=true;return;}
+    if(!take||!noteIntervals(take).length){controls.poster.hidden=true;return;}
     const notes=noteIntervals(take),context=controls.poster.getContext('2d',{alpha:false});
     if(!context)return;
     const title=(controls.title.value||'My Piano Session').trim();
-    drawFrame(context,(notes[0].start+100)/1000,notes,title);
+    drawFrame(context,selectedCoverTime/1000,notes,title);
     controls.poster.hidden=false;
+  }
+  function saveCover(){
+    if(!take||capturing||exporting||converting)return;
+    const canvas=controls.poster;
+    if(canvas.hidden||typeof canvas.toBlob!=='function'){
+      status('PNG cover export is not supported in this browser.');return;
+    }
+    const name=safeFilename(controls.title.value)+'-cover.png';
+    canvas.toBlob(blob=>{
+      if(blob?.size){
+        downloadBlob(blob,name);
+        status('9:16 PNG cover saved locally (720 × 1280). Your performance was not uploaded.');
+      }else status('Could not create PNG cover; the recording and MIDI remain available.');
+    },'image/png');
   }
   function scheduleAudio(ctx,destination,notes,lead){
     for(const n of notes){
@@ -135,11 +248,12 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     exporting=true;shouldCancel=false;stopReplay();resetVideo();updateUI();controls.progress.value=0;
     status('Rendering locally in real time. Keep this tab visible.');
     let audioCtx=null,stream=null,recorder=null,animation=0,metadataWarning=false;
+    const settings=videoSettings(); // Freeze options during rendering.
     const canvas=document.createElement('canvas');canvas.width=720;canvas.height=1280;
     try{
       const context=canvas.getContext('2d',{alpha:false});if(!context)throw new Error('Canvas unavailable');
       const title=(controls.title.value||'My Piano Session').trim().slice(0,60);
-      drawFrame(context,0,notes,title);
+      drawFrame(context,0,notes,title,settings);
       audioCtx=new AudioCtor();await audioCtx.resume();
       const destination=audioCtx.createMediaStreamDestination();
       const lead=.42;
@@ -166,7 +280,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
           if(shouldCancel){reject(new Error('Cancelled'));return;}
           if(document.hidden){reject(new Error('Keep the tab visible while exporting video.'));return;}
           const elapsed=Math.max(0,performance.now()-begins);
-          drawFrame(context,elapsed/1000,notes,title);
+          drawFrame(context,elapsed/1000,notes,title,settings);
           controls.progress.value=Math.min(100,Math.round(elapsed/total*100));
           if(elapsed>=total){resolve();return;}
           animation=requestAnimationFrame(frame);
@@ -291,6 +405,13 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     catch(error){if(error.name!=='AbortError')status('System share was unavailable; please download and upload manually.');}
   }
   controls.theme.addEventListener('change',()=>{updatePoster();status('Video style updated. Export again to apply it to the file.');});
+  controls.seek.addEventListener('input',()=>seekTo(Number(controls.seek.value)));
+  controls['cover-position'].addEventListener('input',()=>{
+    selectedCoverTime=Number(controls['cover-position'].value);
+    controls['cover-time'].textContent=clock(selectedCoverTime);
+    updatePoster();
+  });
+  controls['cover-download'].addEventListener('click',saveCover);
   controls['show-chords'].addEventListener('change',()=>{
     updatePoster();status('Chord captions updated in the preview. Export again to apply this choice to your video.');
   });
