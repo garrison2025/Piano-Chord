@@ -2,6 +2,7 @@ import {releaseChords} from '../data/chords.js';
 import {createChord,findChordMatches,prettyNote,prettySymbol,midiVoicing} from '../lib/music.js';
 import {keyboardSvg} from '../lib/pianoSvg.js';
 import {coreChordByKey,coreChordKeyboard,findCoreChordMatches} from '../lib/chordAtlas.mjs';
+import {describeChordBass} from '../lib/chordBass.mjs';
 const bySlug=new Map(releaseChords.map(entry=>[entry.slug,createChord(entry)]));
 const el=id=>document.getElementById(id);
 const status=message=>{const target=el('app-status');if(target)target.textContent=message;};
@@ -93,7 +94,7 @@ function bindSearch(){
 }
 function finder(){
   const picker=el('pitch-picker');if(!picker)return;
-  const selected=new Set(),output=el('finder-results');
+  const selected=new Set(),output=el('finder-results'),bass=el('finder-bass');
   function render(){
     for(const button of picker.querySelectorAll('[data-pitch]'))
       button.setAttribute('aria-pressed',String(selected.has(Number(button.dataset.pitch))));
@@ -108,14 +109,18 @@ function finder(){
       return;
     }
     output.innerHTML='<p><strong>'+matches.length+' possible chord name'+(matches.length===1?'':'s')+
-      '</strong> for these pitch classes. Root and bass depend on musical context:</p><ul>'+
+      '</strong> for these pitch classes. '+(bass.value===''?
+        'Select an optional lowest note to identify a voicing:':'The lowest note is specified; other harmonic names may still be possible:')+
+      '</p><ul>'+
       matches.slice(0,12).map(chord=>{
         const theory='/tools/inversion-explorer/?root='+encodeURIComponent(chord.root)+'&quality='+encodeURIComponent(chord.quality);
-        return '<li><strong>'+escapeHtml(chord.symbol)+' — '+escapeHtml(chord.name)+'</strong><br/>'+
-          '<small>'+escapeHtml(chord.notes.map(prettyNote).join(' · '))+'</small>'+
+        const detail=describeChordBass(chord,bass.value);
+        return '<li><strong>'+escapeHtml(detail.slashName)+' — '+escapeHtml(chord.name)+'</strong><br/>'+
+          '<small>'+escapeHtml(chord.notes.map(prettyNote).join(' · '))+'</small><br/>'+
+          '<small>'+escapeHtml(detail.description)+'</small>'+
           '<div class="button-row"><button class="btn btn-primary" type="button" data-play-midi="'+chord.midi.join(',')+
-          '" aria-label="Hear '+escapeHtml(chord.name)+'">▶ Hear</button>'+
-          '<a class="btn" href="'+theory+'">Bass &amp; inversions ↗</a></div></li>';
+          '" aria-label="Hear '+escapeHtml(chord.name)+' root voicing">▶ Hear</button>'+
+          '<a class="btn" href="'+theory+'">Hear inversions ↗</a></div></li>';
       }).join('')+'</ul>';
   }
   picker.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
@@ -125,7 +130,8 @@ function finder(){
     else{status('Choose no more than four pitch classes.');return;}
     render();
   }));
-  el('clear-pitches').addEventListener('click',()=>{selected.clear();render();});
+  bass.addEventListener('change',render);
+  el('clear-pitches').addEventListener('click',()=>{selected.clear();bass.value='';render();});
   el('example-pitches').addEventListener('click',()=>{selected.clear();[0,4,7].forEach(v=>selected.add(v));render();});
   render();
 }
