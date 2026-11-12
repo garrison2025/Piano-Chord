@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {releaseChords} from '../src/data/chords.js';
+import {chordLessons} from '../src/data/editorials.js';
 import {chordSearchDescriptions,chordSearchTitles} from '../src/data/chordSeo.js';
 import {createChord,prettyNote} from '../src/lib/music.js';
 test('all 29 authored lessons have unique, legible non-boilerplate SEO descriptions',()=>{
@@ -26,4 +27,12 @@ test('all 29 chord lesson titles are distinct, concise and aligned to intent',()
     assert.match(t,/piano chord/i,chord.slug+' intent');
     assert.ok(t.toLowerCase().includes(chord.symbol.toLowerCase()),chord.slug+' symbol '+chord.symbol);
   }
+});
+
+
+test('C-major to A-minor exercise correctly distinguishes root position and inversion',()=>{
+  const exercise=chordLessons['c-major'].exercise;
+  assert.match(exercise,/root position/);
+  assert.match(exercise,/C and E steady/);
+  assert.doesNotMatch(exercise,/A minor inversion/);
 });

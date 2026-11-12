@@ -45,6 +45,13 @@ for(const p of paths){
   if(!html.includes('name="twitter:card" content="summary_large_image"'))
     issues.push('Twitter/X must use large image card on '+p);
   if(headings!==1)issues.push('Must have exactly one H1 on '+p+': '+headings);
+  if(p.startsWith('/chords/')&&p!=='/chords/'){
+    if(!html.includes('id="chord-answer"')||
+      !/What notes are in the [^<]+ piano chord\?/.test(html))
+      issues.push('Missing human-readable, answer-first notes on '+p);
+    if(!html.includes('How does ')||!html.includes('compare with a related chord?'))
+      issues.push('Missing original chord relationship explanation on '+p);
+  }
   if(!html.includes('rel="preconnect" href="https://fonts.googleapis.com"')||
      !html.includes('rel="preconnect" href="https://fonts.gstatic.com"'))
     issues.push('Missing Google Fonts resource preconnect on '+p);

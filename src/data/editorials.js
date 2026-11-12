@@ -22,7 +22,7 @@ export const chordLessons={
  'c-major': {
    character:'C major is often the first piano chord students encounter because its three notes, C–E–G, are all white keys and form an easy visual landmark.',
    comparison:'Compare C major to A minor (A–C–E). C and E are shared, while G moves up to A; this gives an accessible first harmony exercise.',
-   exercise:'Play C–E–G, then lower the G and add A as the bass of an A minor inversion. Name each note before you play.',
+   exercise:'Play C–E–G, then keep C and E steady while moving G up to A. Reposition A below C and E to hear A minor in root position; the original G-to-A move alone gives a different voicing. Name each chord tone before you play.',
    pitfall:'C major chord is not the same search task as the chords found inside the C major scale. A chord is three specific notes; a key contains several harmonies.',
  },
  'e-minor': {
