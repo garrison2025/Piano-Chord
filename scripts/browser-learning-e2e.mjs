@@ -313,6 +313,17 @@ try{
   assert.equal(await page.locator('#vp-midi').isDisabled(),false);
   assert.equal(await page.locator('#vp-export').isDisabled(),false);
   assert.equal(await page.locator('#vp-practice-stop-take').isVisible(),false);
+  assert.equal(await page.locator('#vp-timeline').isVisible(),true);
+  assert.ok(await page.locator('#vp-timeline-cues button').count()>=1,'Dm7 should form a recorded chord timeline segment');
+  assert.match(await page.locator('#vp-timeline-cues').innerText(),/Dm7/);
+  await page.locator('#vp-timeline-cues button').first().click();
+  assert.match(await page.locator('#vp-replay').innerText(),/Stop replay/);
+  await page.locator('#vp-replay').click();
+  assert.equal(await page.locator('#vp-cover-download').isDisabled(),false);
+  const coverDownload=page.waitForEvent('download');
+  await page.locator('#vp-cover-download').click();
+  assert.match((await coverDownload).suggestedFilename(),/-cover\.png$/);
+  assert.equal(await page.locator('#vp-cover-controls').isVisible(),true);
   assert.equal(await page.locator('#practice-report').isVisible(),true);
   assert.match(await page.locator('#practice-report-summary').innerText(),/Matched 1 of 3 scheduled bars \(33% chord coverage\)/);
   const poster=page.locator('#vp-poster');

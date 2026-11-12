@@ -11,6 +11,8 @@ on:
       - 'src/lib/seventhTransfer.mjs'
       - 'src/lib/chordDetection.mjs'
       - 'src/lib/performanceOverlay.mjs'
+      - 'src/lib/recordingTimeline.mjs'
+      - 'tests/recordingTimeline.test.js'
       - 'src/lib/performanceVideo.mjs'
       - 'tests/performanceOverlay.test.js'
       - 'tests/performanceVideo.test.js'

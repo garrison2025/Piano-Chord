@@ -9,6 +9,7 @@ on:
       - src/scripts/pianoRecorder.js
       - src/lib/videoConversion.mjs
       - src/lib/performanceOverlay.mjs
+      - src/lib/recordingTimeline.mjs
       - src/lib/performanceVideo.mjs
       - src/lib/chordDetection.mjs
       - src/lib/practiceTransfer.mjs

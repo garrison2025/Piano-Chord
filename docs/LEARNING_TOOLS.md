@@ -82,3 +82,13 @@ Actual Chromium screenshots exposed unstyled bars: cards inserted by JavaScript 
 - The studio has an on-by-default optional chord and target overlay toggle. The original 720×1280 renderer labels Played chords exclusively from recorded note overlaps, and TARGET exclusively from the guide progression and BPM; it never claims that a target chord was actually played or professionally grades performance. Guideless recordings only show locally detected chords. No server or microphone is involved. Preview canvas, local WebM export and H.264/AAC conversion use the same renderer.
 - Guide metadata attaches only to recordings started by Record & follow guide. Manual changing/stopping/restarting the practice guide invalidates the timed report and suppresses the guided video target metadata. Ordinary solo recordings remain unchanged.
 - Unit tests cover no chord, real Dm7 vs target G7, guide bar/beat progress, invalid metadata and caption visibility toggles. Browser tests exercise captured pointer gestures and Chromium emulated two-touch contacts, return-to-scroll mode and note release. Physical iOS and Android finger latency and actual social uploads remain separate, unverified checks.
+
+
+## Recorded chord timeline + selectable PNG video cover (2026-11-12)
+
+- The 88-key studio derives a local chord timeline from the normalized MIDI note events used by replay and video. Only stable (at least 90 ms), actually held, recognized triad/seventh intervals receive labels. There is no microphone analysis and no conflation of guide targets with recorded chords. Melodies without chord matches can still be scrubbed and replayed.
+- Choosing a chord cue resumes from that timestamp and restores any notes already being held at the seek point. The slider and chord markers reflect replay progress, and pausing preserves position.
+- The original video canvas also exports a user-selected, 720 x 1280 PNG poster: automatic first stable-chord frame (otherwise first note), user-controlled slider, video theme, title and caption toggle. The PNG is saved directly without re-encoding video or uploading user data.
+- Export options are snapshotted for consistent visuals throughout real-time video rendering. Choosing the poster frame does not change the start time of the full video.
+- Unit tests in src/lib/recordingTimeline.mjs / tests/recordingTimeline.test.js cover event boundaries and poster suggestions. Real Chromium tests check chord-cue replay, downloaded PNG and dimensions and preserve the existing WebM/MP4 export regression.
+- Live deployment, physical iOS/Android and actual social platform uploads still require separate verification.

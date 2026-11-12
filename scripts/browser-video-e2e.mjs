@@ -1,6 +1,6 @@
 /** Real FFmpeg WebAssembly browser E2E: synthetic note, no user media uploads. */
 import {chromium} from 'playwright';
-import {mkdirSync,existsSync} from 'node:fs';
+import {mkdirSync,existsSync,readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -54,6 +54,27 @@ try{
   await poster.waitFor({state:'visible',timeout:10000});
   const before=await poster.evaluate(canvas=>[...canvas.getContext('2d').getImageData(12,12,1,1).data]);
   await poster.screenshot({path:outputDir+'/video-poster-midnight.png'});
+  assert.equal(await page.locator('#vp-timeline').isVisible(),true);
+  assert.equal(await page.locator('#vp-cover-controls').isVisible(),true);
+  const [coverDownload]=await Promise.all([
+    page.waitForEvent('download',{timeout:12000}),
+    page.locator('#vp-cover-download').click()
+  ]);
+  await coverDownload.saveAs(outputDir+'/selected-cover.png');
+  assert.match(coverDownload.suggestedFilename(),/-cover\.png$/);
+  const png=readFileSync(outputDir+'/selected-cover.png');
+  assert.equal(png.subarray(1,4).toString(),'PNG','Cover must be PNG');
+  assert.equal(png.readUInt32BE(16),720,'Cover width must match the video');
+  assert.equal(png.readUInt32BE(20),1280,'Cover height must match the video');
+  await page.locator('#vp-cover-position').evaluate(el=>{
+    el.value=String(el.max);el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  assert.notEqual(await page.locator('#vp-cover-time').innerText(),'00:00');
+  await page.locator('#vp-seek').evaluate(el=>{
+    el.value=String(Math.round(Number(el.max)/2));el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  assert.ok((await page.locator('#vp-seek-time').innerText()).includes(' / '));
+  console.log('PASS 720x1280 local PNG cover and selectable replay/cover frames');
   assert.equal(await page.locator('#vp-show-chords').isChecked(),true);
   await page.locator('#vp-show-chords').uncheck();
   await poster.screenshot({path:outputDir+'/video-poster-plain.png'});
