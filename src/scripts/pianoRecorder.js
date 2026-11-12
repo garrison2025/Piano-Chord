@@ -17,6 +17,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
 
   function status(message) { controls.message.textContent=message; }
   function clock(ms) { const sec=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; }
+  function preciseClock(ms) { const tenth=Math.max(0,Math.floor(ms/100));const sec=Math.floor(tenth/10);return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}.${tenth%10}`; }
   function updateUI(){
     const hasNotes=Boolean(take && noteIntervals(take).length);
     controls.record.disabled=capturing||exporting||converting;
@@ -50,7 +51,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     if(!take)return;
     const duration=Math.max(1,take.duration);
     controls.seek.value=String(Math.round(Math.max(0,Math.min(duration,t))));
-    controls['seek-time'].textContent=clock(t)+' / '+clock(duration);
+    controls['seek-time'].textContent=preciseClock(t)+' / '+preciseClock(duration);
     const current=chordSegments.findIndex(s=>t>=s.start&&t<s.end);
     timelineMarkers.forEach(({marker,cue},i)=>{
       const selected=i===current;
@@ -92,7 +93,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
       cue.className='recording-timeline-cue';cue.dataset.index=String(i);
       cue.setAttribute('aria-label',label);
       const title=document.createElement('strong');title.textContent=segment.symbol;
-      const time=document.createElement('small');time.textContent=clock(segment.start);
+      const time=document.createElement('small');time.textContent=preciseClock(segment.start);
       cue.append(title,time);
       marker.addEventListener('click',()=>seekTo(jump,true));
       cue.addEventListener('click',()=>seekTo(jump,true));
@@ -114,7 +115,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     playhead=0;
     selectedCoverTime=Math.round(suggestCoverTime(take,chordSegments));
     controls['cover-position'].value=String(selectedCoverTime);
-    controls['cover-time'].textContent=clock(selectedCoverTime);
+    controls['cover-time'].textContent=preciseClock(selectedCoverTime);
     controls.timeline.hidden=false;controls['cover-controls'].hidden=false;
     updateTimelineCursor(0);
   }
@@ -408,7 +409,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   controls.seek.addEventListener('input',()=>seekTo(Number(controls.seek.value)));
   controls['cover-position'].addEventListener('input',()=>{
     selectedCoverTime=Number(controls['cover-position'].value);
-    controls['cover-time'].textContent=clock(selectedCoverTime);
+    controls['cover-time'].textContent=preciseClock(selectedCoverTime);
     updatePoster();
   });
   controls['cover-download'].addEventListener('click',saveCover);
