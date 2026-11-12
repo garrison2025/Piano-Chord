@@ -264,6 +264,7 @@ try{
   await page.locator('#finder-bass').selectOption('2');
   assert.match(await page.locator('#finder-results').innerText(),/C\/D/);
   assert.match(await page.locator('#finder-results').innerText(),/not an inversion/i);
+  assert.equal(await cMajorFirst.getByRole('link',{name:'Chord voicings'}).count(),1);
   assert.equal(await cMajorFirst.locator('button[data-play-midi]').getAttribute('data-play-midi'),'50,60,64,67',
     'C/D result must audition the added D bass below the C major chord');
   await page.locator('#clear-pitches').click();
