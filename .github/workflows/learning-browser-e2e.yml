@@ -29,6 +29,8 @@ on:
       - 'tests/chordSeo.test.js'
       - 'tests/lessonPathways.test.js'
       - 'src/styles/studio.css'
+      - 'src/styles/global.css'
+      - 'src/layouts/BaseLayout.astro'
       - 'src/pages/tools/chord-compare.astro'
       - 'scripts/verify-build.mjs'
       - 'tests/chordAtlas.test.js'

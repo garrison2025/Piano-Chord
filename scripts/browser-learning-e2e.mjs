@@ -94,6 +94,24 @@ try{
   await practiceMobile.close();
   console.log('PASS authored ear drills and preselected A/B comparisons across lesson families, 390px mobile layout');
 
+  // SEO-relevant examples must be legible without client execution; then
+  // the contextual links must select the right notes in the actual tools.
+  await go('/tools/chord-finder/');
+  assert.equal(await page.getByRole('heading',{name:'C–E–G: C major'}).count(),1);
+  assert.equal(await page.getByRole('heading',{name:'C–E–G–B♭: C7'}).count(),1);
+  assert.equal(await page.getByRole('heading',{name:'What if your chord is not recognised?'}).count(),1);
+  await go('/tools/chord-compare/');
+  await page.locator('a[href="/tools/chord-compare/?a=b-minor&b=d-major"]').click();
+  await page.waitForFunction(()=>document.getElementById('compare-a')?.value==='b-minor' &&
+    document.getElementById('compare-b')?.value==='d-major',null,{timeout:9000});
+  assert.equal(await page.getByRole('heading',{name:'Bm → D major: keep two notes still'}).count(),1);
+  await go('/tools/metronome/');
+  for(const name of ['2/4: two beats per bar','3/4: three beats per bar','4/4: four beats per bar'])
+    assert.equal(await page.getByRole('heading',{name}).count(),1);
+  assert.equal(await page.locator('link[rel="preconnect"][href="https://fonts.gstatic.com"]').count(),1);
+  assert.equal(await page.locator('link[rel="stylesheet"][href^="https://fonts.googleapis.com/css2"]').count(),1);
+  console.log('PASS authored finder/compare/metronome examples, contextual links and font resource hints');
+
   await go('/tools/scales-and-keys/');
   assert.deepEqual((await texts('#scale-degree-row strong')).map(s=>s.trim()),['C','D','E','F','G','A','B']);
   await page.locator('#scale-root').selectOption('Gb');
