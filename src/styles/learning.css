@@ -1,0 +1,68 @@
+/* Piano learning workspace: consistent with the existing violet/cream studio. */
+.learning-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(270px,.85fr);gap:20px}
+.learning-panel{background:#fffefa;border:1px solid #e4dff0;border-radius:22px;padding:clamp(18px,3vw,28px);box-shadow:0 20px 50px -40px #352c69}
+.learning-panel h2{font-size:clamp(21px,2.4vw,29px);letter-spacing:-.045em;margin:0 0 12px;color:#2b254b}
+.learning-panel p{color:#676178;line-height:1.7}
+.learning-controls{display:flex;gap:13px;flex-wrap:wrap;align-items:end;margin:0 0 22px}
+.learning-controls label{display:grid;gap:6px;flex:1 1 160px;min-width:130px;font-size:13px;font-weight:750;color:#534972}
+.learning-controls select,.learning-controls input{min-height:46px;border:1px solid #d8d0e6;border-radius:11px;background:white;padding:10px 12px;color:#2b254b;font:inherit;font-weight:500;max-width:100%}
+.learning-controls :is(select,input):focus-visible{outline:3px solid #c7beff;outline-offset:2px}
+.learning-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.learning-actions button,.learning-actions a{border:1px solid #d9d2e8;border-radius:11px;padding:11px 16px;min-height:46px;background:#fff;color:#4f437f;font:inherit;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.learning-actions .action-primary{background:#5d50c0;border-color:#5d50c0;color:white}
+.learning-actions button:focus-visible,.learning-actions a:focus-visible{outline:3px solid #b9acfc;outline-offset:3px}
+.learning-actions button:hover:not(:disabled){background:#f0edff}
+.learning-actions .action-primary:hover:not(:disabled){background:#4c3db6}
+.learning-actions button:disabled{opacity:.5;cursor:not-allowed}
+.learning-status{min-height:24px;color:#6a608b;font-size:13px}
+.scale-degree-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px;margin:19px 0}
+.scale-degree{border-radius:13px;padding:14px 6px;text-align:center;background:#f1eefc;border:1px solid #e4ddf9}
+.scale-degree strong{font-size:clamp(15px,2vw,22px);display:block;color:#4d40ad}
+.scale-degree small{font-size:10px;display:block;color:#766e90}
+.scale-degree:first-child{background:#e0d9ff;border-color:#bbb1f6}
+.scale-keys-scroll{overflow-x:auto;max-width:100%;padding:7px 2px 14px;scrollbar-color:#998ed9 transparent}
+.scale-keybed{position:relative;height:182px;width:510px;max-width:none;touch-action:pan-x}
+.scale-piano-key{position:absolute;top:0;cursor:pointer;transition:background .14s,transform .14s;font:inherit}
+.scale-piano-key.white{width:34px;height:175px;border:1px solid #c8c4d4;border-radius:0 0 6px 6px;background:linear-gradient(#fff,#f4f1f9);z-index:1;border-bottom:5px solid #c5bdcf;color:#625a81}
+.scale-piano-key.black{width:21px;height:109px;border:1px solid #161321;border-bottom:4px solid #161321;border-radius:0 0 5px 5px;background:linear-gradient(#39344d,#211d30);z-index:2;color:#fff}
+.scale-piano-key.in-scale.white{background:linear-gradient(#e3ddff,#c3b9ff)}
+.scale-piano-key.in-scale.black{background:linear-gradient(#8172e1,#463a9a)}
+.scale-piano-key.tonic.white{background:linear-gradient(#bbf4e3,#7ad6c0)}
+.scale-piano-key.tonic.black{background:linear-gradient(#5abf9f,#327d72)}
+.scale-piano-key.is-flashing{filter:brightness(1.12);transform:translateY(3px)}
+.scale-piano-key span{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-size:10px;font-weight:750}
+.chord-degree-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:12px 0}
+.chord-degree-list li{background:#f9f7ff;border:1px solid #ebe6f6;border-radius:12px;padding:13px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.chord-degree-list li strong{color:#5143a6}
+.chord-degree-list li small{font-size:11px;color:#776e8d;display:block}
+.chord-degree-list li button{border:1px solid #d6cfec;background:white;border-radius:9px;min-width:42px;min-height:40px;cursor:pointer;color:#5143a6}
+.progression-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:15px 0}
+.progression-step{padding:18px 12px;background:#f7f5ff;border:1px solid #e0daf3;border-radius:16px;transition:background .16s,border-color .16s,transform .16s;min-width:0}
+.progression-step.is-current{background:#e8e3ff;border-color:#8676d8;box-shadow:0 7px 20px -14px #473cb5;transform:translateY(-2px)}
+.progression-step .step-roman{font-size:12px;color:#79708d;font-weight:750}
+.progression-step strong{font-size:clamp(20px,2.7vw,29px);color:#4c3da5;display:block;letter-spacing:-.04em}
+.progression-step p{font-size:12px;min-height:36px;margin:6px 0 12px}
+.progression-step select{width:100%;min-height:42px;border:1px solid #d4cde4;border-radius:10px;background:white;color:#40345b;padding:7px 3px;font-size:12px;max-width:100%}
+.progression-step button{background:#fff;border:1px solid #d9d1ea;border-radius:9px;padding:9px 12px;min-height:40px;margin-top:10px;cursor:pointer;color:#4b3f94;font-weight:750}
+.learning-tempo{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 16px;color:#554a74;font-size:14px}
+.learning-tempo input[type=range]{accent-color:#6657cb;flex:1 1 170px}
+.learning-tempo output{font-size:22px;color:#493aab;font-variant-numeric:tabular-nums;font-weight:800}
+.learning-tempo label{display:flex;align-items:center;gap:8px}
+.metronome-widget{background:linear-gradient(135deg,#2a2544,#37305a);color:#faf9ff;border-radius:20px;padding:clamp(18px,3vw,27px);box-shadow:0 22px 42px -35px #1a103e}
+.metronome-widget .learning-controls label{color:#d9d2fa}
+.metronome-widget .learning-controls :is(select,input){background:#edeaf8;color:#322a4f;border-color:#635a82}
+.metronome-heading{display:flex;justify-content:space-between;gap:15px;align-items:start}
+.metronome-heading h2{margin:0;font-size:clamp(21px,3vw,30px);color:#fff}
+.metronome-heading p{margin:5px 0;color:#d0c6e7;font-size:13px}
+.metronome-bpm{font-size:35px;font-weight:850;font-variant-numeric:tabular-nums;color:#d4c7ff}
+.metronome-bpm small{font-size:11px;font-weight:700;display:block;color:#c4b9db;text-align:center}
+.metro-leds{display:flex;justify-content:center;gap:16px;margin:19px 0}
+.metro-led{width:22px;height:22px;border-radius:50%;background:#5a5179;border:2px solid #776c9b;transition:background .07s,box-shadow .07s}
+.metro-led.active{background:#a896ff;box-shadow:0 0 0 6px #a896ff22}
+.metro-led.active:first-child{background:#85e2ca;box-shadow:0 0 0 6px #85e2ca22}
+.metronome-widget .learning-actions button{background:#413965;border-color:#7669a1;color:white}
+.metronome-widget .learning-actions .action-primary{background:#a89afb;color:#241c4f;border-color:#a89afb}
+.metronome-widget .learning-status{color:#e5dff8}
+@media(max-width:980px){.learning-grid{grid-template-columns:1fr}.progression-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:610px){.scale-degree-row{gap:4px}.scale-degree{padding:10px 3px}.scale-degree small{font-size:9px}.chord-degree-list{grid-template-columns:1fr}.progression-grid{gap:9px}.progression-step{padding:13px 10px}.learning-panel{padding:18px}.metronome-heading{align-items:center}}
+@media(prefers-reduced-motion:reduce){.scale-piano-key,.progression-step,.metro-led{transition:none!important}.progression-step.is-current{transform:none}}

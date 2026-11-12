@@ -1,0 +1,71 @@
+---
+import '../styles/learning.css';
+---
+<div id="practice-metronome" class="metronome-widget">
+  <div class="metronome-heading"><div><h2>Practice metronome</h2><p>Keep a steady beat while learning piano or chords.</p></div><div class="metronome-bpm"><output id="metro-bpm-output">100</output><small>BPM</small></div></div>
+  <div class="learning-controls" style="margin-top:19px">
+    <label>Tempo (40–200)<input id="metro-bpm" type="range" min="40" max="200" value="100" step="1" aria-label="Metronome tempo in beats per minute"/></label>
+    <label>Time signature<select id="metro-meter"><option value="4">4/4</option><option value="3">3/4</option><option value="2">2/4</option></select></label>
+    <label>Click volume<input id="metro-volume" type="range" min="0" max="100" value="65" step="5" aria-label="Metronome click volume"/></label>
+  </div>
+  <div class="metro-leds" id="metro-leds" aria-label="Four beat visual indicator"><span class="metro-led"></span><span class="metro-led"></span><span class="metro-led"></span><span class="metro-led"></span></div>
+  <div class="learning-actions"><button type="button" id="metro-toggle" class="action-primary" aria-pressed="false">▶ Start metronome</button><button type="button" id="metro-tap">Tap tempo</button></div>
+  <div class="learning-status" id="metro-status" role="status" aria-live="polite">Click Start, or tap a rhythm to set the tempo.</div>
+</div>
+<script>
+import {createStudyAudio,tapTempo} from '../scripts/studyAudio.js';
+const widget=document.getElementById('practice-metronome');
+if(widget){
+  const by=id=>widget.querySelector('#'+id);
+  const bpm=by('metro-bpm'),bpmOut=by('metro-bpm-output'),meter=by('metro-meter'),
+    volume=by('metro-volume'),toggle=by('metro-toggle'),tap=by('metro-tap'),
+    status=by('metro-status'),leds=by('metro-leds');
+  const audio=createStudyAudio();
+  let running=false,nextTime=0,step=0,clock=null,token=0;
+  let visualTimers=[],taps=[];
+  const updateLeds=()=>{const count=Number(meter.value);leds.replaceChildren(...Array.from({length:count},()=>{const led=document.createElement('span');led.className='metro-led';return led;}));leds.setAttribute('aria-label',count+' beat visual indicator');};
+  updateLeds();
+  function stop(){
+    running=false;token++;clearInterval(clock);clock=null;
+    visualTimers.forEach(clearTimeout);visualTimers=[];
+    audio.stop();leds.querySelectorAll('.metro-led').forEach(v=>v.classList.remove('active'));
+    toggle.textContent='▶ Start metronome';toggle.setAttribute('aria-pressed','false');
+    status.textContent='Stopped. Tap Start to resume.';
+  }
+  function schedule(){
+    if(!running)return;
+    let count=0;
+    while(nextTime<audio.now()+.14 && count++<6){
+      const index=step%Number(meter.value),scheduled=nextTime,runToken=token;
+      audio.tick(scheduled,index===0,Number(volume.value)/100);
+      const timer=setTimeout(()=>{
+        if(!running||runToken!==token)return;
+        [...leds.children].forEach((led,i)=>led.classList.toggle('active',i===index));
+      },Math.max(0,(scheduled-audio.now())*1000));
+      visualTimers.push(timer);
+      if(visualTimers.length>30)visualTimers=visualTimers.slice(-12);
+      step++;
+      nextTime+=60/Number(bpm.value);
+    }
+  }
+  async function start(){
+    if(running)return;
+    try{await audio.unlock();}catch(e){status.textContent=e.message;return;}
+    running=true;token++;step=0;nextTime=audio.now()+.08;
+    toggle.textContent='■ Stop metronome';toggle.setAttribute('aria-pressed','true');
+    status.textContent=Number(meter.value)+'/4 at '+bpm.value+' BPM. First beat is accented.';
+    schedule();clock=setInterval(schedule,25);
+  }
+  toggle.addEventListener('click',()=>running?stop():start());
+  bpm.addEventListener('input',()=>{bpmOut.textContent=bpm.value;if(running)status.textContent='Tempo changed to '+bpm.value+' BPM.';});
+  meter.addEventListener('change',()=>{if(running)stop();updateLeds();});
+  tap.addEventListener('click',()=>{
+    const now=performance.now();
+    taps.push(now);taps=taps.filter(t=>now-t<2400).slice(-6);
+    if(taps.length>=2){const intervals=taps.slice(1).map((t,i)=>t-taps[i]);const estimate=tapTempo(intervals);
+      if(estimate){bpm.value=String(estimate);bpmOut.textContent=bpm.value;status.textContent='Tap tempo: '+estimate+' BPM';}}
+  });
+  window.addEventListener('pagehide',stop);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)stop();});
+}
+</script>
