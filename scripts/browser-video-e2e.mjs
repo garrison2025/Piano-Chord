@@ -69,7 +69,7 @@ try{
   const [webmDownload]=await Promise.all([page.waitForEvent('download',{timeout:20000}),page.locator('#vp-download-webm').click()]);
   await webmDownload.saveAs(outputDir+'/original.webm');
   assert.ok(existsSync(outputDir+'/converted.mp4')&&existsSync(outputDir+'/original.webm'));
-  const media=JSON.parse(execFileSync('ffprobe',['-v','error','-show_entries','stream=codec_name,codec_type,start_time,width,height:format=duration','-of','json',outputDir+'/converted.mp4'],{encoding:'utf8'}));
+  const media=JSON.parse(execFileSync('ffprobe',['-v','error','-show_entries','stream=codec_name,codec_type,start_time,width,height,avg_frame_rate:format=duration','-of','json',outputDir+'/converted.mp4'],{encoding:'utf8'}));
   assert.ok(media.streams.some(s=>s.codec_type==='video'&&s.codec_name==='h264'),JSON.stringify(media.streams));
   assert.ok(media.streams.some(s=>s.codec_type==='audio'&&s.codec_name==='aac'),JSON.stringify(media.streams));
   const duration=Number(media.format.duration);
@@ -77,6 +77,10 @@ try{
   const video=media.streams.find(s=>s.codec_type==='video');
   const audio=media.streams.find(s=>s.codec_type==='audio');
   assert.equal(video.width,540);assert.equal(video.height,960);
+  const rate=String(video.avg_frame_rate||'0/0').split('/').map(Number);
+  const fps=rate[1]?rate[0]/rate[1]:0;
+  assert.ok(fps>=23&&fps<=60,'TikTok upload profile requires 23–60 FPS; observed '+fps);
+  console.log('Export frame rate',fps,'FPS (TikTok document minimum: 23 FPS)');
   const offset=Math.abs(Number(video.start_time||0)-Number(audio.start_time||0));
   assert.ok(offset<0.25,'Audio/video track start offset '+offset+'s exceeds 250ms');
   if(mobile){
