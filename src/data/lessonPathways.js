@@ -56,7 +56,7 @@ export const priorityEarDrills=Object.freeze({
   },
   'a-minor':{
     target:'c-major',
-    prompt:'Keep C and E sounding, alternate A–C–E with C–E–G, and decide which note moves down.',
+    prompt:'Keep C and E sounding, alternate A–C–E with C–E–G, and decide which note moves down. Pause for two beats after each change so you can listen before you answer.',
     answer:'A descends a whole step to G. C and E stay, revealing how a relative-minor change can require just one moving voice.',
   },
   'g-major':{
