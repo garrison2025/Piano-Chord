@@ -1,6 +1,7 @@
 import {releaseChords} from '../data/chords.js';
 import {createChord,findChordMatches,prettyNote,prettySymbol,midiVoicing} from '../lib/music.js';
 import {keyboardSvg} from '../lib/pianoSvg.js';
+import {coreChordByKey,coreChordKeyboard,findCoreChordMatches} from '../lib/chordAtlas.mjs';
 const bySlug=new Map(releaseChords.map(entry=>[entry.slug,createChord(entry)]));
 const el=id=>document.getElementById(id);
 const status=message=>{const target=el('app-status');if(target)target.textContent=message;};
@@ -92,18 +93,36 @@ function bindSearch(){
 }
 function finder(){
   const picker=el('pitch-picker');if(!picker)return;
-  const selected=new Set();
-  const output=el('finder-results');
+  const selected=new Set(),output=el('finder-results');
   function render(){
-    for(const btn of picker.querySelectorAll('[data-pitch]'))btn.setAttribute('aria-pressed',String(selected.has(Number(btn.dataset.pitch))));
-    if(selected.size<3){output.textContent=`${selected.size} note${selected.size===1?'':'s'} selected. Choose ${3-selected.size} more to find chords.`;return;}
-    const matches=findChordMatches([...selected]);
-    if(!matches.length){output.textContent='No exact matches among major, minor, diminished, augmented and common seventh chord formulas. Try a different note set.';return;}
-    output.innerHTML=`<p><strong>${matches.length} possible spelling${matches.length===1?'':'s'}</strong> for this pitch-class set:</p><ul>${matches.slice(0,12).map(chord=>`<li><strong>${escapeHtml(prettySymbol(chord.symbol))} — ${escapeHtml(chord.qualityName)}</strong><br/><small>${escapeHtml(chord.notes.map(prettyNote).join(' · '))}</small></li>`).join('')}</ul>`;
+    for(const button of picker.querySelectorAll('[data-pitch]'))
+      button.setAttribute('aria-pressed',String(selected.has(Number(button.dataset.pitch))));
+    if(selected.size<3){
+      output.textContent=selected.size+' note'+(selected.size===1?'':'s')+
+        ' selected. Choose '+(3-selected.size)+' more to find chords.';
+      return;
+    }
+    const matches=findCoreChordMatches([...selected]);
+    if(!matches.length){
+      output.textContent='No exact match among the ten chord families in our 120-chord library. Try a different set; incomplete or extended chords may not be covered.';
+      return;
+    }
+    output.innerHTML='<p><strong>'+matches.length+' possible chord name'+(matches.length===1?'':'s')+
+      '</strong> for these pitch classes. Root and bass depend on musical context:</p><ul>'+
+      matches.slice(0,12).map(chord=>{
+        const theory='/tools/inversion-explorer/?root='+encodeURIComponent(chord.root)+'&quality='+encodeURIComponent(chord.quality);
+        return '<li><strong>'+escapeHtml(chord.symbol)+' — '+escapeHtml(chord.name)+'</strong><br/>'+
+          '<small>'+escapeHtml(chord.notes.map(prettyNote).join(' · '))+'</small>'+
+          '<div class="button-row"><button class="btn btn-primary" type="button" data-play-midi="'+chord.midi.join(',')+
+          '" aria-label="Hear '+escapeHtml(chord.name)+'">▶ Hear</button>'+
+          '<a class="btn" href="'+theory+'">Bass &amp; inversions ↗</a></div></li>';
+      }).join('')+'</ul>';
   }
   picker.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
     const pc=Number(button.dataset.pitch);
-    if(selected.has(pc))selected.delete(pc);else if(selected.size<4)selected.add(pc);else{status('Choose no more than four different pitch classes.');return;}
+    if(selected.has(pc))selected.delete(pc);
+    else if(selected.size<4)selected.add(pc);
+    else{status('Choose no more than four pitch classes.');return;}
     render();
   }));
   el('clear-pitches').addEventListener('click',()=>{selected.clear();render();});
@@ -113,9 +132,24 @@ function finder(){
 function inversionExplorer(){
   const select=el('inversion-chord');if(!select)return;
   const output=el('inversion-tool');
+  const params=new URLSearchParams(window.location.search);
+  const initial=params.get('root')+':'+params.get('quality');
+  if(coreChordByKey.has(initial))select.value=initial;
   function render(){
-    const chord=bySlug.get(select.value);if(!chord)return;
-    output.innerHTML=`<h2>${escapeHtml(chord.name)}</h2><p>Original notes: <strong>${escapeHtml(chord.notes.map(prettyNote).join(' · '))}</strong></p><div class="inversion-list">${chord.inversions.map((v,i)=>`<article class="inversion-card"><h3>${i===0?'Root position':i===1?'First inversion':i===2?'Second inversion':'Third inversion'} · Bass ${escapeHtml(prettyNote(v.bass))}</h3><p>${escapeHtml(v.notes.map(prettyNote).join(' · '))}</p><div class="keyboard-frame">${keyboardSvg(chord,{inversion:i})}</div><button class="btn btn-primary" type="button" data-play-midi="${v.midi.join(',')}">▶ Hear this voicing</button></article>`).join('')}</div>`;
+    const core=coreChordByKey.get(select.value);if(!core)return;
+    const chord=coreChordKeyboard(core),names=['Root position','First inversion','Second inversion','Third inversion'];
+    output.innerHTML='<h2>'+escapeHtml(chord.name)+'</h2>'+
+      '<p>Spelled notes: <strong>'+escapeHtml(chord.notes.map(prettyNote).join(' · '))+'</strong></p>'+
+      '<p class="help-text">'+(chord.notes.length===4?'Four chord tones · four inversions':'Three chord tones · three inversions')+
+      '. The slash name puts the lowest note after the slash.</p>'+
+      '<div class="inversion-list">'+chord.inversions.map((v,i)=>{
+        const slash=i===0?chord.symbol:chord.symbol+'/'+prettyNote(v.bass);
+        return '<article class="inversion-card"><h3>'+names[i]+' · '+escapeHtml(slash)+'</h3>'+
+          '<p>Notes from the bass: '+escapeHtml(v.notes.map(prettyNote).join(' · '))+'</p>'+
+          '<p class="help-text">Lowest written note: <strong>'+escapeHtml(prettyNote(v.bass))+'</strong></p>'+
+          '<div class="keyboard-frame">'+keyboardSvg(chord,{inversion:i})+'</div>'+
+          '<button class="btn btn-primary" type="button" data-play-midi="'+v.midi.join(',')+'">▶ Hear '+names[i].toLowerCase()+'</button></article>';
+      }).join('')+'</div>';
   }
   select.addEventListener('change',render);render();
 }
