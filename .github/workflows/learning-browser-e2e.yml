@@ -1,0 +1,51 @@
+name: Learning Tools Browser E2E
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/learning-browser-e2e.yml'
+      - 'scripts/browser-learning-e2e.mjs'
+      - 'src/lib/keyTheory.mjs'
+      - 'src/scripts/studyAudio.js'
+      - 'src/components/MetronomePanel.astro'
+      - 'src/pages/tools/scales-and-keys.astro'
+      - 'src/pages/tools/chord-progressions.astro'
+      - 'src/pages/tools/metronome.astro'
+      - 'src/pages/tools/virtual-piano.astro'
+      - 'src/styles/learning.css'
+jobs:
+  browser-learning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install app and Chromium
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save playwright@1.56.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Build Astro
+        run: npm run build
+      - name: Serve static output
+        run: |
+          python3 -m http.server 4321 --bind 127.0.0.1 --directory dist > /tmp/learning-preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --noproxy '*' -fsS http://127.0.0.1:4321/tools/scales-and-keys/ > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/learning-preview.log
+          exit 1
+      - name: Test scales, progressions, metronome and responsive layouts
+        run: node scripts/browser-learning-e2e.mjs
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-learning-browser-screenshots
+          path: test-results/learning/
+          if-no-files-found: ignore
+          retention-days: 5
