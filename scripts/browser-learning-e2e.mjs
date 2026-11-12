@@ -54,6 +54,44 @@ try{
   await page.screenshot({path:'test-results/learning/progressions-desktop.png',fullPage:true});
   console.log('PASS major/minor progressions, harmonic V, edit, play/stop');
 
+  // Handoff must preserve a manually edited minor cadence, its harmonic V, and tempo.
+  await go('/tools/chord-progressions/');
+  await page.locator('#prog-mode').selectOption('minor');
+  await page.locator('#prog-root').selectOption('A');
+  await page.locator('#prog-preset').selectOption('cadence');
+  await page.locator('#prog-bpm').fill('120');
+  const handoff=await page.locator('#prog-piano-link').getAttribute('href');
+  assert.ok(handoff?.includes('practice=1')&&handoff.includes('120'));
+  await go(handoff);
+  assert.equal(await page.locator('#piano-practice').isVisible(),true);
+  assert.deepEqual((await texts('.practice-bar strong')).map(x=>x.trim()),['Am','Dm','E','Am']);
+  assert.match(await page.locator('#practice-current').innerText(),/Bar 1 of 4/);
+  assert.equal(await page.locator('.piano-key.practice-target').count(),3);
+  await page.locator('#vp-scroll').focus();
+  await page.keyboard.down('h');await page.keyboard.down('a');await page.keyboard.down('d');
+  assert.match(await page.locator('#practice-status').innerText(),/Correct Am chord/);
+  await page.keyboard.up('d');await page.keyboard.up('a');await page.keyboard.up('h');
+  await page.locator('#practice-bars button:nth-child(3)').click();
+  assert.match(await page.locator('#practice-current').innerText(),/E/);
+  assert.equal(await page.locator('.piano-key.practice-target').count(),3);
+  await page.locator('#practice-record').click();
+  assert.equal(await page.locator('#vp-end-record').isDisabled(),false);
+  assert.equal(await page.locator('#vp-export').isDisabled(),true);
+  await page.locator('#vp-scroll').focus();
+  await page.keyboard.down('d');await page.keyboard.down('y');await page.keyboard.down('k');
+  await delay(150);await page.keyboard.up('k');await page.keyboard.up('y');await page.keyboard.up('d');
+  await page.locator('#vp-end-record').click();
+  assert.equal(await page.locator('#vp-midi').isDisabled(),false);
+  await page.locator('#practice-edit').click();
+  assert.deepEqual((await texts('#progression-steps strong')).map(x=>x.trim()),['Am','Dm','E','Am']);
+  assert.equal(await page.locator('#prog-bpm').inputValue(),'120');
+  await page.screenshot({path:'test-results/learning/progression-piano-roundtrip.png',fullPage:true});
+  console.log('PASS progression roundtrip, chord hints, actual keyboard matching and practice recording');
+  await go('/tools/virtual-piano/?practice=1&root=C&mode=major&bpm=90&steps=0%3Aminor');
+  assert.equal(await page.locator('#piano-practice').isVisible(),false);
+  assert.equal(await page.locator('.piano-key[data-midi]').count(),88);
+  console.log('PASS rejected malformed practice URL without disrupting virtual piano');
+
   await go('/tools/metronome/');
   await page.locator('#metro-toggle').click();await delay(300);
   assert.match(await page.locator('#metro-toggle').innerText(),/Stop metronome/);
