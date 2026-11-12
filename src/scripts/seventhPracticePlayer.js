@@ -2,13 +2,14 @@
 import {SEVENTH_PATTERNS,seventhPattern,planSeventhPractice} from '../lib/seventhPractice.mjs';
 import {createStudyAudio} from './studyAudio.js';
 import {prettyNote} from '../lib/music.js';
+import {serializeSeventhTransfer} from '../lib/seventhTransfer.mjs';
 
 export function setupSeventhPractice(){
   const by=id=>document.getElementById(id),region=by('seventh-player');
   if(!region)return;
   const selection=by('seventh-pattern'),slider=by('seventh-tempo'),tempo=by('seventh-tempo-output');
   const click=by('seventh-click'),loop=by('seventh-loop'),start=by('seventh-start'),stop=by('seventh-stop');
-  const bars=by('seventh-player-bars'),status=by('seventh-player-status');
+  const bars=by('seventh-player-bars'),status=by('seventh-player-status'),pianoLink=by('seventh-piano-link');
   const audio=createStudyAudio();
   const timers=new Set();
   let running=false,session=0,current=null;
@@ -19,6 +20,7 @@ export function setupSeventhPractice(){
     const id=setTimeout(()=>{timers.delete(id);fn();},Math.max(0,ms));
     timers.add(id);
   }
+  function updatePianoLink(){pianoLink.href='/tools/virtual-piano/?'+serializeSeventhTransfer({patternId:selection.value,bpm:Number(slider.value)});}
   function render(){
     const info=seventhPattern(selection.value);
     bars.replaceChildren(...info.bars.map((bar,i)=>{
@@ -30,6 +32,7 @@ export function setupSeventhPractice(){
       card.append(number,symbol,notes);return card;
     }));
     current=info;
+    updatePianoLink();
   }
   function clearHighlights(){
     for(const card of bars.children){card.classList.remove('is-current');card.setAttribute('aria-current','false');}
@@ -74,7 +77,7 @@ export function setupSeventhPractice(){
     schedule(audio.now()+.12,nonce);
   }
   selection.addEventListener('change',()=>{halt(true);render();status.textContent='Selected '+current.label+'.';});
-  slider.addEventListener('input',()=>{tempo.textContent=slider.value+' BPM';if(running)halt(false);});
+  slider.addEventListener('input',()=>{tempo.textContent=slider.value+' BPM';updatePianoLink();if(running)halt(false);});
   start.addEventListener('click',begin);
   stop.addEventListener('click',()=>halt());
   document.addEventListener('visibilitychange',()=>{
