@@ -14,7 +14,7 @@ test('triads, doubled octaves, incomplete and non-chord combinations',()=>{
   assert.ok(describeHeldChord([60,64,67]).matches.some(x=>x.symbol==='C'));
   assert.equal(describeHeldChord([60,72,64,67]).kind,'triad');
   assert.equal(describeHeldChord([60,64]).kind,'idle');
-  assert.equal(describeHeldChord([60,64,67,70,74]).kind,'seventh');
+  assert.equal(describeHeldChord([60,64,67,70,72]).kind,'seventh');
   assert.equal(describeHeldChord([60,64,67,70,73]).kind,'unknown');
   assert.equal(describeHeldChord([0,999,'60']).kind,'idle');
 });

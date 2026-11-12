@@ -6,6 +6,7 @@ const INTERVALS = Object.freeze({
   dominant7:[0,4,7,10], major7:[0,4,7,11], minor7:[0,3,7,10],
 });
 const LABELS = Object.freeze({ major:'Major',minor:'Minor',diminished:'Diminished',augmented:'Augmented',dominant7:'Dominant seventh',major7:'Major seventh',minor7:'Minor seventh' });
+const SYMBOL_SUFFIX = Object.freeze({major:'',minor:'m',diminished:'dim',augmented:'aug',dominant7:'7',major7:'maj7',minor7:'m7'});
 const PREFERRED_ROOTS = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 const SIGN = Object.freeze({ '#':'♯', 'b':'♭' });
 export function mod(n,m){return ((n%m)+m)%m;}
@@ -49,7 +50,7 @@ export function midiVoicing(root,quality,inversion=0){
 }
 export function createChord({slug,root,quality,symbol,name,keyword}={}){
   const notes=chordNotes(root,quality), pcs=notes.map(pitchClass);
-  return {slug,root,quality,symbol:symbol||root+(quality==='minor'?'m':quality==='dominant7'?'7':''),name:name||`${prettyNote(root)} ${LABELS[quality]}`,keyword,notes,pcs,intervals:[...INTERVALS[quality]],qualityName:LABELS[quality],inversions:notes.map((_,i)=>midiVoicing(root,quality,i))};
+  return {slug,root,quality,symbol:symbol||root+SYMBOL_SUFFIX[quality],name:name||`${prettyNote(root)} ${LABELS[quality]}`,keyword,notes,pcs,intervals:[...INTERVALS[quality]],qualityName:LABELS[quality],inversions:notes.map((_,i)=>midiVoicing(root,quality,i))};
 }
 export function allFindableChords(){
   return PREFERRED_ROOTS.flatMap(root=>['major','minor','diminished','augmented','dominant7','major7','minor7'].map(quality=>createChord({root,quality})));
