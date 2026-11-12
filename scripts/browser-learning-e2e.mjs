@@ -215,6 +215,57 @@ try{
   await page.screenshot({path:'test-results/learning/seventh-types-guide.png',fullPage:true});
   console.log('PASS four authored seventh lessons, four inversions each, true sound and separate comparison guide');
 
+  // Seventh lesson -> playable 88 keys -> four-note recognition -> local recording.
+  await go('/guides/seventh-chords-piano/');
+  await page.locator('#seventh-player[data-ready="true"]').waitFor();
+  await page.locator('#seventh-pattern').selectOption('ii-v-i');
+  await page.locator('#seventh-tempo').evaluate(el=>{el.value='110';el.dispatchEvent(new Event('input',{bubbles:true}));});
+  const seventhLink=await page.locator('#seventh-piano-link').getAttribute('href');
+  assert.ok(seventhLink?.includes('practice=7')&&seventhLink.includes('ii-v-i')&&seventhLink.includes('110'));
+  await go(seventhLink);
+  assert.equal(await page.locator('#piano-practice').isVisible(),true);
+  assert.deepEqual((await texts('#practice-bars strong')).map(x=>x.trim()),['Dm7','G7','Cmaj7']);
+  assert.match(await page.locator('#practice-current').innerText(),/Bar 1 of 3/);
+  assert.equal(await page.locator('.piano-key.practice-target').count(),4);
+  await page.locator('#vp-scroll').focus();
+  for(const note of ['s','f','h','k'])await page.keyboard.down(note);
+  assert.match(await page.locator('#vp-chord-name').innerText(),/Dm7/);
+  assert.equal(await page.locator('#vp-chord-detect').getAttribute('data-kind'),'seventh');
+  assert.match(await page.locator('#practice-status').innerText(),/Correct Dm7 chord/);
+  for(const note of ['k','h','f','s'])await page.keyboard.up(note);
+  await page.locator('#practice-record').click();
+  assert.equal(await page.locator('#vp-end-record').isDisabled(),false);
+  await page.locator('#vp-scroll').focus();
+  for(const note of ['s','f','h','k'])await page.keyboard.down(note);
+  await delay(160);
+  for(const note of ['k','h','f','s'])await page.keyboard.up(note);
+  await page.locator('#vp-end-record').click();
+  assert.equal(await page.locator('#vp-midi').isDisabled(),false);
+  assert.equal(await page.locator('#vp-export').isDisabled(),false);
+  await page.locator('#practice-bars button:nth-child(3)').click();
+  assert.match(await page.locator('#practice-current').innerText(),/Cmaj7/);
+  assert.equal(await page.locator('.piano-key.practice-target').count(),4);
+  await page.screenshot({path:'test-results/learning/seventh-recording-desktop.png',fullPage:true});
+  await go('/guides/seventh-chords-piano/');
+  await page.locator('#seventh-player[data-ready="true"]').waitFor();
+  await page.locator('#seventh-pattern').selectOption('turnaround');
+  const turnaroundLink=await page.locator('#seventh-piano-link').getAttribute('href');
+  await go(turnaroundLink);
+  assert.deepEqual((await texts('#practice-bars strong')).map(x=>x.trim()),['Cmaj7','Am7','Dm7','G7']);
+  await go('/tools/virtual-piano/?practice=7&pattern=ii-v-i&bpm=80&bpm=120');
+  assert.equal(await page.locator('#piano-practice').isVisible(),false);
+  const mobileSeventh=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  const mobileSeventhPage=await mobileSeventh.newPage();
+  await mobileSeventhPage.goto(origin+seventhLink,{waitUntil:'domcontentloaded'});
+  assert.equal(await mobileSeventhPage.locator('#piano-practice').isVisible(),true);
+  assert.equal(await mobileSeventhPage.locator('.piano-key.practice-target').count(),4);
+  const dim=await mobileSeventhPage.evaluate(()=>({scroll:document.documentElement.scrollWidth,view:document.documentElement.clientWidth}));
+  assert.ok(dim.scroll<=dim.view+2,'Mobile seventh guide overflow: '+JSON.stringify(dim));
+  await mobileSeventhPage.screenshot({path:'test-results/learning/seventh-recording-mobile.png',fullPage:true});
+  await mobileSeventh.close();
+  console.log('PASS seventh handoff, 3/4 bars, four-note chord detection, recording, mobile');
+
+
   await go('/chords/f-sharp-minor/');
   assert.ok(await page.locator('a[href="/chords/a-major/"]').count()>=1,'F-sharp minor should link its relative A major');
   await page.locator('[data-inversion-button="1"]').click();
