@@ -224,6 +224,20 @@ try{
   console.log('PASS metronome start/stop, 3/4 measure and tap tempo');
 
   await go('/tools/virtual-piano/');
+  // Local static server resource sample, not a real-user Core Web Vitals score.
+  await page.waitForLoadState('networkidle');
+  const pianoResources=await page.evaluate(()=>{
+    const scripts=performance.getEntriesByType('resource').filter(x=>/\.js(?:\?|$)/.test(x.name));
+    return {jsCount:scripts.length,
+      jsBytes:scripts.reduce((sum,x)=>sum+x.encodedBodySize,0),
+      urls:scripts.map(x=>new URL(x.name).pathname)};
+  });
+  assert.ok(!pianoResources.urls.some(u=>/\/_astro\/client[.-]/.test(u)),
+    'Virtual piano must not download the unused chord-atlas client module: '+pianoResources.urls.join(', '));
+  assert.ok(!pianoResources.urls.some(u=>/ffmpeg|ffmpeg-core|ffmpeg-worker/.test(u)),
+    'Optional video conversion must not download before the user requests conversion');
+  console.log('Piano initial JS resources: '+pianoResources.jsCount+
+    ' files / '+Math.round(pianoResources.jsBytes/1024)+' KiB (local HTTP build, not field Core Web Vitals)');
   assert.equal(await page.locator('.piano-key[data-midi]').count(),88);
   assert.equal(await page.locator('#practice-metronome').count(),1);
   await page.locator('#metro-toggle').click();await delay(200);
