@@ -22,6 +22,7 @@ const defaultPractice=progression('C','major','pop');
     <button id="prog-start" type="button" class="action-primary">▶ Play four bars</button>
     <button id="prog-stop" type="button">■ Stop</button>
     <button id="prog-copy" type="button">Copy chord sequence</button>
+    <a id="prog-piano-link" class="action-primary" href="/tools/virtual-piano/">Practice these bars on the 88-key piano ↗</a>
     <a id="prog-scale-link" href="/tools/scales-and-keys/?root=C&mode=major">Explore this scale ↗</a>
   </div>
   <div id="prog-status" class="learning-status" role="status" aria-live="polite">Each chord lasts four quarter-note beats in 4/4. Tap Play to begin.</div>
@@ -32,6 +33,7 @@ const defaultPractice=progression('C','major','pop');
 import {KEY_ROOTS,keyInfo,progression,progressionStep,PROGRESSION_PRESETS} from '../../lib/keyTheory.mjs';
 import {prettyNote} from '../../lib/music.js';
 import {createStudyAudio} from '../../scripts/studyAudio.js';
+import {serializePractice,parsePractice} from '../../lib/practiceTransfer.mjs';
 const audio=createStudyAudio(),by=id=>document.getElementById(id);
 const mode=by('prog-mode'),root=by('prog-root'),preset=by('prog-preset'),container=by('progression-steps'),
   bpm=by('prog-bpm'),tempo=by('prog-tempo'),message=by('prog-status');
@@ -72,17 +74,19 @@ function render(){
     article.append(roman,title,notes,selector,playButton);return article;
   }));
   by('prog-scale-link').href='/tools/scales-and-keys/?root='+encodeURIComponent(root.value)+'&mode='+mode.value;
+  by('prog-piano-link').href='/tools/virtual-piano/?'+serializePractice({root:root.value,mode:mode.value,bpm:Number(bpm.value),steps})+'#piano-practice';
   message.textContent='Selected '+key.name+'. Four bars of 4/4; adjust each chord if you like.';
 }
 function refresh(){stop(true);steps=progression(root.value,mode.value,preset.value).steps;render();}
 mode.addEventListener('change',()=>{setRoots();setPresets();refresh();});
-root.addEventListener('change',refresh);
-preset.addEventListener('change',refresh);
+root.addEventListener('change',()=>{if(preset.value==='custom')preset.value=PROGRESSION_PRESETS[mode.value][0].id;refresh();});
+preset.addEventListener('change',()=>{if(preset.value==='custom')return;refresh();});
 container.addEventListener('change',e=>{
   const selector=e.target.closest('select[data-step]');if(!selector)return;
   const [degree,quality]=selector.value.split(':');
   stop(true);steps[Number(selector.dataset.step)]=progressionStep(key,Number(degree),quality);
-  render();message.textContent='Bar '+(Number(selector.dataset.step)+1)+' updated.';
+  if(![...preset.options].some(o=>o.value==='custom'))preset.add(new Option('Custom edited sequence','custom'));
+  preset.value='custom';render();message.textContent='Bar '+(Number(selector.dataset.step)+1)+' updated.';
 });
 container.addEventListener('click',async e=>{
   const button=e.target.closest('[data-preview]');if(!button)return;
@@ -91,7 +95,7 @@ container.addEventListener('click',async e=>{
   try{await audio.unlock();audio.chord(s.midi,audio.now()+.04,1.2);message.textContent='Listening to '+s.symbol+'.';}
   catch(error){message.textContent=error.message;}
 });
-bpm.addEventListener('input',()=>{tempo.textContent=bpm.value+' BPM';if(playing)stop(true);});
+bpm.addEventListener('input',()=>{tempo.textContent=bpm.value+' BPM';if(playing)stop(true);render();});
 async function runLoop(){
   const myToken=++token,sec=60/Number(bpm.value);
   try{await audio.unlock();}catch(e){message.textContent=e.message;playing=false;return;}
@@ -120,9 +124,18 @@ by('prog-copy').addEventListener('click',async()=>{
   const text=key.name+': '+steps.map(s=>s.symbol).join(' – ')+' ('+steps.map(s=>s.roman).join(' – ')+')';
   try{await navigator.clipboard.writeText(text);message.textContent='Copied: '+text;}catch{message.textContent='Copy unavailable. Your sequence: '+text;}
 });
-if(KEY_ROOTS[params.get('mode')]?.includes(params.get('root')))mode.value=params.get('mode');
-setRoots();if(KEY_ROOTS[mode.value].includes(params.get('root')))root.value=params.get('root');
-setPresets();refresh();
+const restored=parsePractice(window.location.search);
+if(restored){
+  mode.value=restored.mode;setRoots();root.value=restored.root;setPresets();
+  preset.add(new Option('Imported custom sequence','custom'));preset.value='custom';
+  bpm.value=String(restored.bpm);tempo.textContent=bpm.value+' BPM';
+  steps=restored.steps;render();
+  message.textContent='Your edited four-bar sequence was restored from the virtual piano.';
+}else{
+  if(KEY_ROOTS[params.get('mode')]?.includes(params.get('root')))mode.value=params.get('mode');
+  setRoots();if(KEY_ROOTS[mode.value].includes(params.get('root')))root.value=params.get('root');
+  setPresets();refresh();
+}
 window.addEventListener('pagehide',()=>stop(true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)stop(true);});
 </script>

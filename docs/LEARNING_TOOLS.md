@@ -31,3 +31,10 @@ This release expands the earlier 16 individually authored chord lessons, 120-cho
 - [Original video WASM export regression](https://github.com/garrison2025/Piano-Chord/actions/runs/43130905741) passed after embedding the metronome and adding the new routes.
 - Live Cloudflare HTML and canonical metadata were fetched for all three new tool pages and the existing Virtual Piano; each responds and displays the expected new content.
 - Unverified: physical iPhone Safari / Android Chrome audio latency and metronome multitasking, true piano key feel on touch devices, and user-level pedagogical review. The metronome clicks are intentionally not included in the piano recorder's note-event exports.
+
+## Editable progression → Virtual Piano practice handoff
+
+- Progression Trainer serializes the four **edited** chord degrees/qualities, key and tempo into validated query parameters; no account, database or extra indexable URL is created.
+- Virtual Piano highlights a target C4-octave voicing, provides a four-bar silent visual guide (manual/timed), exact pitch-class chord matching with octave freedom, and a Record & Follow button that invokes the existing recording studio.
+- The guide produces **no audio of its own**, and only real keyboard notes are recorded. Replayed takes do not mark a practice target as correctly played. Edited sequences can be returned to the trainer with BPM preserved.
+- Local unit test `tests/practiceTransfer.test.js` checks C pop, harmonic-minor V, edits, URL rejection and octave-invariant recognition. Learning browser E2E covers roundtrip navigation.
