@@ -4,6 +4,7 @@ import path from 'node:path';
 import { releaseChords } from '../src/data/chords.js';
 import {lessonEarDrills} from '../src/data/lessonPathways.js';
 import {chordSearchDescriptions} from '../src/data/chordSeo.js';
+import {lessonPracticeHandoff} from '../src/lib/lessonPracticeHandoff.mjs';
 const dist = path.resolve('dist');
 const publishedPages = [
   '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
@@ -39,6 +40,9 @@ for(const url of publishedPages){
 for(const entry of releaseChords){
  const html=read(getFile('/chords/'+entry.slug+'/')).replaceAll('&amp;','&');
  const drill=lessonEarDrills[entry.slug];
+ const handoff=lessonPracticeHandoff(entry);
+ if(!html.includes('href="'+handoff.href+'"'))
+   errors.push('Missing validated lesson-to-progression link: '+entry.slug);
  const meta=html.match(/<meta\s+name="description"\s+content="([^"]*)"/)?.[1];
  const expected=chordSearchDescriptions[entry.slug];
  if(!expected||meta!==expected)errors.push('Missing or inconsistent authored meta description: '+entry.slug);

@@ -4,7 +4,7 @@
  */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
-import {mkdirSync,existsSync,statSync} from 'node:fs';
+import {mkdirSync,existsSync,statSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 
@@ -23,6 +23,28 @@ try{
   };
   const texts=async selector=>page.locator(selector).allTextContents();
   // 16 V1.3 priority plus 13 individually authored supplemental lessons.
+  await go('/chords/b-minor/');
+  const minorProgression=page.locator('a[href^="/tools/chord-progressions/?root=B&mode=minor&preset=cadence"]');
+  assert.equal(await minorProgression.count(),1);
+  await minorProgression.click();
+  await page.waitForFunction(()=>document.getElementById('prog-root')?.value==='B'&&
+    document.getElementById('prog-mode')?.value==='minor'&&document.getElementById('prog-preset')?.value==='cadence',
+    null,{timeout:9000});
+  assert.equal((await texts('#progression-steps strong'))[0],'Bm');
+  await go('/chords/c-sharp-minor/');
+  await page.locator('a[href^="/tools/chord-progressions/?root=C%23&mode=minor&preset=cadence"]').click();
+  await page.waitForFunction(()=>document.getElementById('prog-root')?.value==='C#',null,{timeout:9000});
+  assert.equal((await texts('#progression-steps strong'))[0],'C♯m');
+  await go('/chords/a-minor-7/');
+  await page.locator('a[href="/guides/seventh-chords-piano/?pattern=turnaround#cadence"]').click();
+  await page.waitForFunction(()=>document.getElementById('seventh-pattern')?.value==='turnaround',null,{timeout:9000});
+  assert.deepEqual((await texts('#seventh-player-bars strong')).map(s=>s.trim()),['Cmaj7','Am7','Dm7','G7']);
+  await go('/chords/c-7/');
+  await page.locator('a[href="/guides/seventh-chords-piano/#c7-resolution"]').click();
+  assert.equal(await page.locator('#c7-resolution').isVisible(),true);
+  assert.equal(await page.locator('#c7-resolution button[data-play-midi]').count(),2);
+  assert.match(await page.locator('#c7-resolution').innerText(),/C7.*F major/s);
+  console.log('PASS lessons → tonic and seventh progressions, C7-to-F true resolution');
   await go('/chords/b-minor/');
   assert.equal(await page.locator('#ear-training').isVisible(),true);
   assert.equal(await page.locator('.ear-training-chord').count(),2);
@@ -531,6 +553,20 @@ try{
   await page.screenshot({path:'test-results/learning/f-sharp-minor-inversion.png',fullPage:true});
   await go('/printables/piano-chord-chart/');
   assert.equal(await page.locator('.print-cell').count(),16,'Original starter printable should not silently grow');
+  // Test actual Chromium printing on both supported paper formats.
+  await page.emulateMedia({media:'print'});
+  const printColumns=await page.locator('.print-chart-grid').evaluate(el=>
+    getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+  assert.equal(printColumns,4,'The print layout must retain four columns');
+  for(const format of ['A4','Letter']){
+    const pdf=await page.pdf({format,printBackground:true,preferCSSPageSize:false});
+    assert.equal(pdf.subarray(0,4).toString(),'%PDF','Chrome must generate PDF: '+format);
+    const count=(pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)||[]).length;
+    assert.equal(count,1,format+' should fit all 16 diagrams on one printable page');
+    writeFileSync('test-results/learning/16-chords-'+format.toLowerCase()+'.pdf',pdf);
+    console.log('PASS '+format+' print: 16 SVG diagrams, four columns, '+count+' PDF page');
+  }
+  await page.emulateMedia({media:'screen'});
   console.log('PASS nine authored chord pages, SVG routes, inversions, audio and fixed 16-chord printable');
 
   for(const path of ['/chords/f-sharp-minor/','/chords/b-flat-minor/','/chords/c-major-7/','/guides/seventh-chords-piano/']){
