@@ -54,6 +54,9 @@ const cycle=[cmaj7,am7,dm7,g7];
 <section class="container section-compact"><div class="panel"><h2>Where to go next</h2><p>For exact note positions and four complete voicings, open the individual lessons. For chord recognition without knowing the symbol, try the free chord finder.</p><div class="button-row"><a class="btn btn-primary" href="/chords/">Browse all 29 lessons ↗</a><a class="btn" href="/tools/chord-finder/">Identify piano chords ↗</a><a class="btn" href="/tools/chord-progressions/">Build a four-bar progression ↗</a></div></div></section>
 <style>
 .seventh-card,.seventh-step{min-width:0;overflow:hidden}
+#listen .card-grid,#cadence .card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media(max-width:920px){#listen .card-grid,#cadence .card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#listen .card-grid,#cadence .card-grid{grid-template-columns:minmax(0,1fr)}}
 .seventh-card h3{font-size:clamp(27px,3vw,40px);margin:.25em 0}
 .seventh-card .keyboard-frame{width:100%;max-width:100%;overflow:hidden}
 .seventh-card .keyboard-frame :global(svg){max-width:100%;height:auto}

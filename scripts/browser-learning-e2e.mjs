@@ -205,6 +205,12 @@ try{
     const mobileLessonPage=await mobileLesson.newPage();
     const response=await mobileLessonPage.goto(origin+path,{waitUntil:'domcontentloaded'});
     assert.equal(response?.status(),200);
+    if(path.includes('seventh-chords-piano')){
+      const cards=await mobileLessonPage.locator('#listen .seventh-card').evaluateAll(nodes=>nodes.map(n=>({x:n.getBoundingClientRect().x,w:n.getBoundingClientRect().width})));
+      assert.equal(cards.length,3);
+      assert.ok(cards.every(x=>Math.abs(x.x-cards[0].x)<2),'Mobile seventh cards must stack vertically');
+      assert.ok(cards.every(x=>x.w>280),'Mobile seventh cards need readable full width');
+    }
     const width=await mobileLessonPage.evaluate(()=>({scroll:document.documentElement.scrollWidth,view:document.documentElement.clientWidth}));
     assert.ok(width.scroll<=width.view+2,'Mobile chord page overflow '+path+': '+JSON.stringify(width));
     await mobileLessonPage.screenshot({path:'test-results/learning/mobile-'+path.split('/')[2]+'.png',fullPage:true});
