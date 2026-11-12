@@ -132,7 +132,7 @@ function finder(){
   }));
   bass.addEventListener('change',render);
   el('clear-pitches').addEventListener('click',()=>{selected.clear();bass.value='';render();});
-  el('example-pitches').addEventListener('click',()=>{selected.clear();[0,4,7].forEach(v=>selected.add(v));render();});
+  el('example-pitches').addEventListener('click',()=>{selected.clear();bass.value='';[0,4,7].forEach(v=>selected.add(v));render();});
   render();
 }
 function inversionExplorer(){

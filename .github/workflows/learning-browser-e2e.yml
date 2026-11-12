@@ -11,6 +11,8 @@ on:
       - 'src/lib/seventhTransfer.mjs'
       - 'src/lib/chordDetection.mjs'
       - 'src/lib/chordAtlas.mjs'
+      - 'src/lib/chordSearch.mjs'
+      - 'tests/chordSearch.test.js'
       - 'src/lib/coreCatalog.js'
       - 'src/lib/pianoSvg.js'
       - 'src/scripts/client.js'

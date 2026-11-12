@@ -239,6 +239,15 @@ try{
   // 120-family atlas -> theoretical inversions -> playable examples -> live recognition.
   await go('/tools/chord-library/');
   assert.equal(await page.locator('.atlas-card').count(),120);
+  await page.locator('#atlas-search').fill('C♯maj7');
+  assert.equal(await page.locator('.atlas-card:visible').count(),1);
+  assert.match(await page.locator('.atlas-card:visible').innerText(),/D♭maj7/);
+  assert.match(await page.locator('.atlas-card:visible').innerText(),/Enharmonic search match: C♯maj7/);
+  await page.locator('#atlas-search').fill('F# minor');
+  assert.equal(await page.locator('.atlas-card:visible').count(),1);
+  assert.match(await page.locator('.atlas-card:visible').innerText(),/G♭m/);
+  await page.locator('#atlas-reset').click();
+  assert.equal(await page.locator('.atlas-card:visible').count(),120);
   assert.equal(await page.locator('.atlas-card a[href^="/tools/inversion-explorer/?root="]').count(),120);
   await page.locator('#atlas-type').selectOption('m7b5');
   assert.equal(await page.locator('.atlas-card:visible').count(),12);
@@ -269,6 +278,10 @@ try{
   assert.equal(await cMajorFirst.getByRole('link',{name:'Chord voicings'}).count(),1);
   assert.equal(await cMajorFirst.locator('button[data-play-midi]').getAttribute('data-play-midi'),'50,60,64,67',
     'C/D result must audition the added D bass below the C major chord');
+  await page.locator('#example-pitches').click();
+  assert.equal(await page.locator('#finder-bass').inputValue(),'','Example resets old bass');
+  assert.match(await page.locator('#finder-results').innerText(),/C Major/);
+  assert.doesNotMatch(await page.locator('#finder-results').innerText(),/C\/D/);
   await page.locator('#clear-pitches').click();
   assert.equal(await page.locator('#finder-bass').inputValue(),'');
   assert.match(await page.locator('#finder-results').innerText(),/0 notes selected/);
