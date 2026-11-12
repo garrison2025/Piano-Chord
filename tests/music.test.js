@@ -34,7 +34,7 @@ test('24 major/minor + C7 chord lessons without duplicate canonical slugs',()=>{
   assert.equal(releaseChords.filter(c=>c.quality==='major').length,12);
   assert.equal(releaseChords.filter(c=>c.quality==='minor').length,12);
   assert.equal(releaseChords.filter(c=>c.quality==='dominant7').length,1);
-  assert.equal(new Set(releaseChords.map(c=>c.slug)).size,16);
+  assert.equal(new Set(releaseChords.map(c=>c.slug)).size,25);
   assert(releaseChords.every(c=>chordNotes(c.root,c.quality).length>=3));
 });
 test('keyboard SVG includes original image and accessible labels',()=>{
