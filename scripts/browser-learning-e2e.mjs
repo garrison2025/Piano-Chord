@@ -36,6 +36,40 @@ try{
   await page.screenshot({path:'test-results/learning/scales-desktop.png',fullPage:true});
   console.log('PASS scales, key spelling, keyboard and sound controls');
 
+  // 120-family atlas -> theoretical inversions -> playable examples -> live recognition.
+  await go('/tools/chord-library/');
+  assert.equal(await page.locator('.atlas-card').count(),120);
+  assert.equal(await page.locator('.atlas-card a[href^="/tools/inversion-explorer/?root="]').count(),120);
+  await page.locator('#atlas-type').selectOption('m7b5');
+  assert.equal(await page.locator('.atlas-card:visible').count(),12);
+  await page.locator('#atlas-reset').click();
+  await page.locator('.atlas-card a[href="/tools/inversion-explorer/?root=Db&quality=maj7"]').click();
+  assert.equal(await page.locator('#inversion-chord').inputValue(),'Db:maj7');
+  assert.equal(await page.locator('#inversion-tool .inversion-card').count(),4);
+  assert.match(await page.locator('#inversion-tool').innerText(),/D♭ · F · A♭ · C/);
+  await page.locator('#inversion-chord').selectOption('C:sus4');
+  assert.equal(await page.locator('#inversion-tool .inversion-card').count(),3);
+  assert.match(await page.locator('#inversion-tool').innerText(),/Csus4\/F/);
+  await page.locator('#inversion-tool .inversion-card').first().locator('button[data-play-midi]').click();
+  assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
+  await page.screenshot({path:'test-results/learning/120-inversions.png',fullPage:true});
+  await go('/tools/chord-finder/');
+  for(const pc of [0,5,7])await page.locator('[data-pitch="'+pc+'"]').click();
+  assert.match(await page.locator('#finder-results').innerText(),/Csus4/);
+  await page.locator('#finder-results a[href="/tools/inversion-explorer/?root=C&quality=sus4"]').click();
+  assert.equal(await page.locator('#inversion-chord').inputValue(),'C:sus4');
+  await go('/tools/chord-finder/');
+  for(const pc of [0,3,6,10])await page.locator('[data-pitch="'+pc+'"]').click();
+  assert.match(await page.locator('#finder-results').innerText(),/Cm7b5/);
+  assert.ok(await page.locator('#finder-results button[data-play-midi]').count()>=1);
+  await page.screenshot({path:'test-results/learning/120-family-finder.png',fullPage:true});
+  await go('/tools/virtual-piano/');
+  await page.locator('#vp-scroll').focus();
+  for(const key of ['a','f','g'])await page.keyboard.down(key);
+  assert.match(await page.locator('#vp-chord-name').innerText(),/Csus4/);
+  for(const key of ['g','f','a'])await page.keyboard.up(key);
+  console.log('PASS 120 atlas inversion links, all-family finder, full inversions and real 88-key sus4');
+
   await go('/tools/chord-progressions/');
   assert.deepEqual((await texts('#progression-steps strong')).map(s=>s.trim()),['C','G','Am','F']);
   await page.locator('#prog-mode').selectOption('minor');

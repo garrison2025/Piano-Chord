@@ -45,6 +45,9 @@ const pianoHtml=read(path.join(dist,'tools/virtual-piano/index.html'));
 if((pianoHtml.match(/data-midi="[0-9]+"/g)||[]).length!==88)errors.push('Virtual piano must contain 88 key buttons');
 const atlasHtml=read(path.join(dist,'tools/chord-library/index.html'));
 if((atlasHtml.match(/class="atlas-card"/g)||[]).length!==120)errors.push('Chord atlas must contain 120 core chord cards');
+if((atlasHtml.match(/href="\/tools\/inversion-explorer\/\?root=/g)||[]).length!==120)errors.push('Every atlas card needs a true inversion explorer link');
+const inversionHtml=read(path.join(dist,'tools/inversion-explorer/index.html'));
+if((inversionHtml.match(/<option value="[A-G][b]?:[^"]+"/g)||[]).length!==120)errors.push('Inversion explorer must publish 120 selectable chord options');
 for(const [page,selectors] of [
  ['/tools/scales-and-keys/',['id="scale-mode"','id="scale-root"','id="scale-chords"']],
  ['/tools/chord-progressions/',['id="prog-mode"','id="prog-start"','id="progression-steps"']],

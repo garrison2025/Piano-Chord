@@ -92,3 +92,10 @@ Actual Chromium screenshots exposed unstyled bars: cards inserted by JavaScript 
 - Export options are snapshotted for consistent visuals throughout real-time video rendering. Choosing the poster frame does not change the start time of the full video.
 - Unit tests in src/lib/recordingTimeline.mjs / tests/recordingTimeline.test.js cover event boundaries and poster suggestions. Real Chromium tests check chord-cue replay, downloaded PNG and dimensions and preserve the existing WebM/MP4 export regression.
 - Live deployment, physical iOS/Android and actual social platform uploads still require separate verification.
+
+
+## V1.3 120-chord core integration (2026-11-12)
+
+Video production expansion is paused. The 120-chord atlas, ten-family note finder, and chord inversion explorer now share one model. Every atlas card links to real root/quality voicings: three inversions/positions for three-note families and four for seventh chords. Each shows spelled notes, slash bass, SVG diagram and browser-playable audio. Live 88-key chord recognition falls back to that same catalog for suspended and half-diminished forms. Distinct alternative names are shown as possible interpretations; no unique bass or key is inferred from pitch-class matches alone.
+
+The original 29 individually written chord detail pages remain the sole individual chord SEO routes; they link to the exact inversion experience. No mass-generated SEO pages were added. Pure chord-voicing/finder tests, the 120-option static build verifier and Chromium end-to-end checks form the new release gate. Cloudflare live deployment, mobile hardware and Search Console indexation remain separate verification tasks.
