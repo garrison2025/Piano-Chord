@@ -1,0 +1,56 @@
+name: Video stress and emulated mobile (real WASM)
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: Recording length, in seconds
+        type: choice
+        options: ['60', '90']
+        default: '60'
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/video-stress-e2e.yml
+      - scripts/browser-video-e2e.mjs
+jobs:
+  video-stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      PIANO_STRESS_SECONDS: ${{ inputs.duration || '60' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install app, browser and media inspector
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save playwright@1.56.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Build Astro
+        run: npm run build
+      - name: Serve static output
+        run: |
+          python3 -m http.server 4321 --bind 127.0.0.1 --directory dist > /tmp/piano-preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --noproxy '*' -fsS http://127.0.0.1:4321/tools/virtual-piano/ > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/piano-preview.log
+          exit 1
+      - name: Emulated mobile touch recording, video export and fallback share
+        run: PIANO_EMULATED_MOBILE=1 node scripts/browser-video-e2e.mjs
+      - name: 60–90 second real recording, WebM export and MP4 WASM conversion
+        run: PIANO_STRESS=1 node scripts/browser-video-e2e.mjs
+      - name: Archive diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-stress-diagnostics
+          path: |
+            test-results/
+            /tmp/piano-preview.log
+          if-no-files-found: ignore
+          retention-days: 5
