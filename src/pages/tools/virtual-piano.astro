@@ -62,7 +62,12 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
     </div></div>
   </div>
   <div class="vp-practice-hud-actions"><button id="vp-practice-cancel" type="button" hidden>Cancel count-in</button><button id="vp-practice-stop-take" type="button" hidden>■ Stop &amp; review</button></div>
-</div><div class="piano-controls"><span>Computer octave</span><button id="vp-down" type="button">−</button><output id="vp-oct">C4</output><button id="vp-up" type="button">+</button><button id="vp-sustain" type="button" aria-pressed="false">Sustain: Off</button><label>Volume <input id="vp-vol" type="range" min="0" max="100" value="55"/></label><button id="vp-stop" type="button">Stop</button></div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><div id="vp-chord-detect" class="piano-detection" data-kind="idle" role="status" aria-live="polite" aria-atomic="true"><span>LIVE CHORD RECOGNITION</span><strong id="vp-chord-name">Play a chord</strong><p id="vp-chord-notes">Hold three notes for a triad, or four different pitch classes for a seventh chord.</p></div><footer class="piano-foot">52 white · 36 black · Synthesized browser audio (not acoustic samples) · The separate metronome does not become part of the recorded performance.</footer></div></section>
+</div><div class="piano-controls"><span>Computer octave</span><button id="vp-down" type="button">−</button><output id="vp-oct">C4</output><button id="vp-up" type="button">+</button><button id="vp-sustain" type="button" aria-pressed="false">Sustain: Off</button><label>Volume <input id="vp-vol" type="range" min="0" max="100" value="55"/></label><button id="vp-stop" type="button">Stop</button></div><div class="piano-touch-toolbar" role="group" aria-label="Piano touch gesture mode">
+  <strong>Finger gestures</strong>
+  <button id="vp-touch-scroll" class="vp-touch-mode is-selected" type="button" aria-pressed="true">↔ Scroll keys</button>
+  <button id="vp-touch-glide" class="vp-touch-mode" type="button" aria-pressed="false">♪ Glide to play</button>
+  <span id="vp-touch-hint">Scroll mode: swipe to reach another octave. Tap several keys for chords.</span>
+</div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" data-touch-mode="scroll" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><div id="vp-chord-detect" class="piano-detection" data-kind="idle" role="status" aria-live="polite" aria-atomic="true"><span>LIVE CHORD RECOGNITION</span><strong id="vp-chord-name">Play a chord</strong><p id="vp-chord-notes">Hold three notes for a triad, or four different pitch classes for a seventh chord.</p></div><footer class="piano-foot">52 white · 36 black · Synthesized browser audio (not acoustic samples) · The separate metronome does not become part of the recorded performance.</footer></div></section>
 <section class="container section-compact" id="piano-metronome"><MetronomePanel /></section>
 <section class="container section-compact" id="recording-studio">
   <div id="vp-recording-studio" class="recording-shell">
@@ -111,7 +116,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
     </div>
   </div>
 </section>
-<section class="container section"><div class="tool-grid"><div class="panel"><h2>Play with computer keys</h2><p><strong>A W S E D F T G Y H U J K O L P ;</strong> map to the chromatic notes beginning at C4. Press <strong>Z/X</strong> to shift the octave and hold <strong>Space</strong> for sustain. Play several keys together for chords.</p><p>Shortcuts are inactive while typing in form fields. Focus an on-screen key and use the arrow keys to move, then Enter or Space to play it.</p></div><div class="panel"><h2>Play with touch or mouse</h2><p>Tap a key, use multiple fingers for chords, or scroll horizontally through the entire 88-key range. Choose Low, Middle or High C to jump to a register.</p><p>This lightweight version uses synthesized tones so it does not need copyrighted piano recordings or a sample download.</p></div></div></section>
+<section class="container section"><div class="tool-grid"><div class="panel"><h2>Play with computer keys</h2><p><strong>A W S E D F T G Y H U J K O L P ;</strong> map to the chromatic notes beginning at C4. Press <strong>Z/X</strong> to shift the octave and hold <strong>Space</strong> for sustain. Play several keys together for chords.</p><p>Shortcuts are inactive while typing in form fields. Focus an on-screen key and use the arrow keys to move, then Enter or Space to play it.</p></div><div class="panel"><h2>Play with touch or mouse</h2><p>Touch multiple keys at once to play a chord. <strong>Scroll keys</strong> lets you swipe horizontally through the 88-key range; <strong>Glide to play</strong> turns that swipe into a sequence of notes while keeping independent fingers on their own keys. Use Low, Middle or High C, or switch back to Scroll, to reach other registers.</p><p>This lightweight version uses synthesized tones so it does not need copyrighted piano recordings or a sample download.</p></div></div></section>
 <script>
 import {setupPianoRecorder} from '../../scripts/pianoRecorder.js';
 import {setupProgressionGuide} from '../../scripts/progressionGuide.js';
@@ -132,7 +137,47 @@ function off(source){const m=sources.get(source);if(m==null)return;sources.delet
 function drain(){if(sustain||space)return;for(const m of [...voices.keys()])if(![...sources.values()].includes(m))release(m);}
 function stop(){sources.clear();for(const m of [...voices.keys()])release(m);readout.textContent='All notes released';}
 function jump(m){const b=keys.get(m);if(b)scroll.scrollTo({left:Math.max(0,b.offsetLeft-scroll.clientWidth/2+22),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
-for(const b of keys.values()){b.addEventListener('pointerdown',e=>{if(e.button!==0&&e.pointerType==='mouse')return;e.preventDefault();b.setPointerCapture(e.pointerId);on(+b.dataset.midi,'p'+e.pointerId);});for(const t of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(t,e=>off('p'+e.pointerId));}
+const touchScroll=document.getElementById('vp-touch-scroll');
+const touchGlide=document.getElementById('vp-touch-glide');
+const touchHint=document.getElementById('vp-touch-hint');
+function setTouchMode(mode){
+  const glide=mode==='glide';
+  // Switching while a finger is on a key must release captured voices first.
+  stop();
+  scroll.dataset.touchMode=glide?'glide':'scroll';
+  touchScroll.classList.toggle('is-selected',!glide);
+  touchGlide.classList.toggle('is-selected',glide);
+  touchScroll.setAttribute('aria-pressed',String(!glide));
+  touchGlide.setAttribute('aria-pressed',String(glide));
+  touchHint.textContent=glide?'Glide mode: drag between keys to play; use octave jump buttons or switch back to Scroll to pan.':
+    'Scroll mode: swipe to reach another octave. Tap several keys for chords.';
+}
+touchScroll.addEventListener('click',()=>setTouchMode('scroll'));
+touchGlide.addEventListener('click',()=>setTouchMode('glide'));
+for(const b of keys.values()){
+  b.addEventListener('pointerdown',e=>{
+    if(e.button!==0&&e.pointerType==='mouse')return;
+    e.preventDefault();
+    try{b.setPointerCapture(e.pointerId);}catch{ /* Some assistive pointer synthesizers do not support capture. */ }
+    on(+b.dataset.midi,'p'+e.pointerId);
+  });
+  b.addEventListener('pointermove',e=>{
+    if(scroll.dataset.touchMode!=='glide')return;
+    const source='p'+e.pointerId;
+    if(!sources.has(source))return;
+    e.preventDefault();
+    // Pointer capture keeps routing to the original key. Hit-test the
+    // physical finger coordinates instead of trusting e.target.
+    const hit=document.elementFromPoint(e.clientX,e.clientY)?.closest('.piano-key');
+    const target=hit&&scroll.contains(hit)?+hit.dataset.midi:null;
+    const previous=sources.get(source);
+    if(target===previous)return;
+    off(source);
+    if(target!==null)on(target,source);
+  });
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])
+    b.addEventListener(name,e=>off('p'+e.pointerId));
+}
 document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,textarea,select,a,button:not(.piano-key),[contenteditable]'))return;
 const focus=e.target.closest('.piano-key');if(focus&&['ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();const next=Math.max(21,Math.min(108,+focus.dataset.midi+(e.code==='ArrowRight'?1:-1)));focus.tabIndex=-1;keys.get(next).tabIndex=0;keys.get(next).focus();return;}
 if(focus&&['Enter','Space'].includes(e.code)){e.preventDefault();if(!e.repeat)on(+focus.dataset.midi,'f'+focus.dataset.midi);return;}
