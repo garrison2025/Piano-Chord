@@ -97,6 +97,12 @@ try{
   // SEO-relevant examples must be legible without client execution; then
   // the contextual links must select the right notes in the actual tools.
   await go('/tools/chord-finder/');
+  assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'),
+    'https://piano-chord.pages.dev/share-card.png');
+  assert.equal(await page.locator('meta[name="twitter:card"]').getAttribute('content'),'summary_large_image');
+  const previewResponse=await page.request.get(origin+'/share-card.png');
+  assert.equal(previewResponse.status(),200,'Local OG image route');
+  assert.match(previewResponse.headers()['content-type']||'',/image\/png/);
   assert.equal(await page.getByRole('heading',{name:'C–E–G: C major'}).count(),1);
   assert.equal(await page.getByRole('heading',{name:'C–E–G–B♭: C7'}).count(),1);
   assert.equal(await page.getByRole('heading',{name:'What if your chord is not recognised?'}).count(),1);

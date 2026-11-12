@@ -32,12 +32,18 @@ for(const p of paths){
   const description=attr(html,/<meta\s+name="description"\s+content="([^"]*)"/i);
   const canonical=attr(html,/<link\s+rel="canonical"\s+href="([^"]*)"/i);
   const ogUrl=attr(html,/<meta\s+property="og:url"\s+content="([^"]*)"/i);
+  const ogImage=attr(html,/<meta\s+property="og:image"\s+content="([^"]*)"/i);
+  const twitterImage=attr(html,/<meta\s+name="twitter:image"\s+content="([^"]*)"/i);
   const expected=origin+p;
   const headings=(html.match(/<h1\b[^>]*>/gi)||[]).length;
   addUnique(titles,title,p,'title');
   addUnique(descriptions,description,p,'description');
   if(canonical!==expected)issues.push('Canonical mismatch on '+p+': '+canonical);
   if(ogUrl!==canonical)issues.push('Open Graph URL mismatch on '+p);
+  if(ogImage!==origin+'/share-card.png'||twitterImage!==ogImage)
+    issues.push('Social share image must use canonical host and match on '+p);
+  if(!html.includes('name="twitter:card" content="summary_large_image"'))
+    issues.push('Twitter/X must use large image card on '+p);
   if(headings!==1)issues.push('Must have exactly one H1 on '+p+': '+headings);
   if(!html.includes('rel="preconnect" href="https://fonts.googleapis.com"')||
      !html.includes('rel="preconnect" href="https://fonts.gstatic.com"'))
@@ -87,9 +93,17 @@ const privacy=fs.readFileSync(fileFor('/privacy/'),'utf8');
 if(!privacy.includes('name="robots" content="noindex,follow"'))issues.push('Privacy must be noindex');
 const notFound=fs.readFileSync(path.join(dist,'404.html'),'utf8');
 if(!notFound.includes('name="robots" content="noindex,follow"'))issues.push('404 must be noindex');
+const pngPath=path.join(dist,'share-card.png');
+if(!fs.existsSync(pngPath))issues.push('Missing local social preview PNG');
+else{
+  const png=fs.readFileSync(pngPath);
+  if(png.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||
+     png.readUInt32BE(16)!==1200||png.readUInt32BE(20)!==630)
+    issues.push('Social preview must be a real 1200×630 PNG');
+}
 const summary={origin,indexablePages:paths.length,uniqueTitles:titles.size,
   uniqueDescriptions:descriptions.size,totalHTMLImages:rows.reduce((s,r)=>s+r.imageCount,0),
-  orphanCount:orphans.length,googleFontsExternal:true,ogImageConfigured:false,
+  orphanCount:orphans.length,googleFontsExternal:true,ogImageConfigured:true,
   warnings,issues,rows};
 fs.mkdirSync('test-results/seo',{recursive:true});
 fs.writeFileSync('test-results/seo/seo-audit.json',JSON.stringify(summary,null,2)+'\n');
