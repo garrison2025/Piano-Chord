@@ -1,0 +1,129 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/learning.css';
+import {keyInfo,progression} from '../../lib/keyTheory.mjs';
+const defaultPractice=progression('C','major','pop');
+---
+<BaseLayout title="Piano Chord Progression Trainer – Play & Practice in Any Key" description="Practice four-chord progressions in all 12 major and 12 minor keys. Change chords, set BPM, add a metronome and hear each progression without signup." canonicalPath="/tools/chord-progressions/" crumbs={[{name:'Chord Progressions',href:'/tools/chord-progressions/'}]}>
+<section class="container page-hero tool-hero"><span class="eyebrow">CHORD PROGRESSION TRAINER</span><h1>Four chords.<br/><em>Countless songs.</em></h1><p class="lead">Choose a key and a progression, swap any of its four chords, and practice with real-time piano audio and an optional four-beat click.</p><div class="button-row"><a class="btn btn-primary" href="/tools/scales-and-keys/">Explore scales & keys ↗</a><a class="btn" href="/tools/virtual-piano/">Play on virtual piano</a></div></section>
+<section class="container section-compact">
+<div class="learning-panel">
+  <h2>Build your practice loop</h2>
+  <div class="learning-controls">
+    <label for="prog-mode">Key type<select id="prog-mode"><option value="major">Major</option><option value="minor">Natural minor / harmonic dominant</option></select></label>
+    <label for="prog-root">Key center<select id="prog-root"><option value="C">C</option></select></label>
+    <label for="prog-preset">Progression style<select id="prog-preset"><option value="pop">Pop favorite · I–V–vi–IV</option></select></label>
+  </div>
+  <div id="progression-steps" class="progression-grid" aria-label="Four editable chords">
+    {defaultPractice.steps.map((c,i)=><article class="progression-step"><span class="step-roman">{c.roman} · Bar {i+1}</span><strong>{c.symbol}</strong><p>{c.notes.join(' · ')}</p></article>)}
+  </div>
+  <div class="learning-tempo"><label for="prog-bpm">Tempo</label><input id="prog-bpm" type="range" min="50" max="180" value="90" step="1" aria-label="Progression tempo in BPM"/><output id="prog-tempo">90 BPM</output><label><input id="prog-click" type="checkbox" checked/> Accent each bar</label><label><input id="prog-loop" type="checkbox"/> Repeat loop</label></div>
+  <div class="learning-actions">
+    <button id="prog-start" type="button" class="action-primary">▶ Play four bars</button>
+    <button id="prog-stop" type="button">■ Stop</button>
+    <button id="prog-copy" type="button">Copy chord sequence</button>
+    <a id="prog-scale-link" href="/tools/scales-and-keys/?root=C&mode=major">Explore this scale ↗</a>
+  </div>
+  <div id="prog-status" class="learning-status" role="status" aria-live="polite">Each chord lasts four quarter-note beats in 4/4. Tap Play to begin.</div>
+</div>
+</section>
+<section class="container section"><div class="learning-grid"><div class="learning-panel"><h2>Why these progressions work</h2><p>Roman numerals describe chords by their position in a key, so the same pattern can be moved to C, F, B♭ or any other supported root. I–V–vi–IV uses the tonic, dominant, relative minor and subdominant. Try changing the third bar and listen for the shift in mood.</p><p>Natural minor usually has a minor v chord. The Harmonic minor preset intentionally raises the dominant third so V becomes major, producing a stronger cadence. That alteration is marked rather than silently presented as a natural-minor diatonic chord.</p></div><div class="learning-panel"><h2>Practice tip</h2><p>Start at 60–80 BPM. Play each chord on the first beat, then hold until the next bar. After four bars, try moving to a different inversion while keeping your hand near the previous notes. Use the <a href="/tools/inversion-explorer/">Inversion Explorer</a> to hear individual voicings.</p><p>Everything plays locally using Web Audio. No audio recordings, social account, API key or subscription is needed.</p></div></div></section>
+<script>
+import {KEY_ROOTS,keyInfo,progression,progressionStep,PROGRESSION_PRESETS} from '../../lib/keyTheory.mjs';
+import {prettyNote} from '../../lib/music.js';
+import {createStudyAudio} from '../../scripts/studyAudio.js';
+const audio=createStudyAudio(),by=id=>document.getElementById(id);
+const mode=by('prog-mode'),root=by('prog-root'),preset=by('prog-preset'),container=by('progression-steps'),
+  bpm=by('prog-bpm'),tempo=by('prog-tempo'),message=by('prog-status');
+let key=keyInfo('C','major'),steps=[],playing=false,timers=[],token=0;
+const params=new URLSearchParams(window.location.search);
+function stop(quiet=false){
+  playing=false;token++;timers.forEach(clearTimeout);timers=[];audio.stop();
+  container.querySelectorAll('.progression-step').forEach(c=>c.classList.remove('is-current'));
+  by('prog-start').textContent='▶ Play four bars';
+  if(!quiet)message.textContent='Playback stopped. Adjust the key, chords or tempo and play again.';
+}
+function setRoots(){
+  const choices=KEY_ROOTS[mode.value],previous=root.value;
+  root.replaceChildren(...choices.map(v=>new Option(prettyNote(v),v)));
+  root.value=choices.includes(previous)?previous:'C';
+}
+function setPresets(){
+  const items=PROGRESSION_PRESETS[mode.value];
+  preset.replaceChildren(...items.map(v=>new Option(v.label,v.id)));
+}
+function optionsFor(key){
+  const choices=key.chords.map(c=>({value:c.degree+':'+c.quality,label:c.roman+' · '+c.symbol}));
+  if(key.mode==='minor')choices.push({value:'4:major',label:'V · '+prettyNote(key.chords[4].root)+' (harmonic minor)'});
+  return choices;
+}
+function render(){
+  key=keyInfo(root.value,mode.value);
+  const options=optionsFor(key);
+  container.replaceChildren(...steps.map((step,index)=>{
+    const article=document.createElement('article');article.className='progression-step';article.dataset.index=String(index);
+    const roman=document.createElement('span');roman.className='step-roman';roman.textContent=step.roman+' · Bar '+(index+1);
+    const title=document.createElement('strong');title.textContent=step.symbol;
+    const notes=document.createElement('p');notes.textContent=step.notes.map(prettyNote).join(' · ');
+    const selector=document.createElement('select');selector.dataset.step=String(index);selector.setAttribute('aria-label','Chord for bar '+(index+1));
+    selector.replaceChildren(...options.map(choice=>new Option(choice.label,choice.value)));
+    selector.value=step.degree+':'+step.quality;
+    const playButton=document.createElement('button');playButton.type='button';playButton.dataset.preview=String(index);playButton.textContent='▶ Hear chord';
+    article.append(roman,title,notes,selector,playButton);return article;
+  }));
+  by('prog-scale-link').href='/tools/scales-and-keys/?root='+encodeURIComponent(root.value)+'&mode='+mode.value;
+  message.textContent='Selected '+key.name+'. Four bars of 4/4; adjust each chord if you like.';
+}
+function refresh(){stop(true);steps=progression(root.value,mode.value,preset.value).steps;render();}
+mode.addEventListener('change',()=>{setRoots();setPresets();refresh();});
+root.addEventListener('change',refresh);
+preset.addEventListener('change',refresh);
+container.addEventListener('change',e=>{
+  const selector=e.target.closest('select[data-step]');if(!selector)return;
+  const [degree,quality]=selector.value.split(':');
+  stop(true);steps[Number(selector.dataset.step)]=progressionStep(key,Number(degree),quality);
+  render();message.textContent='Bar '+(Number(selector.dataset.step)+1)+' updated.';
+});
+container.addEventListener('click',async e=>{
+  const button=e.target.closest('[data-preview]');if(!button)return;
+  stop(true);
+  const s=steps[Number(button.dataset.preview)];
+  try{await audio.unlock();audio.chord(s.midi,audio.now()+.04,1.2);message.textContent='Listening to '+s.symbol+'.';}
+  catch(error){message.textContent=error.message;}
+});
+bpm.addEventListener('input',()=>{tempo.textContent=bpm.value+' BPM';if(playing)stop(true);});
+async function runLoop(){
+  const myToken=++token,sec=60/Number(bpm.value);
+  try{await audio.unlock();}catch(e){message.textContent=e.message;playing=false;return;}
+  if(myToken!==token)return;
+  audio.stop();playing=true;by('prog-start').textContent='▶ Restart';
+  const start=audio.now()+.12,ms=sec*1000;
+  steps.forEach((chord,index)=>{
+    audio.chord(chord.midi,start+index*4*sec,3.55*sec);
+    if(by('prog-click').checked)for(let beat=0;beat<4;beat++)audio.tick(start+(index*4+beat)*sec,beat===0,.65);
+    const t=setTimeout(()=>{
+      if(myToken!==token)return;
+      [...container.children].forEach((card,i)=>card.classList.toggle('is-current',i===index));
+      message.textContent='Bar '+(index+1)+' of 4 · '+chord.symbol+' · '+bpm.value+' BPM';
+    },Math.max(0,(start-audio.now())*1000+index*4*ms));
+    timers.push(t);
+  });
+  timers.push(setTimeout(()=>{
+    if(myToken!==token)return;
+    if(by('prog-loop').checked){audio.stop();timers=[];runLoop();}
+    else{stop(true);message.textContent='Four-bar progression complete.';}
+  },Math.max(0,(start-audio.now())*1000+steps.length*4*ms+80)));
+}
+by('prog-start').addEventListener('click',()=>{stop(true);runLoop();});
+by('prog-stop').addEventListener('click',()=>stop());
+by('prog-copy').addEventListener('click',async()=>{
+  const text=key.name+': '+steps.map(s=>s.symbol).join(' – ')+' ('+steps.map(s=>s.roman).join(' – ')+')';
+  try{await navigator.clipboard.writeText(text);message.textContent='Copied: '+text;}catch{message.textContent='Copy unavailable. Your sequence: '+text;}
+});
+if(KEY_ROOTS[params.get('mode')]?.includes(params.get('root')))mode.value=params.get('mode');
+setRoots();if(KEY_ROOTS[mode.value].includes(params.get('root')))root.value=params.get('root');
+setPresets();refresh();
+window.addEventListener('pagehide',()=>stop(true));
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)stop(true);});
+</script>
+</BaseLayout>

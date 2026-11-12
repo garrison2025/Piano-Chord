@@ -1,0 +1,132 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/learning.css';
+import {keyInfo,KEY_ROOTS} from '../../lib/keyTheory.mjs';
+import {prettyNote} from '../../lib/music.js';
+const initial=keyInfo('C','major');
+---
+<BaseLayout title="Piano Scales & Keys – 12 Major and 12 Minor Scales" description="Learn all 12 major and 12 natural minor piano scales. Hear their notes, see a highlighted piano keyboard and explore seven correctly spelled chords in each key." canonicalPath="/tools/scales-and-keys/" crumbs={[{name:'Scales & Keys',href:'/tools/scales-and-keys/'}]}>
+<section class="container page-hero tool-hero"><span class="eyebrow">KEYS · SCALES · HARMONY</span><h1>Know the key.<br/><em>Find your sound.</em></h1><p class="lead">Explore 24 major and natural-minor scales, hear the notes and discover the seven chords that belong to each key. All interactive, free and browser-only.</p><div class="button-row"><a href="/tools/chord-progressions/" class="btn btn-primary">Practice chord progressions ↗</a><a href="/tools/virtual-piano/" class="btn">Play the full piano</a></div></section>
+<section class="container section-compact">
+<div class="learning-grid">
+  <div class="learning-panel">
+    <h2>Explore a scale</h2>
+    <div class="learning-controls">
+      <label for="scale-mode">Scale family<select id="scale-mode"><option value="major">Major scale</option><option value="minor">Natural minor scale</option></select></label>
+      <label for="scale-root">Starting note<select id="scale-root">{KEY_ROOTS.major.map(root=><option value={root}>{prettyNote(root)}</option>)}</select></label>
+    </div>
+    <h3 id="scale-name">C major scale</h3>
+    <div class="scale-degree-row" id="scale-degree-row" aria-label="Notes of the selected scale">
+      {initial.notes.map((note,i)=><div class="scale-degree"><strong>{prettyNote(note)}</strong><small>{i+1}</small></div>)}
+    </div>
+    <div class="scale-keys-scroll" aria-label="Two octave piano keyboard illustrating selected scale" tabindex="0"><div id="scale-keyboard" class="scale-keybed"></div></div>
+    <div class="learning-actions"><button id="scale-play" class="action-primary" type="button">▶ Play ascending scale</button><button id="scale-stop" type="button">■ Stop audio</button></div>
+    <div class="learning-status" id="scale-status" role="status" aria-live="polite">Choose a key or tap a piano key to hear a note.</div>
+  </div>
+  <div class="learning-panel">
+    <h2>Understand this key</h2><p id="scale-explanation">The C major scale has no sharps or flats. Its seven notes form the chords shown below.</p>
+    <p><strong>Relative key:</strong> <span id="scale-relative">A minor</span></p>
+    <p><strong>Step pattern:</strong> <span id="scale-steps">W – W – H – W – W – W – H</span></p>
+    <p style="font-size:13px">W means a whole step (two semitones). H means a half step (one semitone). The minor mode on this page is <em>natural minor</em>, not harmonic or melodic minor.</p>
+    <div class="learning-actions"><a id="scale-progression-link" href="/tools/chord-progressions/?root=C&mode=major" class="action-primary">Practice in this key ↗</a></div>
+  </div>
+</div>
+</section>
+<section class="container section-compact">
+<div class="learning-panel">
+  <h2>Seven diatonic triads</h2>
+  <p>Build a three-note chord on each degree using only the notes of the chosen scale. Press Play to hear it; the Roman numeral shows its role in the key.</p>
+  <ol id="scale-chords" class="chord-degree-list">
+    {initial.chords.map(c=><li><span><strong>{c.roman} — {c.symbol}</strong><small>{c.notes.map(prettyNote).join(' · ')}</small></span><span>Triad</span></li>)}
+  </ol>
+</div>
+</section>
+<section class="container section"><div class="learning-panel"><h2>How to practice scales</h2><p>Start with the tonic, play each note up one octave, then descend. Notice the two half-step gaps in a major scale (3–4 and 7–1), and the distinctive natural-minor pattern (2–3 and 5–6). Try a three-note chord on the first, fourth and fifth degrees to hear how a key creates harmony.</p><p>We publish only two learning tools here, rather than automatically creating dozens of near-identical SEO pages. Each scale and chord is still fully playable without registration.</p></div></section>
+<script>
+import {KEY_ROOTS,keyInfo,chordMidis} from '../../lib/keyTheory.mjs';
+import {pitchClass,prettyNote} from '../../lib/music.js';
+import {createStudyAudio} from '../../scripts/studyAudio.js';
+const audio=createStudyAudio();
+const by=id=>document.getElementById(id);
+const root=by('scale-root'),mode=by('scale-mode'),notesRow=by('scale-degree-row'),keyboard=by('scale-keyboard'),chordList=by('scale-chords'),status=by('scale-status');
+const params=new URLSearchParams(window.location.search);
+let current=keyInfo('C','major'),flashTimers=[];
+function clearFlash(){flashTimers.forEach(clearTimeout);flashTimers=[];keyboard.querySelectorAll('.is-flashing').forEach(b=>b.classList.remove('is-flashing'));}
+function updateRootOptions(){
+  const allowed=KEY_ROOTS[mode.value];
+  const prior=root.value;
+  root.replaceChildren(...allowed.map(value=>{const option=new Option(prettyNote(value),value);return option;}));
+  root.value=allowed.includes(prior)?prior:'C';
+}
+function buildKeyboard(){
+  const valid=new Set(current.notes.map(pitchClass)),tonic=pitchClass(current.root);
+  const black=new Set([1,3,6,8,10]);let whites=0;
+  const nodes=[];
+  for(let midi=60;midi<=84;midi++){
+    const isBlack=black.has(midi%12),pc=midi%12;
+    const b=document.createElement('button');b.type='button';b.dataset.midi=String(midi);
+    b.className='scale-piano-key '+(isBlack?'black':'white')+
+      (valid.has(pc)?' in-scale':'')+(pc===tonic?' tonic':'');
+    b.style.left=(isBlack?whites*34-10.5:whites*34)+'px';
+    const label=String(midi);b.setAttribute('aria-label','Hear MIDI '+label+(valid.has(pc)?' (in scale)':''));
+    if(!isBlack){const span=document.createElement('span');span.textContent=pc===0?'C':'';b.append(span);whites++;}
+    nodes.push(b);
+  }
+  keyboard.replaceChildren(...nodes);
+}
+function render(){
+  current=keyInfo(root.value,mode.value);audio.stop();clearFlash();
+  by('scale-name').textContent=prettyNote(current.root)+' '+(current.mode==='major'?'major':'natural minor')+' scale';
+  notesRow.replaceChildren(...current.notes.map((note,i)=>{
+    const box=document.createElement('div');box.className='scale-degree';
+    const strong=document.createElement('strong');strong.textContent=prettyNote(note);
+    const small=document.createElement('small');small.textContent=String(i+1);
+    box.append(strong,small);return box;
+  }));
+  chordList.replaceChildren(...current.chords.map((c,i)=>{
+    const li=document.createElement('li'),span=document.createElement('span'),strong=document.createElement('strong'),small=document.createElement('small');
+    strong.textContent=c.roman+' — '+c.symbol;small.textContent=c.notes.map(prettyNote).join(' · ');
+    span.append(strong,small);const button=document.createElement('button');
+    button.type='button';button.textContent='▶';button.dataset.degree=String(i);button.setAttribute('aria-label','Play '+c.symbol);
+    li.append(span,button);return li;
+  }));
+  by('scale-relative').textContent=current.relative;
+  by('scale-steps').textContent=mode.value==='major'?'W – W – H – W – W – W – H':'W – H – W – W – H – W – W';
+  by('scale-explanation').textContent=current.name+' contains seven distinct pitch classes and the diatonic triads built above. Tap any highlighted key to hear its pitch.';
+  const link=by('scale-progression-link');
+  link.href='/tools/chord-progressions/?root='+encodeURIComponent(root.value)+'&mode='+mode.value;
+  buildKeyboard();status.textContent='Showing '+current.name+'. Choose Play to hear one octave.';
+}
+mode.addEventListener('change',()=>{updateRootOptions();render();});
+root.addEventListener('change',render);
+keyboard.addEventListener('click',async event=>{
+  const b=event.target.closest('[data-midi]');if(!b)return;
+  try{await audio.unlock();audio.stop();audio.note(Number(b.dataset.midi),audio.now()+.02,.65);b.classList.add('is-flashing');const timer=setTimeout(()=>b.classList.remove('is-flashing'),650);flashTimers.push(timer);}
+  catch(e){status.textContent=e.message;}
+});
+chordList.addEventListener('click',async event=>{
+  const b=event.target.closest('[data-degree]');if(!b)return;
+  try{await audio.unlock();audio.stop();const c=current.chords[Number(b.dataset.degree)];audio.chord(chordMidis(c.notes),audio.now()+.03,1.2);status.textContent='Playing '+c.symbol+' ('+c.notes.map(prettyNote).join(' · ')+')';}
+  catch(e){status.textContent=e.message;}
+});
+by('scale-play').addEventListener('click',async()=>{
+  try{await audio.unlock();audio.stop();clearFlash();
+    const start=audio.now()+.08,baseMidi=60+pitchClass(current.root);
+    for(let i=0;i<=7;i++){
+      const semi=i===7?12:current.intervals[i],midi=baseMidi+semi;
+      audio.note(midi,start+i*.35,.32,.12);
+      const timer=setTimeout(()=>{keyboard.querySelectorAll('[data-midi="'+midi+'"]').forEach(b=>b.classList.add('is-flashing'));},i*350+80);
+      const clear=setTimeout(()=>keyboard.querySelectorAll('[data-midi="'+midi+'"]').forEach(b=>b.classList.remove('is-flashing')),i*350+440);
+      flashTimers.push(timer,clear);
+    }
+    status.textContent='Playing '+current.name+' ascending over one octave.';
+  }catch(e){status.textContent=e.message;}
+});
+by('scale-stop').addEventListener('click',()=>{audio.stop();clearFlash();status.textContent='Playback stopped.';});
+if(KEY_ROOTS[params.get('mode')]?.includes(params.get('root'))){
+  mode.value=params.get('mode');updateRootOptions();root.value=params.get('root');
+}
+render();
+window.addEventListener('pagehide',()=>{audio.stop();clearFlash();});
+</script>
+</BaseLayout>
