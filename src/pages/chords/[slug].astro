@@ -9,6 +9,7 @@ import {chordSearchDescriptions,chordSearchTitles} from '../../data/chordSeo.js'
 import {createChord,prettyNote} from '../../lib/music.js';
 import {relatedLessons} from '../../lib/chordRelations.mjs';
 import {lessonPracticeHandoff} from '../../lib/lessonPracticeHandoff.mjs';
+import {chordQuickAnswer} from '../../lib/chordQuickAnswer.mjs';
 export function getStaticPaths(){return releaseChords.map(entry=>({params:{slug:entry.slug},props:{entry}}));}
 const {entry}=Astro.props;
 const chord=createChord(entry);
@@ -24,13 +25,41 @@ const qualityTip={major:'A major triad contains a root, major third (4 semitones
 const thirdKind=['minor','minor7'].includes(chord.quality)?'minor':'major';
 const seventhKind=chord.quality==='major7'?'major seventh':'minor seventh';
 const description=chordSearchDescriptions[entry.slug];
+const quickAnswer=chordQuickAnswer(chord);
+const lessonUrl=new URL('/chords/'+entry.slug+'/',Astro.site||Astro.url).toString();
+const subjectSchema={
+  '@context':'https://schema.org',
+  '@type':'WebPage',
+  name:chordSearchTitles[entry.slug],
+  url:lessonUrl,
+  description,
+  inLanguage:'en',
+  isAccessibleForFree:true,
+  mainEntity:{
+    '@type':'DefinedTerm',
+    name:chord.name,
+    termCode:chord.symbol,
+    description:quickAnswer.definition
+  }
+};
 const heading=`${chord.name} piano chord`;
 const invNames=['Root position','First inversion','Second inversion','Third inversion'];
 const atlasQuality={dominant7:'7',major7:'maj7',minor7:'m7'};
 const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.root)+'&quality='+encodeURIComponent(atlasQuality[chord.quality]||chord.quality);
 ---
 <BaseLayout title={chordSearchTitles[entry.slug]} description={description} canonicalPath={`/chords/${entry.slug}/`} crumbs={[{name:'Chord Library',href:'/chords/'},{name:chord.name,href:`/chords/${entry.slug}/`}] }>
+  <script type="application/ld+json" set:html={JSON.stringify(subjectSchema)} />
   <div class="container page-hero lesson-hero"><span class="eyebrow">THE CHORD ATLAS / {chord.qualityName.toUpperCase()}</span><h1>{heading}</h1><p class="lead">The <strong>{prettyNote(chord.symbol)}</strong> chord is built from <strong>{spelled}</strong>. See the exact keys, hear how they sound together, and explore how the chord changes when you move its lowest note.</p><div class="lesson-facts"><span><b>{chord.notes.length}</b> notes</span><span><b>{chord.inversions.length}</b> voicings</span><span><b>Free</b> to play &amp; print</span></div><nav class="lesson-jumps no-print" aria-label="On this page"><a href="#listen">01 <span>Listen</span> ↘</a><a href="#inversions">02 <span>Inversions</span> ↘</a><a href="#practice">03 <span>Practice</span> ↘</a>{drillPartner&&<a href="#ear-training">04 <span>Ear drill</span> ↘</a>}</nav></div>
+  <section id="chord-quick-answer" class="container section-compact" aria-labelledby="chord-answer-title">
+    <article class="panel prose">
+      <span class="eyebrow">QUICK REFERENCE · EXACT NOTES</span>
+      <h2 id="chord-answer-title">{quickAnswer.question}</h2>
+      <p data-chord-answer><strong>{quickAnswer.definition}</strong></p>
+      <h3>{quickAnswer.inversionQuestion}</h3>
+      <p data-inversion-answer>{quickAnswer.inversionAnswer}</p>
+      <p class="help-text">These are reference note spellings in twelve-tone equal temperament, not fixed fingerings. <a href="#listen">See the keys</a>, <a href="#inversions">hear each voicing</a>, or <a href="/guides/how-to-read-piano-chords/">learn chord spelling</a>.</p>
+    </article>
+  </section>
   <section id="listen" class="container section-compact lesson-listen"><div class="two-col">
     <article class="panel"><div style="display:flex;justify-content:space-between;align-items:start;gap:15px;flex-wrap:wrap"><div><span class="tag">Interactive keyboard</span><h2 style="margin:13px 0 7px">{prettyNote(chord.symbol)} <span style="color:#7b8d84;font-size:17px">{chord.qualityName}</span></h2><p>Selected notes: <strong>{spelled}</strong></p></div><span class="help-text">12-tone equal temperament</span></div>
       <img class="keyboard-image" src={`/diagrams/${entry.slug}.svg`} alt={`${chord.name} keyboard diagram showing ${spelled}`} width="692" height="195" decoding="async"/>
