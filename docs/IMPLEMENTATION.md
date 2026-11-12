@@ -43,3 +43,11 @@
 ## 2026-11-12: complete 12 major + 12 minor triad lessons
 
 Added nine specifically authored lesson pages to the original 16: D-flat major, G-flat major, A-flat major, A major, C-sharp minor, E-flat minor, F-sharp minor, G-sharp minor and B-flat minor. Totals: 12 major, 12 minor, plus C7 = **25 detailed chord lessons**; the broader 120-chord interactive catalogue is unchanged. Every lesson renders three inversions, audio, a stable SVG image and chord-specific practice, contrast, character and spelling pitfall paragraphs. Build inventory: 38 canonical HTML pages and 25 SVG chord diagrams. The original 16-chord beginner printable remains 16 by design; it does not silently grow to 25 and break its paper layout. New pages are original coverage additions, **not individually validated using live Semrush traffic data**; traffic impact must be assessed with GSC after indexing. Avoid claims of verified SEO demand or actual rankings.
+
+## Seventh-chord lesson release (2026-11-12)
+
+- Expanded the published collection to 29 authored chord lessons: 24 major/minor triads and 5 selected seventh chords (original C7 plus Cmaj7, Am7, Dm7, G7). Preserved the original 16-chord printable and 120-chord interactive catalogue unchanged.
+- The music-theory engine already handled all three seventh qualities and their four positions. Fixed the shared lesson template so it explains **minor versus major thirds** and **major versus minor sevenths** correctly instead of incorrectly treating every four-note chord as dominant7.
+- Added a distinct seventh-chord guide with direct Web Audio playback and a Dm7–G7–Cmaj7 / Cmaj7–Am7–Dm7–G7 practice path. The four new lessons contain individual sound comparison, practical drills and common note-spelling mistakes.
+- SEO inventory is 43 HTML routes (14 support + 29 chord lessons), 29 accessible SVG keyboard diagrams and 120 interactive atlas cards. No keyword rankings or Semrush traffic validation is claimed for the new pages.
+- CI and browser acceptance are separate gates; real mobile Safari/Chrome tactile and audio validation remain pending.

@@ -29,12 +29,14 @@ test('finder recognizes C minor and C major separately',()=>{
   assert(findChordMatches([0,3,7]).some(v=>v.root==='C'&&v.quality==='minor'));
   assert(!findChordMatches([0,3,7]).some(v=>v.root==='C'&&v.quality==='major'));
 });
-test('24 major/minor + C7 chord lessons without duplicate canonical slugs',()=>{
-  assert.equal(releaseChords.length,25);
+test('29 authored chord lessons without duplicate canonical slugs',()=>{
+  assert.equal(releaseChords.length,29);
   assert.equal(releaseChords.filter(c=>c.quality==='major').length,12);
   assert.equal(releaseChords.filter(c=>c.quality==='minor').length,12);
-  assert.equal(releaseChords.filter(c=>c.quality==='dominant7').length,1);
-  assert.equal(new Set(releaseChords.map(c=>c.slug)).size,25);
+  assert.equal(releaseChords.filter(c=>c.quality==='dominant7').length,2);
+  assert.equal(releaseChords.filter(c=>c.quality==='major7').length,1);
+  assert.equal(releaseChords.filter(c=>c.quality==='minor7').length,2);
+  assert.equal(new Set(releaseChords.map(c=>c.slug)).size,29);
   assert(releaseChords.every(c=>chordNotes(c.root,c.quality).length>=3));
 });
 test('keyboard SVG includes original image and accessible labels',()=>{
@@ -43,10 +45,10 @@ test('keyboard SVG includes original image and accessible labels',()=>{
   assert.equal((svg.match(/<rect x=/g)||[]).length,36);
 });
 
-test('all 25 SEO chord lessons contain distinct authored exercises',()=>{
+test('all 29 SEO chord lessons contain distinct authored exercises',()=>{
  const lessons=releaseChords.map(x=>chordLessons[x.slug]);
  assert(lessons.every(x=>x && x.character.length>60 && x.comparison.length>70 && x.exercise.length>70 && x.pitfall.length>50));
- assert.equal(new Set(lessons.map(x=>x.exercise)).size,25);
+ assert.equal(new Set(lessons.map(x=>x.exercise)).size,29);
 });
 
 import {coreChords,roots,qualities} from '../src/lib/coreCatalog.js';
@@ -77,4 +79,23 @@ test('related chord lessons prefer shared tones and meaningful contrast',()=>{
     assert.equal(new Set(matches.map(e=>e.slug)).size,3);
     assert.ok(matches.every(e=>e.slug!==entry.slug));
   }
+});
+
+test('selected seventh chords have distinct four-note spelling and four voicings',()=>{
+ const expected={
+  'c-7':['C','E','G','Bb'],'c-major-7':['C','E','G','B'],
+  'a-minor-7':['A','C','E','G'],'d-minor-7':['D','F','A','C'],
+  'g-7':['G','B','D','F']
+ };
+ for(const [slug,notes] of Object.entries(expected)){
+  const entry=releaseChords.find(e=>e.slug===slug);
+  assert.ok(entry,'Missing '+slug);
+  const chord=createChord(entry);
+  assert.deepEqual(chord.notes,notes,slug);
+  assert.equal(chord.inversions.length,4);
+  assert.ok(chord.inversions.every((v,i)=>v.notes[0]===notes[i]),'Inversion should have correct bass: '+slug);
+  assert.equal(chordLessons[slug].pitfall.length>60,true);
+ }
+ assert.notDeepEqual(chordNotes('C','dominant7'),chordNotes('C','major7'));
+ assert.notDeepEqual(chordNotes('A','minor7'),chordNotes('A','major7'));
 });

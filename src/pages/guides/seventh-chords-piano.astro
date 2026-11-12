@@ -1,0 +1,69 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PianoKeyboard from '../../components/PianoKeyboard.astro';
+import {releaseChords} from '../../data/chords.js';
+import {createChord,prettyNote} from '../../lib/music.js';
+const bySlug=slug=>createChord(releaseChords.find(e=>e.slug===slug));
+const c7=bySlug('c-7'),cmaj7=bySlug('c-major-7'),am7=bySlug('a-minor-7'),dm7=bySlug('d-minor-7'),g7=bySlug('g-7');
+const family=[
+ {chord:c7,interval:'1 – 3 – 5 – ♭7',meaning:'Major third + minor seventh',note:'B♭ is 10 semitones above C. The plain 7 symbol does not mean major seventh.'},
+ {chord:cmaj7,interval:'1 – 3 – 5 – 7',meaning:'Major third + major seventh',note:'B natural is 11 semitones above C. Only the seventh changes compared with C7.'},
+ {chord:am7,interval:'1 – ♭3 – 5 – ♭7',meaning:'Minor third + minor seventh',note:'Am7 has C natural, not C♯; and G natural, not G♯.'}
+];
+const cadence=[dm7,g7,cmaj7];
+const cycle=[cmaj7,am7,dm7,g7];
+---
+<BaseLayout title="Piano Seventh Chords: C7 vs Cmaj7 vs Am7 – Notes & Audio" description="Hear the difference between dominant, major and minor seventh piano chords. Compare C7, Cmaj7 and Am7, then practice Dm7–G7–Cmaj7 with original keyboard diagrams." canonicalPath="/guides/seventh-chords-piano/" crumbs={[{name:'Chord lessons',href:'/chords/'},{name:'Seventh chords',href:'/guides/seventh-chords-piano/'}]}>
+<section class="container page-hero">
+ <span class="eyebrow">THE HARMONY LAB / SEVENTH CHORDS</span>
+ <h1>One extra note.<br/><em>Three different sounds.</em></h1>
+ <p class="lead">A plain 7, a maj7 and an m7 do not mean the same thing. Compare exact note spellings, hear each chord, and practice a four-chord progression entirely in your browser.</p>
+ <div class="button-row"><a class="btn btn-primary" href="#listen">Compare the sounds ↓</a><a class="btn" href="#cadence">Practice ii–V–I ↓</a></div>
+</section>
+<section class="container section-compact" id="listen"><div class="section-head"><div><span class="eyebrow">01 / HEAR THE QUALITY</span><h2>Compare the seventh and the third</h2><p>C7 and Cmaj7 share the first three notes; Am7 changes both the root and the third. Listen to each before reading the names.</p></div></div>
+ <div class="card-grid">
+ {family.map(({chord,interval,meaning,note})=><article class="panel seventh-card">
+    <span class="eyebrow">{chord.qualityName}</span><h3><a href={'/chords/'+chord.slug+'/'}>{prettyNote(chord.symbol)}</a></h3>
+    <p><strong>{chord.notes.map(prettyNote).join(' · ')}</strong></p>
+    <p class="seventh-interval">{interval}</p>
+    <PianoKeyboard chord={chord}/>
+    <p><strong>{meaning}.</strong> {note}</p>
+    <div class="button-row"><button type="button" class="btn btn-primary" data-play-midi={chord.inversions[0].midi.join(',')}>▶ Hear {prettyNote(chord.symbol)}</button><a class="btn" href={'/chords/'+chord.slug+'/'}>All inversions ↗</a></div>
+  </article>)}
+ </div>
+</section>
+<section class="container section-compact"><div class="two-col">
+ <article class="panel"><span class="eyebrow">02 / THE HALF-STEP TEST</span><h2>C7 versus Cmaj7</h2><p>Hold C, E and G. Play B♭ to hear C7, then move just that top note up one semitone to B natural to hear Cmaj7. The root, third and fifth never change.</p><p>C7 is often used as a dominant resolving toward F; Cmaj7 can serve as the tonic seventh chord in C major. The names describe different intervals, not interchangeable spellings.</p><div class="button-row"><button class="btn" type="button" data-play-midi={c7.inversions[0].midi.join(',')}>▶ C7</button><button class="btn" type="button" data-play-midi={cmaj7.inversions[0].midi.join(',')}>▶ Cmaj7</button></div></article>
+ <article class="panel"><span class="eyebrow">03 / THE MINOR THIRD</span><h2>Am7 versus A7</h2><p>Am7 spells A–C–E–G, so both the third and the seventh are minor. A7 would instead spell A–C♯–E–G. Changing only C to C♯ changes the chord quality even though the root and seventh stay fixed.</p><p>Play Am7 with all white keys, then compare its close relative Cmaj7. The two chords share C, E and G, but they do not have the same root.</p><div class="button-row"><button class="btn" type="button" data-play-midi={am7.inversions[0].midi.join(',')}>▶ Am7</button><a class="btn" href="/chords/a-minor-7/">Am7 lesson ↗</a></div></article>
+ </div>
+</section>
+<section id="cadence" class="container section-compact">
+ <div class="section-head"><div><span class="eyebrow">04 / MAKE IT MUSICAL</span><h2>The ii–V–I in C major</h2><p>Play Dm7, G7 and Cmaj7 in order, holding each chord for four metronome beats at 60–80 BPM. In a simple close voicing, notice how F in G7 tends toward E in Cmaj7.</p></div><a class="text-link" href="/tools/metronome/">Open metronome ↗</a></div>
+ <div class="card-grid">
+  {cadence.map((chord,i)=><article class="panel seventh-step">
+   <span class="eyebrow">{['ii7','V7','Imaj7'][i]} · bar {i+1}</span><h3>{prettyNote(chord.symbol)}</h3><p>{chord.notes.map(prettyNote).join(' · ')}</p>
+   <button class="btn btn-primary" type="button" data-play-midi={chord.inversions[0].midi.join(',')}>▶ Play bar {i+1}</button>
+   <a class="text-link" href={'/chords/'+chord.slug+'/'}>Read lesson ↗</a>
+  </article>)}
+ </div>
+ <div class="panel" style="margin-top:18px"><h3>Now try a four-bar turnaround</h3><p>In C major, one possible Imaj7–vi7–ii7–V7 cycle is Cmaj7 – Am7 – Dm7 – G7. Listen for common tones before repeating. These four buttons play individual chords; they do not automatically play a backing track.</p>
+ <div class="button-row">
+ {cycle.map(chord=><button class="btn" type="button" data-play-midi={chord.inversions[0].midi.join(',')}>▶ {prettyNote(chord.symbol)}</button>)}
+ </div><p class="help-text">All audio uses local synthesized browser sound; no account, music samples or recording upload.</p></div>
+</section>
+<section class="container section-compact"><div class="panel"><h2>Where to go next</h2><p>For exact note positions and four complete voicings, open the individual lessons. For chord recognition without knowing the symbol, try the free chord finder.</p><div class="button-row"><a class="btn btn-primary" href="/chords/">Browse all 29 lessons ↗</a><a class="btn" href="/tools/chord-finder/">Identify piano chords ↗</a><a class="btn" href="/tools/chord-progressions/">Build a four-bar progression ↗</a></div></div></section>
+<style>
+.seventh-card,.seventh-step{min-width:0;overflow:hidden}
+.seventh-card h3{font-size:clamp(27px,3vw,40px);margin:.25em 0}
+.seventh-card .keyboard-frame{width:100%;max-width:100%;overflow:hidden}
+.seventh-card .keyboard-frame :global(svg){max-width:100%;height:auto}
+.seventh-card p{font-size:14px;line-height:1.65}
+.seventh-card .button-row,.seventh-step{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.seventh-card .button-row{align-items:start;flex-direction:row;flex-wrap:wrap}
+.seventh-interval{color:#4d40ad;font-weight:800;letter-spacing:.03em}
+.seventh-step h3{margin:0;font-size:clamp(26px,3vw,37px)}
+.seventh-step p{flex:1}
+.seventh-step button{align-self:start}
+@media(max-width:700px){.seventh-card .button-row{flex-direction:column;align-items:stretch}.seventh-card .btn{white-space:normal}}
+</style>
+</BaseLayout>
