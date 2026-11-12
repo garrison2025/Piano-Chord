@@ -2,15 +2,57 @@
 import {parsePractice,serializePractice,practiceHintMidis,matchesPracticeNotes} from '../lib/practiceTransfer.mjs';
 import {prettyNote,findChordMatches} from '../lib/music.js';
 import {parseSeventhTransfer,seventhHintMidis} from '../lib/seventhTransfer.mjs';
+import {assessGuidedTake} from '../lib/practiceAssessment.mjs';
 export function setupProgressionGuide({keys,scroll}){
   const seventh=parseSeventhTransfer(window.location.search);
   const regular=seventh?null:parsePractice(window.location.search);
   const data=seventh||regular;
   const el=id=>document.getElementById(id),section=el('piano-practice');
-  if(!data||!section)return {noteOn(){},stop(){}};
+  if(!data||!section)return {noteOn(){},stop(){},recordingStart(){},recordingEnd(){}};
   const isSeventh=Boolean(seventh),steps=isSeventh?seventh.steps:regular.steps;
   const cards=el('practice-bars'),status=el('practice-status'),current=el('practice-current'),start=el('practice-start');
   let index=0,active=false,timer=null,matched=new Set(),deadline=0;
+  let armed=false,guideRecording=false,guideInvalid=false,lastReportText='';
+  const report=el('practice-report'),reportBars=el('practice-report-bars'),
+    reportSummary=el('practice-report-summary'),reportCount=el('practice-report-count'),
+    reportNotice=el('practice-report-notice'),copyFallback=el('practice-report-text');
+  function clearReport(){
+    report.hidden=true;reportBars.replaceChildren();lastReportText='';
+    copyFallback.hidden=true;copyFallback.value='';reportNotice.textContent='';
+  }
+  function markChanged(){if(guideRecording)guideInvalid=true;}
+  function reportText(result){
+    return ['Piano Chord practice: '+(data.label||data.key?.root+' '+data.mode),
+      result.matched+' of '+result.total+' bars matched at '+result.bpm+' BPM ('+result.coveragePercent+'% chord coverage)',
+      ...result.bars.map(bar=>'Bar '+(bar.index+1)+' '+bar.symbol+': '+
+        (bar.matched?'matched (beat '+bar.beat+', +'+(bar.firstMatchMs/1000).toFixed(2)+' s)':
+          bar.status==='not-reached'?'not reached':'not matched')),
+      result.complete?'Full timed sequence recorded':'Partial take — stopped before the timed sequence ended',
+      'Based on held MIDI notes, not a grade of musical expression.'].join('\n');
+  }
+  function showReport(result){
+    report.hidden=false;
+    reportCount.textContent=result.matched+' / '+result.total;
+    reportSummary.textContent='Matched '+result.matched+' of '+result.total+' scheduled bars ('+
+      result.coveragePercent+'% chord coverage). '+(result.complete?
+      'Entire timed sequence recorded.':'Partial take: some bars may not have been reached.');
+    const items=result.bars.map(bar=>{
+      const li=document.createElement('li');
+      li.className='practice-result-card';li.dataset.status=bar.status;
+      const heading=document.createElement('small');
+      heading.textContent='BAR '+(bar.index+1)+' · '+(
+        bar.matched?'MATCHED':bar.status==='not-reached'?'NOT REACHED':'NOT MATCHED');
+      const symbol=document.createElement('strong');symbol.textContent=bar.symbol;
+      const detail=document.createElement('span');
+      detail.textContent=bar.matched?'Detected on beat '+bar.beat+' (+'+(bar.firstMatchMs/1000).toFixed(2)+' s from bar start)':
+        bar.status==='not-reached'?'The recording ended before this bar.':'No complete chord held for 45 ms in this bar.';
+      li.append(heading,symbol,detail);return li;
+    });
+    reportBars.replaceChildren(...items);
+    lastReportText=reportText(result);
+    reportNotice.textContent='Chord coverage counts exact pitch classes held together for at least 45 ms within each bar. It is not a skill or rhythm score.';
+    report.scrollIntoView({block:'nearest',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+  }
   section.hidden=false;
   el('practice-kicker').textContent=isSeventh?'SEVENTH-CHORD PIANO PRACTICE':'YOUR FOUR-BAR PRACTICE';
   el('practice-title').textContent=isSeventh?'Play the seventh chords. Record your take.':'Follow the chords. Play your own part.';
@@ -26,7 +68,7 @@ export function setupProgressionGuide({keys,scroll}){
     const title=document.createElement('strong');title.textContent=step.symbol;
     const detail=document.createElement('span');detail.textContent=step.notes.map(prettyNote).join(' · ');
     card.append(number,title,detail);
-    card.addEventListener('click',()=>{stopGuide(true);setBar(i);});
+    card.addEventListener('click',()=>{markChanged();stopGuide(true);setBar(i);});
     cards.append(card);return card;
   });
   function highlight(){
@@ -71,21 +113,65 @@ export function setupProgressionGuide({keys,scroll}){
     start.textContent='↻ Restart guide';deadline=performance.now();
     setBar(0);nextTimedBar();
   }
-  start.addEventListener('click',begin);
-  el('practice-stop').addEventListener('click',()=>stopGuide());
-  el('practice-prev').addEventListener('click',()=>{stopGuide(true);setBar(index-1);});
-  el('practice-next').addEventListener('click',()=>{stopGuide(true);setBar(index+1);});
+  start.addEventListener('click',()=>{markChanged();begin();});
+  el('practice-stop').addEventListener('click',()=>{markChanged();stopGuide();});
+  el('practice-prev').addEventListener('click',()=>{markChanged();stopGuide(true);setBar(index-1);});
+  el('practice-next').addEventListener('click',()=>{markChanged();stopGuide(true);setBar(index+1);});
   el('practice-record').addEventListener('click',()=>{
     const record=el('vp-record');
     if(record.disabled){status.textContent='Finish the current recording or export before starting another.';return;}
-    record.click();begin();
-    status.textContent='Recording your own notes. The silent guide is not part of the audio or MIDI.';
+    stopGuide(true);
+    armed=true;
+    record.click();
+    if(!guideRecording){armed=false;status.textContent='Recording did not start. Try again.';return;}
+    begin();
+    status.textContent='Recording guided practice. Hold the target chord during each bar; only your notes enter MIDI and video.';
     document.getElementById('playable-piano').scrollIntoView({behavior:'smooth',block:'center'});
   });
-  document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)stopGuide();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&active){markChanged();stopGuide();}});
   window.addEventListener('pagehide',()=>stopGuide(true));
+  el('practice-copy').addEventListener('click',async()=>{
+    if(!lastReportText)return;
+    try{
+      if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(lastReportText);
+      reportNotice.textContent='Results copied. Paste them alongside your performance video if you wish.';
+    }catch{
+      copyFallback.value=lastReportText;copyFallback.hidden=false;copyFallback.focus();copyFallback.select();
+      reportNotice.textContent='Clipboard access is unavailable. Select and copy the results in the text field.';
+    }
+  });
+  el('practice-save').addEventListener('click',()=>{
+    if(!lastReportText)return;
+    const blob=new Blob([lastReportText],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download='piano-chord-practice-report.txt';link.hidden=true;
+    document.body.append(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    reportNotice.textContent='Practice summary downloaded to your device.';
+  });
   setBar(0);
   return {
+    recordingStart(){
+      guideRecording=armed;armed=false;guideInvalid=false;clearReport();
+    },
+    recordingEnd(take){
+      const scored=guideRecording,invalid=guideInvalid;
+      guideRecording=false;guideInvalid=false;armed=false;
+      stopGuide(true);
+      if(!scored)return;
+      if(invalid){
+        status.textContent='Guide changed during recording, so timed chord coverage was not calculated. MIDI and video exports still work.';
+        return;
+      }
+      try{
+        const result=assessGuidedTake(take,steps,data.bpm);
+        showReport(result);
+        status.textContent='Recording reviewed: '+result.matched+'/'+result.total+' chords matched. See the practice report.';
+      }catch{
+        status.textContent='Recording saved, but practice assessment was unavailable. MIDI and video exports still work.';
+      }
+    },
     noteOn(midis){
       if(matched.has(index))return;
       if(!matchesPracticeNotes(midis,steps[index])){
