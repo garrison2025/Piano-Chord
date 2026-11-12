@@ -4,6 +4,7 @@ import PianoKeyboard from '../../components/PianoKeyboard.astro';
 import ChordCard from '../../components/ChordCard.astro';
 import {releaseChords} from '../../data/chords.js';
 import {chordLessons} from '../../data/editorials.js';
+import {priorityEarDrills} from '../../data/lessonPathways.js';
 import {createChord,prettyNote} from '../../lib/music.js';
 import {relatedLessons} from '../../lib/chordRelations.mjs';
 export function getStaticPaths(){return releaseChords.map(entry=>({params:{slug:entry.slug},props:{entry}}));}
@@ -11,6 +12,10 @@ const {entry}=Astro.props;
 const chord=createChord(entry);
 const lesson=chordLessons[entry.slug];
 const related=relatedLessons(entry);
+const drill=priorityEarDrills[entry.slug];
+const drillPartnerEntry=drill?releaseChords.find(e=>e.slug===drill.target):null;
+const drillPartner=drillPartnerEntry?createChord(drillPartnerEntry):null;
+const compareHref=drillPartner?'/tools/chord-compare/?a='+encodeURIComponent(entry.slug)+'&b='+encodeURIComponent(drillPartner.slug):'/tools/chord-compare/?a='+encodeURIComponent(entry.slug);
 const spelled=chord.notes.map(prettyNote).join(' – ');
 const qualityTip={major:'A major triad contains a root, major third (4 semitones) and perfect fifth (7 semitones).',minor:'A minor triad contains a root, minor third (3 semitones) and perfect fifth (7 semitones).',dominant7:'A dominant seventh contains root (0), major third (4), perfect fifth (7) and minor seventh (10 semitones).',major7:'A major seventh contains root (0), major third (4), perfect fifth (7) and major seventh (11 semitones).',minor7:'A minor seventh contains root (0), minor third (3), perfect fifth (7) and minor seventh (10 semitones).'}[chord.quality];
 const thirdKind=['minor','minor7'].includes(chord.quality)?'minor':'major';
@@ -22,7 +27,7 @@ const atlasQuality={dominant7:'7',major7:'maj7',minor7:'m7'};
 const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.root)+'&quality='+encodeURIComponent(atlasQuality[chord.quality]||chord.quality);
 ---
 <BaseLayout title={`${heading} – Notes, Keyboard & Inversions | Piano Chord Explorer`} description={description} canonicalPath={`/chords/${entry.slug}/`} crumbs={[{name:'Chord Library',href:'/chords/'},{name:chord.name,href:`/chords/${entry.slug}/`}] }>
-  <div class="container page-hero lesson-hero"><span class="eyebrow">THE CHORD ATLAS / {chord.qualityName.toUpperCase()}</span><h1>{heading}</h1><p class="lead">The <strong>{prettyNote(chord.symbol)}</strong> chord is built from <strong>{spelled}</strong>. See the exact keys, hear how they sound together, and explore how the chord changes when you move its lowest note.</p><div class="lesson-facts"><span><b>{chord.notes.length}</b> notes</span><span><b>{chord.inversions.length}</b> voicings</span><span><b>Free</b> to play &amp; print</span></div><nav class="lesson-jumps no-print" aria-label="On this page"><a href="#listen">01 <span>Listen</span> ↘</a><a href="#inversions">02 <span>Inversions</span> ↘</a><a href="#practice">03 <span>Practice</span> ↘</a></nav></div>
+  <div class="container page-hero lesson-hero"><span class="eyebrow">THE CHORD ATLAS / {chord.qualityName.toUpperCase()}</span><h1>{heading}</h1><p class="lead">The <strong>{prettyNote(chord.symbol)}</strong> chord is built from <strong>{spelled}</strong>. See the exact keys, hear how they sound together, and explore how the chord changes when you move its lowest note.</p><div class="lesson-facts"><span><b>{chord.notes.length}</b> notes</span><span><b>{chord.inversions.length}</b> voicings</span><span><b>Free</b> to play &amp; print</span></div><nav class="lesson-jumps no-print" aria-label="On this page"><a href="#listen">01 <span>Listen</span> ↘</a><a href="#inversions">02 <span>Inversions</span> ↘</a><a href="#practice">03 <span>Practice</span> ↘</a>{drillPartner&&<a href="#ear-training">04 <span>Ear drill</span> ↘</a>}</nav></div>
   <section id="listen" class="container section-compact lesson-listen"><div class="two-col">
     <article class="panel"><div style="display:flex;justify-content:space-between;align-items:start;gap:15px;flex-wrap:wrap"><div><span class="tag">Interactive keyboard</span><h2 style="margin:13px 0 7px">{prettyNote(chord.symbol)} <span style="color:#7b8d84;font-size:17px">{chord.qualityName}</span></h2><p>Selected notes: <strong>{spelled}</strong></p></div><span class="help-text">12-tone equal temperament</span></div>
       <img class="keyboard-image" src={`/diagrams/${entry.slug}.svg`} alt={`${chord.name} keyboard diagram showing ${spelled}`} width="692" height="195" decoding="async"/>
@@ -36,7 +41,36 @@ const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.
     </div>
   </section>
   <section id="practice" class="container section-compact lesson-practice"><div class="two-col"><article class="prose"><span class="eyebrow">Learn the shape</span><h2>How to play {prettyNote(chord.symbol)} on piano</h2><p>First, find <strong>{prettyNote(chord.root)}</strong>, the root of this chord. Then add <strong>{prettyNote(chord.notes[1])}</strong>, the {thirdKind} third. Add <strong>{prettyNote(chord.notes[2])}</strong> to complete the triad. {chord.notes.length===4?`The fourth note, ${prettyNote(chord.notes[3])}, is a ${seventhKind} above the root.`:''}</p><p>Play the notes together to hear the harmony, or one at a time to hear how the intervals form the chord. Start at a comfortable octave; the diagram shows one reference voicing, not the only valid place to play it.</p><h3>What makes {prettyNote(chord.symbol)} distinctive?</h3><p>{lesson.character}</p><h3>Compare this chord with another</h3><p>{lesson.comparison}</p><h3>A practice exercise for {prettyNote(chord.symbol)}</h3><p>{lesson.exercise}</p><h3>One mistake to avoid</h3><p>{lesson.pitfall}</p><h3>A simple practice routine</h3><ul><li>Say each note name aloud as you find its key.</li><li>Play the root-position chord, then release the keys evenly.</li><li>Move to first inversion and listen to the bass change.</li><li>Return to root position without looking at the diagram.</li></ul><p>Finger numbers depend on your hand size, octave and musical context; there isn't one universally correct fingering for every voicing.</p></article>
-      <aside class="panel"><h3>Practice beyond this chord</h3><p>Compare the notes with another harmony, or keep a printed reference on your music stand.</p><div style="display:grid;gap:10px"><a class="btn" href={`/tools/chord-compare/?a=${encodeURIComponent(entry.slug)}`}>⇄ Compare this chord</a><a class="btn" href="/printables/piano-chord-chart/">↓ Printable chord chart</a><a class="btn" href="/guides/how-to-read-piano-chords/">↗ Read chord diagrams</a>{chord.notes.length===4&&<a class="btn" href="/guides/seventh-chords-piano/">♬ Compare seventh chords</a>}</div></aside></div>
+      <aside class="panel"><h3>Practice beyond this chord</h3><p>Compare the notes with another harmony, or keep a printed reference on your music stand.</p><div style="display:grid;gap:10px"><a class="btn" href={compareHref}>⇄ {drillPartner?"Compare with "+prettyNote(drillPartner.symbol):"Compare this chord"}</a><a class="btn" href="/printables/piano-chord-chart/">↓ Printable chord chart</a><a class="btn" href="/guides/how-to-read-piano-chords/">↗ Read chord diagrams</a>{chord.notes.length===4&&<a class="btn" href="/guides/seventh-chords-piano/">♬ Compare seventh chords</a>}</div></aside></div>
   </section>
+  {drill && drillPartner && <section id="ear-training" class="container section-compact lesson-ear-training" aria-labelledby="ear-training-heading">
+    <div class="panel ear-training-panel">
+      <div class="ear-training-intro">
+        <span class="eyebrow">A TWO-CHORD EAR-TRAINING CHALLENGE</span>
+        <h2 id="ear-training-heading">Hear {prettyNote(chord.symbol)} become {prettyNote(drillPartner.symbol)}</h2>
+        <p>{drill.prompt}</p>
+      </div>
+      <div class="ear-training-players" role="group" aria-label="Listen to the source and destination piano chords">
+        <button type="button" class="ear-training-chord" data-play-midi={chord.inversions[0].midi.join(',')}>
+          <span>01 · START</span><strong>{prettyNote(chord.symbol)}</strong>
+          <small>{chord.notes.map(prettyNote).join(' · ')}</small><em>▶ Hear this chord</em>
+        </button>
+        <span class="ear-training-arrow" aria-hidden="true">→</span>
+        <button type="button" class="ear-training-chord" data-play-midi={drillPartner.inversions[0].midi.join(',')}>
+          <span>02 · CHANGE</span><strong>{prettyNote(drillPartner.symbol)}</strong>
+          <small>{drillPartner.notes.map(prettyNote).join(' · ')}</small><em>▶ Hear the next chord</em>
+        </button>
+      </div>
+      <details class="ear-training-reveal">
+        <summary>Show the answer: which notes stay or move?</summary>
+        <p>{drill.answer}</p>
+      </details>
+      <div class="ear-training-links no-print">
+        <a class="btn btn-primary" href={compareHref}>⇄ Open these two chords in Compare</a>
+        <a class="text-link" href={'/chords/'+drillPartner.slug+'/'}>Read the {drillPartner.name} lesson ↗</a>
+      </div>
+      <p class="help-text">Play each button after the previous sound fades. The exercise checks your listening; it does not record or score your performance.</p>
+    </div>
+  </section>}
   <section class="container section-compact"><div class="section-head"><div><span class="eyebrow">Keep exploring</span><h2>Related piano chords</h2></div></div><div class="card-grid">{related.map(e=><ChordCard entry={e}/>)}</div></section>
 </BaseLayout>

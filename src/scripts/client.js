@@ -155,7 +155,10 @@ function inversionExplorer(){
 }
 function compare(){
  const a=el('compare-a'),b=el('compare-b');if(!a||!b)return;
- const possibleA=new URLSearchParams(window.location.search).get('a');if(bySlug.has(possibleA))a.value=possibleA;
+ const query=new URLSearchParams(window.location.search);
+ const possibleA=query.get('a'),possibleB=query.get('b');
+ if(bySlug.has(possibleA))a.value=possibleA;
+ if(bySlug.has(possibleB))b.value=possibleB;
  function render(){
    const chordA=bySlug.get(a.value),chordB=bySlug.get(b.value);if(!chordA||!chordB)return;
    for(const [chord,target,letter] of [[chordA,'compare-a-view','A'],[chordB,'compare-b-view','B']]){
