@@ -137,10 +137,13 @@ try{
     ['b-flat-minor','B-flat minor']
   ];
   await go('/chords/');
-  assert.equal(await page.locator('[data-searchable-chord]').count(),25);
+  assert.equal(await page.locator('[data-searchable-chord]').count(),29);
+  await page.locator('[data-quality-filter="seventh"]').click();
+  assert.equal(await page.locator('[data-searchable-chord]:visible').count(),5,'Seventh filter must include all five authored seventh lessons');
+  await page.locator('[data-quality-filter="all"]').click();
   await page.locator('#chord-search').fill('F#m');
   assert.equal(await page.locator('[data-searchable-chord]:visible').count(),1,'F#m search should find one authored lesson');
-  await page.screenshot({path:'test-results/learning/25-chord-search.png',fullPage:true});
+  await page.screenshot({path:'test-results/learning/29-chord-search.png',fullPage:true});
   for(const [slug,name] of addedLessons){
     await go('/chords/'+slug+'/');
     assert.match(await page.locator('h1').innerText(),new RegExp(name+' piano chord','i'));
@@ -152,6 +155,39 @@ try{
     assert.equal(response.status(),200,img+' HTTP');
     assert.match(await response.text(),/Highlighted piano keys/);
   }
+  const seventhLessons=[
+    ['c-major-7','C major seventh',['C','E','G','B'],'major seventh'],
+    ['a-minor-7','A minor seventh',['A','C','E','G'],'minor seventh'],
+    ['d-minor-7','D minor seventh',['D','F','A','C'],'minor seventh'],
+    ['g-7','G dominant seventh',['G','B','D','F'],'minor seventh']
+  ];
+  for(const [slug,name,notes,seventhName] of seventhLessons){
+    await go('/chords/'+slug+'/');
+    assert.match(await page.locator('h1').innerText(),new RegExp(name+' piano chord','i'));
+    assert.equal(await page.locator('[data-inversion-button]').count(),4,slug+' needs four voicings');
+    assert.match(await page.locator('#practice').innerText(),new RegExp('is a '+seventhName,'i'));
+    const noteLabels=(await page.locator('#listen .note-row .note-pill').allTextContents()).map(n=>n.trim());
+    assert.deepEqual(noteLabels,notes,'Wrong lesson notes for '+slug);
+    const svg=await page.request.get(origin+'/diagrams/'+slug+'.svg');
+    assert.equal(svg.status(),200,slug+' SVG route');
+    assert.match(await svg.text(),/Highlighted piano keys/);
+  }
+  await go('/chords/c-major-7/');
+  await page.locator('[data-inversion-button="3"]').click();
+  assert.equal(await page.locator('[data-inversion-view="3"]').isVisible(),true);
+  await page.locator('[data-inversion-view="3"] button[data-play-midi]').click();
+  await delay(200);
+  assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
+  await page.screenshot({path:'test-results/learning/cmaj7-third-inversion.png',fullPage:true});
+  await go('/guides/seventh-chords-piano/');
+  assert.equal(await page.locator('#listen .seventh-card').count(),3);
+  assert.equal(await page.locator('#cadence .seventh-step').count(),3);
+  await page.locator('#listen .seventh-card button[data-play-midi]').first().click();
+  await delay(150);
+  assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
+  await page.screenshot({path:'test-results/learning/seventh-types-guide.png',fullPage:true});
+  console.log('PASS four authored seventh lessons, four inversions each, true sound and separate comparison guide');
+
   await go('/chords/f-sharp-minor/');
   assert.ok(await page.locator('a[href="/chords/a-major/"]').count()>=1,'F-sharp minor should link its relative A major');
   await page.locator('[data-inversion-button="1"]').click();
@@ -164,7 +200,7 @@ try{
   assert.equal(await page.locator('.print-cell').count(),16,'Original starter printable should not silently grow');
   console.log('PASS nine authored chord pages, SVG routes, inversions, audio and fixed 16-chord printable');
 
-  for(const path of ['/chords/f-sharp-minor/','/chords/b-flat-minor/']){
+  for(const path of ['/chords/f-sharp-minor/','/chords/b-flat-minor/','/chords/c-major-7/','/guides/seventh-chords-piano/']){
     const mobileLesson=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
     const mobileLessonPage=await mobileLesson.newPage();
     const response=await mobileLessonPage.goto(origin+path,{waitUntil:'domcontentloaded'});
