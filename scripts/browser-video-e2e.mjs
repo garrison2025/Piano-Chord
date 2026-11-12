@@ -54,6 +54,10 @@ try{
   await poster.waitFor({state:'visible',timeout:10000});
   const before=await poster.evaluate(canvas=>[...canvas.getContext('2d').getImageData(12,12,1,1).data]);
   await poster.screenshot({path:outputDir+'/video-poster-midnight.png'});
+  assert.equal(await page.locator('#vp-show-chords').isChecked(),true);
+  await page.locator('#vp-show-chords').uncheck();
+  await poster.screenshot({path:outputDir+'/video-poster-plain.png'});
+  await page.locator('#vp-show-chords').check();
   await page.locator('#vp-theme').selectOption('aurora');
   const after=await poster.evaluate(canvas=>[...canvas.getContext('2d').getImageData(12,12,1,1).data]);
   assert.notDeepEqual(after,before,'Video theme selection failed to redraw the 9:16 poster');

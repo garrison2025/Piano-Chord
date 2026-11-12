@@ -8,6 +8,10 @@ on:
       - scripts/browser-video-e2e.mjs
       - src/scripts/pianoRecorder.js
       - src/lib/videoConversion.mjs
+      - src/lib/performanceOverlay.mjs
+      - src/lib/performanceVideo.mjs
+      - src/lib/chordDetection.mjs
+      - src/lib/practiceTransfer.mjs
       - src/pages/tools/virtual-piano.astro
 jobs:
   chromium-ffmpeg-wasm:

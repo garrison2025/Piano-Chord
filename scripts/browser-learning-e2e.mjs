@@ -143,6 +143,60 @@ try{
   await page.locator('.piano-key[data-midi="60"]').scrollIntoViewIfNeeded();
   await page.locator('.piano-key[data-midi="60"]').click();
   assert.match(await page.locator('#vp-readout').innerText(),/Playing MIDI 60/);
+  // Real captured pointer: glide should hit-test the physical target key.
+  assert.equal(await page.locator('#vp-touch-scroll').getAttribute('aria-pressed'),'true');
+  await page.locator('#vp-touch-glide').click();
+  assert.equal(await page.locator('#vp-scroll').getAttribute('data-touch-mode'),'glide');
+  const c4=page.locator('.piano-key[data-midi="60"]');
+  const d4=page.locator('.piano-key[data-midi="62"]');
+  await c4.scrollIntoViewIfNeeded();
+  const boxC=await c4.boundingBox(),boxD=await d4.boundingBox();
+  assert.ok(boxC&&boxD,'Glide test needs C4/D4 hit boxes');
+  await page.mouse.move(boxC.x+boxC.width/2,boxC.y+boxC.height-19);
+  await page.mouse.down();
+  assert.equal(await c4.evaluate(el=>el.classList.contains('pressed')),true);
+  await page.mouse.move(boxD.x+boxD.width/2,boxD.y+boxD.height-19,{steps:4});
+  assert.equal(await d4.evaluate(el=>el.classList.contains('pressed')),true);
+  assert.equal(await c4.evaluate(el=>el.classList.contains('pressed')),false);
+  await page.mouse.up();
+  assert.equal(await d4.evaluate(el=>el.classList.contains('pressed')),false);
+  await page.locator('#vp-touch-scroll').click();
+  assert.equal(await page.locator('#vp-scroll').getAttribute('data-touch-mode'),'scroll');
+  console.log('PASS actual pointer glide, captured hit-testing and scroll restoration');
+
+  // Two independent mobile touch contacts: hold E4, drag C4 to D4, release.
+  const touchContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  const touchPage=await touchContext.newPage();
+  await touchPage.goto(origin+'/tools/virtual-piano/',{waitUntil:'domcontentloaded'});
+  await touchPage.locator('#vp-touch-glide').click();
+  const cMobile=touchPage.locator('.piano-key[data-midi="60"]');
+  const eMobile=touchPage.locator('.piano-key[data-midi="64"]');
+  const dMobile=touchPage.locator('.piano-key[data-midi="62"]');
+  await cMobile.scrollIntoViewIfNeeded();
+  const cm=await cMobile.boundingBox(),em=await eMobile.boundingBox(),dm=await dMobile.boundingBox();
+  assert.ok(cm&&em&&dm,'Mobile C4/D4/E4 hit boxes');
+  const finger=(b,id)=>({x:b.x+b.width/2,y:b.y+b.height-18,id});
+  const session=await touchContext.newCDPSession(touchPage);
+  try{
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[finger(cm,11)]});
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[finger(cm,11),finger(em,12)]});
+    assert.equal(await cMobile.evaluate(el=>el.classList.contains('pressed')),true);
+    assert.equal(await eMobile.evaluate(el=>el.classList.contains('pressed')),true);
+    await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[finger(dm,11),finger(em,12)]});
+    assert.equal(await dMobile.evaluate(el=>el.classList.contains('pressed')),true);
+    assert.equal(await eMobile.evaluate(el=>el.classList.contains('pressed')),true);
+    assert.equal(await cMobile.evaluate(el=>el.classList.contains('pressed')),false);
+    await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[finger(em,12)]});
+    assert.equal(await dMobile.evaluate(el=>el.classList.contains('pressed')),false);
+    assert.equal(await eMobile.evaluate(el=>el.classList.contains('pressed')),true);
+    await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    assert.equal(await eMobile.evaluate(el=>el.classList.contains('pressed')),false);
+    await touchPage.screenshot({path:'test-results/learning/mobile-two-finger-glide.png',fullPage:true});
+  }finally{
+    await session.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]}).catch(()=>{});
+    await touchContext.close();
+  }
+  console.log('PASS Chromium two-touch gesture, independent release and glissando');
   console.log('PASS original 88-key piano and embedded metronome');
 
   // Validate actual generated lesson routes and diagrams, not only theory formulas.
@@ -260,6 +314,13 @@ try{
   assert.equal(await page.locator('#vp-practice-stop-take').isVisible(),false);
   assert.equal(await page.locator('#practice-report').isVisible(),true);
   assert.match(await page.locator('#practice-report-summary').innerText(),/Matched 1 of 3 scheduled bars \(33% chord coverage\)/);
+  const poster=page.locator('#vp-poster');
+  await poster.waitFor({state:'visible'});
+  const posterPixel=await poster.evaluate(c=>[...c.getContext('2d').getImageData(50,248,1,1).data]);
+  await page.locator('#vp-show-chords').uncheck();
+  const plainPosterPixel=await poster.evaluate(c=>[...c.getContext('2d').getImageData(50,248,1,1).data]);
+  assert.notDeepEqual(plainPosterPixel,posterPixel,'Caption toggle must visibly update video poster');
+  await page.locator('#vp-show-chords').check();
   assert.equal(await page.locator('#practice-report-bars [data-status="matched"]').count(),1);
   assert.equal(await page.locator('#practice-report-bars [data-status="not-reached"]').count(),2);
   const practiceDownload=page.waitForEvent('download');
