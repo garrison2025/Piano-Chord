@@ -103,6 +103,14 @@ try{
   const previewResponse=await page.request.get(origin+'/share-card.png');
   assert.equal(previewResponse.status(),200,'Local OG image route');
   assert.match(previewResponse.headers()['content-type']||'',/image\/png/);
+  const decodedCard=await page.evaluate(async()=>{
+    const img=new Image();
+    img.src='/share-card.png';
+    await img.decode();
+    return {width:img.naturalWidth,height:img.naturalHeight};
+  });
+  assert.deepEqual(decodedCard,{width:1200,height:630},
+    'Share preview PNG must decode to the intended raster image');
   assert.equal(await page.getByRole('heading',{name:'C–E–G: C major'}).count(),1);
   assert.equal(await page.getByRole('heading',{name:'C–E–G–B♭: C7'}).count(),1);
   assert.equal(await page.getByRole('heading',{name:'What if your chord is not recognised?'}).count(),1);
