@@ -5,6 +5,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import {releaseChords} from '../src/data/chords.js';
+import {createChord} from '../src/lib/music.js';
+import {chordQuickAnswer} from '../src/lib/chordQuickAnswer.mjs';
 
 const dist=path.resolve('dist');
 const origin=(process.env.PUBLIC_SITE_URL||'https://piano-chord.pages.dev').replace(/\/$/,'');
@@ -13,6 +16,7 @@ const paths=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>new URL(m[1].re
 const indexable=new Set(paths),issues=[],warnings=[],incoming=new Map(paths.map(p=>[p,new Set()]));
 const titles=new Map(),descriptions=new Map();
 const rows=[];
+const chordByPath=new Map(releaseChords.map(e=>['/chords/'+e.slug+'/',e]));
 function decode(s){return String(s??'').replaceAll('&amp;','&').replaceAll('&quot;','"').replaceAll('&#39;',"'");}
 function fileFor(p){return path.join(dist,p==='/'?'index.html':p.slice(1)+'index.html');}
 function attr(html,pat){return decode(html.match(pat)?.[1]);}
@@ -57,15 +61,16 @@ for(const p of paths){
     issues.push('Missing Google Fonts resource preconnect on '+p);
   if(!/<html\b[^>]*lang="en"/i.test(html))issues.push('Missing page language on '+p);
   if(/<meta\s+name="robots"\s+content="[^"]*noindex/i.test(html))issues.push('Indexable sitemap page incorrectly noindex: '+p);
+  if(/<meta\s+name="robots"\s+content="[^"]*nosnippet/i.test(html))issues.push('AI-search eligible page prohibits snippets: '+p);
   if(title?.length>70)warnings.push('Long title '+title.length+' chars on '+p);
   if(description?.length>185)warnings.push('Long description '+description.length+' chars on '+p);
   const imageTags=[...html.matchAll(/<img\b[^>]*>/gi)].map(m=>m[0]);
   for(const tag of imageTags)
     if(!/\balt="[^"]+"/i.test(tag))issues.push('Missing descriptive img alt on '+p+': '+tag.slice(0,85));
-  let schemaCount=0;
+  let schemaCount=0,structured=[];
   for(const match of html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)){
     try {
-      const value=JSON.parse(match[1]);schemaCount++;
+      const value=JSON.parse(match[1]);schemaCount++;structured.push(value);
       if(!value['@context']||!value['@type'])issues.push('Incomplete JSON-LD on '+p);
       if(value['@type']==='BreadcrumbList'){
         for(const item of value.itemListElement||[])
@@ -81,6 +86,18 @@ for(const p of paths){
     if(!html.includes('"@type":"WebPage"')||
        !html.includes('"@type":"DefinedTerm"'))
       issues.push('Chord page missing music term subject JSON-LD: '+p);
+  }
+  const chordEntry=chordByPath.get(p);
+  if(chordEntry){
+    const answer=chordQuickAnswer(createChord(chordEntry));
+    const subject=structured.find(o=>o?.['@type']==='WebPage' && o.mainEntity?.['@type']==='DefinedTerm');
+    if(!subject || subject.url!==origin+p ||
+      subject.mainEntity.name!==chordEntry.name ||
+      subject.mainEntity.termCode!==chordEntry.symbol ||
+      subject.mainEntity.description!==answer.definition)
+      issues.push('GEO DefinedTerm JSON-LD differs from the music-theory notes: '+p);
+    if(!html.includes(answer.definition)||!html.includes(answer.inversionAnswer))
+      issues.push('GEO visible note/inversion answers disagree with the theory engine: '+p);
   }
   if(p==='/'){
     if(!html.includes('"@type":"WebSite"')||!html.includes('"name":"Piano Chord Explorer"'))
