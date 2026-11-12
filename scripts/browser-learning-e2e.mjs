@@ -308,7 +308,28 @@ try{
   for(const key of ['a','f','g'])await page.keyboard.down(key);
   assert.match(await page.locator('#vp-chord-name').innerText(),/Csus4/);
   for(const key of ['g','f','a'])await page.keyboard.up(key);
-  console.log('PASS 120 atlas inversion links, all-family finder, full inversions and real 88-key sus4');
+  const pressPhysical=async(notes)=>{
+    await page.evaluate(notes=>{
+      notes.forEach((midi,index)=>{
+        document.querySelector('.piano-key[data-midi="'+midi+'"]')
+          .dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,pointerType:'mouse',pointerId:201+index}));
+      });
+    },notes);
+  };
+  const releasePhysical=async(count)=>{
+    await page.evaluate(count=>{
+      for(let i=0;i<count;i++)document.dispatchEvent(new PointerEvent('pointerup',
+        {bubbles:true,button:0,pointerType:'mouse',pointerId:201+i}));
+    },count);
+  };
+  await pressPhysical([64,67,72]);
+  assert.equal(await page.locator('#vp-chord-name').innerText(),'C/E');
+  assert.match(await page.locator('#vp-chord-notes').innerText(),/First inversion/);
+  await releasePhysical(3);
+  await pressPhysical([58,60,64,67]);
+  assert.equal(await page.locator('#vp-chord-name').innerText(),'C7/B♭');
+  await releasePhysical(4);
+  console.log('PASS real-key C/E and C7/B♭ detection, 120 atlas, inversions and 88-key sus4');
 
   await go('/tools/chord-progressions/');
   assert.deepEqual((await texts('#progression-steps strong')).map(s=>s.trim()),['C','G','Am','F']);

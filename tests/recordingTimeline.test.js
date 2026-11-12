@@ -19,6 +19,16 @@ test('detects actual Dm7 then G7 segments with note-relative times',()=>{
   assert.deepEqual(soundingNotesAt(t,900),[]);
   assert.deepEqual(soundingNotesAt(t,1700),[]);
 });
+test('timeline distinguishes stable root, first inversion, and dominant seventh third inversion',()=>{
+  const t=take([
+    {midis:[60,64,67],start:100,end:400},
+    {midis:[64,67,72],start:500,end:900},
+    {midis:[58,60,64,67],start:1000,end:1400}
+  ],1550);
+  assert.deepEqual(buildChordTimeline(t).map(c=>[c.symbol,c.start,c.end]),[
+    ['C',100,400],['C/E',500,900],['C7/B♭',1000,1400]
+  ]);
+});
 test('octave doubled notes do not make two chord labels; two sessions stay separate',()=>{
   const t=take([
     {midis:[60,64,67,72],start:100,end:500},

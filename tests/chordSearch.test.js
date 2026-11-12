@@ -19,6 +19,9 @@ test('canonical flat spelling, empty search and false positives are unchanged',(
   assert.equal(find('').length,120);
   assert.ok(find('D♭maj7').some(c=>c.root==='Db'&&c.quality==='maj7'));
   assert.ok(find('G♭ minor').some(c=>c.root==='Gb'&&c.quality==='minor'));
+  assert.equal(find('F# minor').length,1,'Specific minor triad search excludes minor seventh');
+  assert.equal(find('F♯ major').length,1,'Specific major triad search excludes major seventh');
+  assert.equal(find('G♭ minor').length,1);
   assert.equal(normalizeChordSearch('  C♯maj7  '),'c#maj7');
   assert.equal(find('not-a-chord').length,0);
 });

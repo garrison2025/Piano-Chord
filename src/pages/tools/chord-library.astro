@@ -21,14 +21,15 @@ const lessonFor=c=>{
 </section>
 <section class="container section"><div class="panel"><h2>Why 120 chords?</h2><p>Open <a href="/tools/inversion-explorer/">the inversion explorer</a> from any card to hear all three or four voicings, or use the <a href="/tools/chord-finder/">chord finder</a> to identify a selected set of notes. These are twelve pitch-class roots multiplied by ten common formulas. Enharmonic spelling can depend on harmonic context; the displayed note names follow diatonic chord construction. Not every theoretical spelling has a separate page. This library links to 29 authored lessons; where an enharmonic root is used (for example, D♭ minor versus C♯ minor), the link is explicitly labelled and the note spelling may differ. Additional individual lessons are not automatically generated.</p></div></section>
 <script>
+import {explicitTriadQuality} from '../../lib/chordSearch.mjs';
 const s=document.getElementById('atlas-search'),t=document.getElementById('atlas-type'),c=document.getElementById('atlas-count'),cards=[...document.querySelectorAll('.atlas-card')];
 function norm(v){return String(v).toLowerCase().replaceAll('♯','#').replaceAll('♭','b').trim().replace(/\s+/g,' ');}
 function render(){
-  const q=norm(s.value);let n=0;
+  const q=norm(s.value),precise=explicitTriadQuality(q);let n=0;
   for(const e of cards){
     const direct=norm(e.dataset.search).includes(q);
     const viaAlias=!!q&&!direct&&norm(e.dataset.alias).includes(q);
-    const ok=(t.value==='all'||e.dataset.quality===t.value)&&(!q||direct||viaAlias);
+    const ok=(t.value==='all'||e.dataset.quality===t.value)&&(!precise||e.dataset.quality===precise)&&(!q||direct||viaAlias);
     e.hidden=!ok;
     const note=e.querySelector('.atlas-alias-note');
     if(note)note.hidden=!ok||!viaAlias;

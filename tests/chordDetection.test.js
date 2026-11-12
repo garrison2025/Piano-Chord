@@ -10,6 +10,20 @@ test('recognizes dominant, major and minor sevenths in inversions and octaves',(
     assert.ok(result.matches.some(x=>x.symbol===symbol&&x.quality===quality),symbol);
   }
 });
+test('live piano labels physically lowest note inversion, including fourth-note third inversion',()=>{
+  const first=describeHeldChord([64,67,72]);
+  assert.equal(first.title,'C/E');
+  assert.equal(first.bass,1);
+  assert.match(first.detail,/First inversion/);
+  const second=describeHeldChord([67,72,76]);
+  assert.equal(second.title,'C/G');
+  const c7=describeHeldChord([58,60,64,67]);
+  assert.equal(c7.title,'C7/B♭');
+  assert.equal(c7.bass,3);
+  assert.match(c7.detail,/Third inversion/);
+  assert.equal(describeHeldChord([60,64,67,70]).title,'C7');
+  assert.equal(describeHeldChord([60,72,64,67]).title,'C');
+});
 test('triads, doubled octaves, incomplete and non-chord combinations',()=>{
   assert.ok(describeHeldChord([60,64,67]).matches.some(x=>x.symbol==='C'));
   assert.equal(describeHeldChord([60,72,64,67]).kind,'triad');
