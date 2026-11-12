@@ -83,6 +83,12 @@ try{
     const res=await p.goto(origin+path,{waitUntil:'domcontentloaded'});
     assert.equal(res?.status(),200);
     const dims=await p.evaluate(()=>({scroll:document.documentElement.scrollWidth,view:document.documentElement.clientWidth}));
+    if(dims.scroll>dims.view+2){
+      const offenders=await p.evaluate(()=>[...document.querySelectorAll('body *')].map(e=>{
+        const r=e.getBoundingClientRect();return {tag:e.tagName,cls:String(e.className||'').slice(0,90),id:e.id,left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width)};
+      }).filter(e=>e.right>document.documentElement.clientWidth+3&&e.width>5).slice(0,18));
+      console.error('Mobile overflow elements for '+path,JSON.stringify(offenders));
+    }
     assert.ok(dims.scroll<=dims.view+2,'Mobile horizontal overflow on '+path+': '+JSON.stringify(dims));
     await p.screenshot({path:'test-results/learning/mobile-'+path.split('/')[2]+'.png',fullPage:true});
     await mobile.close();
