@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="About Piano Chord Explorer | Free Piano Learning Tools" description="Learn how Piano Chord Explorer builds chord lessons, interactive keyboards, music-theory references and browser-only practice tools. Send feedback and corrections." canonicalPath="/about/" crumbs={[{name:'About',href:'/about/'}]}>
+  <section class="container page-hero">
+    <span class="eyebrow">ABOUT THIS PROJECT</span>
+    <h1>Piano theory you can<br/><em>see, hear and try.</em></h1>
+    <p class="lead">Piano Chord Explorer is a free educational website for people who want to understand how piano chords work—not just memorize a diagram.</p>
+  </section>
+  <section class="container section-compact">
+    <div class="two-col">
+      <article class="panel prose">
+        <h2>What you can do here</h2>
+        <p>Read 29 individually written chord lessons, browse a 120-chord reference, identify chords from their notes, and listen to inversions. You can also try all 88 piano keys on a virtual instrument, practise common progressions, explore major and minor scales, use a metronome and print a 16-chord reference sheet.</p>
+        <p>The tools are free to use. The main piano practice and recording functions run inside your browser; you do not need an account or a music subscription.</p>
+        <h2>How the chord information is made</h2>
+        <p>Chord notes are built from pitch-class and interval rules in twelve-tone equal temperament. Our note-spelling code distinguishes C7 from Cmaj7 and keeps accidental spellings such as F♯ and B♭ visible. Original keyboard diagrams are generated from the chord data rather than copied from other sites.</p>
+        <p>Automated tests check important note spellings, voicings, page generation and interactions. These checks are useful, but they are not a substitute for a musician listening and reviewing every possible musical context.</p>
+        <h2>What the diagrams do not prescribe</h2>
+        <p>The illustrated keyboard is a reference voicing, not a required octave or a universal fingering. Your preferred hand shape can depend on range, nearby chords and physical comfort. Sound is browser-synthesized, not a recording of an acoustic piano.</p>
+      </article>
+      <aside class="panel prose">
+        <h2>Feedback, corrections and contact</h2>
+        <p>If a note spelling, chord name, diagram or exercise looks wrong, please tell us which page you were using and what you expected to hear or see.</p>
+        <p>We maintain a public issue tracker for site feedback. Reports made there are public, so please do not include passwords, private recordings, contact details or other personal information.</p>
+        <p><a class="btn btn-primary" href="https://github.com/garrison2025/Piano-Chord/issues/new" rel="noopener noreferrer">Report an issue or suggest an improvement ↗</a></p>
+        <h2>Learn more</h2>
+        <p><a class="text-link" href="/guides/how-to-read-piano-chords/">How to read our keyboard diagrams</a></p>
+        <p><a class="text-link" href="/open-source/">Open-source and software license notices</a></p>
+        <p><a class="text-link" href="/privacy/">Privacy and data handling</a></p>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>

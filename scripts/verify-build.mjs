@@ -9,7 +9,7 @@ const dist = path.resolve('dist');
 const publishedPages = [
   '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
   '/tools/chord-compare/', '/tools/virtual-piano/', '/tools/chord-library/', '/tools/scales-and-keys/', '/tools/chord-progressions/', '/tools/metronome/', '/printables/piano-chord-chart/',
-  '/guides/how-to-read-piano-chords/', '/guides/seventh-chords-piano/', '/open-source/', 
+  '/guides/how-to-read-piano-chords/', '/guides/seventh-chords-piano/', '/open-source/', '/about/', 
   ...releaseChords.map(chord=>`/chords/${chord.slug}/`),
 ];
 const errors=[];
@@ -18,7 +18,7 @@ const read=(p)=>fs.readFileSync(p,'utf8');
 const sitemap=read(path.join(dist,'sitemap.xml'));
 const absoluteSite=(process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev').replace(/\/$/,'');
 const canonicalURLs=new Set();
-if(publishedPages.length!==43)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
+if(publishedPages.length!==44)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
 for(const url of publishedPages){
  const target=getFile(url);
  if(!fs.existsSync(target)){errors.push(`Missing HTML: ${url}`);continue;}
@@ -107,9 +107,18 @@ if(fs.existsSync(notFoundPath)){
    errors.push('404 page must be noindex');
 }
 
+const privacyPage=read(getFile('/privacy/'));
+if(!privacyPage.includes('name="robots" content="noindex,follow"'))
+  errors.push('Privacy route must be noindex');
+if(sitemap.includes('/privacy/'))errors.push('Noindex privacy page must be excluded from sitemap');
 const home=read(getFile('/'));
 if(!home.includes('"@type":"WebSite"')||!home.includes('"url":"'+absoluteSite+'/"'))
  errors.push('Homepage missing canonical WebSite JSON-LD');
+const aboutPage=read(getFile('/about/'));
+if(!aboutPage.includes('github.com/garrison2025/Piano-Chord/issues/new'))
+  errors.push('About page must have a verifiable public feedback route');
+if(!home.includes('href="/about/"')||!home.includes('href="/privacy/"'))
+  errors.push('Main site footer must link to About and Privacy');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
 else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, ${releaseChords.length} authored SVG diagrams, ${releaseChords.length} unique chord meta descriptions and interactive two-chord drills, canonical/metadata, sitemap, image sitemap, internal links and robots.`);

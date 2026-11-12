@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Privacy & Local Recording | Piano Chord Explorer" description="How Piano Chord Explorer handles local piano playing, MIDI and video export, hosting requests, external fonts and optional browser-based video conversion." canonicalPath="/privacy/" noindex={true} crumbs={[{name:'Privacy',href:'/privacy/'}]}>
+  <section class="container page-hero">
+    <span class="eyebrow">SITE PRIVACY</span>
+    <h1>Play locally.<br/><em>Know what loads.</em></h1>
+    <p class="lead">Last updated: November 12, 2026. This describes the website features and third-party requests in the current published code. It is not a claim that your browser, hosting provider or linked websites collect no technical information.</p>
+  </section>
+  <section class="container section-compact"><div class="panel prose narrow" style="margin:auto">
+    <h2>Playing, recording and sharing</h2>
+    <p>You do not need an account to play the virtual piano. Keyboard input, synthesized audio, practice evaluation, local recording playback, MIDI file creation and shareable video rendering are performed in your browser. The website does not require you to upload a performance to our servers for these features.</p>
+    <p>Files are saved to your device when you choose a download, or handed to an app you select when you use your operating system's share sheet. We cannot control what a third-party social app does with a file once you choose to share it. Please review that service's privacy terms.</p>
+    <h2>Hosting and external resources</h2>
+    <p>The website is delivered through Cloudflare Pages. Like other hosting providers, Cloudflare may process requests and technical or security data such as IP addresses, browser details and timestamps under its own privacy terms.</p>
+    <p>Fonts are requested from Google Fonts. If you choose optional MP4 conversion, an FFmpeg WebAssembly component is downloaded on demand from the jsDelivr content delivery network. Those providers may receive connection metadata when your browser accesses them. Opening GitHub issue or source-code links takes you to GitHub, a separate website.</p>
+    <p>For details, see the <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener noreferrer">Cloudflare privacy policy</a>, <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google privacy policy</a> and our <a href="/open-source/">software notices</a>.</p>
+    <h2>Analytics and advertising</h2>
+    <p>The current website source does not include a site-operated account system or an embedded display-ad script. If third-party analytics, advertising or other tracking services are added, this notice and any applicable consent controls must be reviewed and updated before they are enabled.</p>
+    <h2>Questions or corrections</h2>
+    <p>For website-related questions, use the project's <a href="https://github.com/garrison2025/Piano-Chord/issues/new" rel="noopener noreferrer">public issue tracker</a>. Do not post private or sensitive information there. Browser storage and download controls can be managed through your browser and device settings.</p>
+    <p class="help-text">This page is provided for transparency about the current tool implementation; it does not replace privacy requirements that may apply to future advertising integrations or custom-domain deployment.</p>
+  </div></section>
+</BaseLayout>
