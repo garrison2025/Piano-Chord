@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 28
     env:
-      PIANO_STRESS_SECONDS: ${{ inputs.duration || '60' }}
+      PIANO_STRESS_SECONDS: ${{ inputs.duration || '90' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

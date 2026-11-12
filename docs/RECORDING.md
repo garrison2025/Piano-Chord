@@ -42,3 +42,14 @@ The H.264/AAC checker now parses real MP4 video/audio track handlers and `stsd` 
 - The original WebM contains VP9 video and Opus audio; its container duration is **3.836 seconds**, with track start times 0.000s (video) and 0.014s (audio). FFprobe emits a nonfatal Matroska unknown-sized-element warning for this WebM; retaining the optional MP4 conversion remains prudent.
 - These measurements verify short recordings on headless desktop Chromium. They do **not** prove exact note-animation perceptual sync, 90-second performance under load, iPhone Safari/Android compatibility, or successful TikTok/X uploads. Those items remain separate acceptance gates.
 - The checked-in test is `scripts/browser-video-e2e.mjs`; the dedicated workflow `.github/workflows/video-browser-e2e.yml` runs on relevant changes or manually. The generated test videos contain only synthetic notes and no user recordings.
+
+
+## 60-second stress and emulated-mobile results (2026-11-12)
+
+- Source commit [29086e5](https://github.com/garrison2025/Piano-Chord/commit/29086e5469e951ddaacf73d9eb9d404579c0fddb); real-WASM run [43124171170](https://github.com/garrison2025/Piano-Chord/actions/runs/43124171170) concluded **success**.
+- Automated Chromium desktop test played dozens of synthetic notes for approximately 60 seconds, generated VP9/Opus WebM, and converted it using the *actual browser FFmpeg WASM engine* to H.264/AAC MP4.
+- Independent `ffprobe` on the saved artifact: WebM **61.660 s** (720x1280; video start 0.000 s, audio start 0.004 s), MP4 **61.621995 s** (540x960; video and audio both start 0.000 s).
+- The WebM still produces a nonfatal Matroska 'unknown-sized element' warning despite its valid container duration; MP4 is the preferred upload deliverable.
+- The same workflow successfully executed **390px Chromium touch/mobile emulation**, checked page horizontal overflow, recorded tapped keys, downloaded audio-bearing WebM/MP4, and exercised the unavailable-file-sharing fallback. This is *not* a real Android device and cannot establish iOS Safari compatibility.
+- Original performance, converted MP4 and mobile screenshot are in the GitHub run's `piano-stress-diagnostics` artifact.
+- The independent test's `PIANO_STRESS_SECONDS` variable also supports a 90-second capture. Upload acceptance on TikTok/X and physical-device verification remain open.
