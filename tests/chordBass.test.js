@@ -19,5 +19,5 @@ test('non-chord slash bass does not masquerade as an inversion',()=>{
 test('enharmonic root spelling follows chord tones when bass is an inversion',()=>{
   const Bb=coreChords.find(x=>x.root==='Bb'&&x.quality==='major');
   assert.match(describeChordBass(Bb,'10').description,/Root position/);
-  assert.equal(describeChordBass(Bb,'2').slashName,'Bb/D');
+  assert.equal(describeChordBass(Bb,'2').slashName,'B♭/D');
 });

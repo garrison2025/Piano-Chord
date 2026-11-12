@@ -119,6 +119,19 @@ if(!aboutPage.includes('github.com/garrison2025/Piano-Chord/issues/new'))
   errors.push('About page must have a verifiable public feedback route');
 if(!home.includes('href="/about/"')||!home.includes('href="/privacy/"'))
   errors.push('Main site footer must link to About and Privacy');
+for(const file of [
+ 'piano-chord-24-triads-a4.pdf','piano-chord-24-triads-letter.pdf',
+ 'piano-chord-36-sevenths-a4.pdf','piano-chord-36-sevenths-letter.pdf'
+]){
+ const target=path.join(dist,'downloads',file);
+ if(!fs.existsSync(target)){errors.push('Missing printable PDF: '+file);continue;}
+ const bytes=fs.readFileSync(target);
+ if(bytes.length<3000||bytes.subarray(0,8).toString('ascii')!=='%PDF-1.4')
+   errors.push('Invalid or empty printable PDF: '+file);
+ const pdf=bytes.toString('latin1');
+ if(!/\/Type\s*\/Page\b/.test(pdf)||!/\/MediaBox\s*\[0\s+0\s+[\d.]+\s+[\d.]+\]/.test(pdf))
+   errors.push('Printable PDF has no valid page box: '+file);
+}
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
 else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, ${releaseChords.length} authored SVG diagrams, ${releaseChords.length} unique chord meta descriptions and interactive two-chord drills, canonical/metadata, sitemap, image sitemap, internal links and robots.`);

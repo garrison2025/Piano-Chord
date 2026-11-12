@@ -254,6 +254,16 @@ try{
   assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
   await page.screenshot({path:'test-results/learning/120-inversions.png',fullPage:true});
   await go('/tools/chord-finder/');
+  for(const pc of [0,4,7])await page.locator('[data-pitch="'+pc+'"]').click();
+  await page.locator('#finder-bass').selectOption('4');
+  assert.match(await page.locator('#finder-results').innerText(),/C\/E/);
+  assert.match(await page.locator('#finder-results').innerText(),/First inversion/);
+  await page.locator('#finder-bass').selectOption('2');
+  assert.match(await page.locator('#finder-results').innerText(),/C\/D/);
+  assert.match(await page.locator('#finder-results').innerText(),/not an inversion/i);
+  await page.locator('#clear-pitches').click();
+  assert.equal(await page.locator('#finder-bass').inputValue(),'');
+  assert.match(await page.locator('#finder-results').innerText(),/0 notes selected/);
   for(const pc of [0,5,7])await page.locator('[data-pitch="'+pc+'"]').click();
   assert.match(await page.locator('#finder-results').innerText(),/Csus4/);
   await page.locator('#finder-results a[href="/tools/inversion-explorer/?root=C&quality=sus4"]').click();
@@ -678,6 +688,18 @@ try{
   await page.screenshot({path:'test-results/learning/f-sharp-minor-inversion.png',fullPage:true});
   await go('/printables/piano-chord-chart/');
   assert.equal(await page.locator('.print-cell').count(),16,'Original starter printable should not silently grow');
+  for(const file of [
+    'piano-chord-24-triads-a4.pdf','piano-chord-24-triads-letter.pdf',
+    'piano-chord-36-sevenths-a4.pdf','piano-chord-36-sevenths-letter.pdf'
+  ]){
+    const response=await page.request.get(origin+'/downloads/'+file);
+    assert.equal(response.status(),200,'Printable PDF must be downloadable: '+file);
+    assert.match(response.headers()['content-type']||'',/application\/pdf/i);
+    assert.equal((await response.body()).subarray(0,8).toString('ascii'),'%PDF-1.4');
+    assert.equal(await page.locator('a[href="/downloads/'+file+'"][download]').count(),1);
+  }
+  assert.equal(await page.getByRole('heading',{name:'Major & minor piano chords'}).count(),1);
+  assert.equal(await page.getByRole('heading',{name:'Dominant, major & minor sevenths'}).count(),1);
   // Test actual Chromium printing on both supported paper formats.
   await page.emulateMedia({media:'print'});
   const printColumns=await page.locator('.print-chart-grid').evaluate(el=>

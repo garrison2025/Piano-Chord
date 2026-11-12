@@ -3,8 +3,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import {starterPrintableChords} from '../../data/chords.js';
 import {createChord,prettyNote} from '../../lib/music.js';
 ---
-<BaseLayout title="Free Printable Piano Chord Chart | 16 Core Chords" description="Print an original piano chord reference sheet with 16 major, minor and seventh chords, notes and accurate keyboard diagrams. A4 and US Letter friendly." canonicalPath="/printables/piano-chord-chart/" crumbs={[{name:'Printable Chord Chart',href:'/printables/piano-chord-chart/'}]}>
-  <div class="container page-hero print-chart-hero"><span class="eyebrow">Free printable resource</span><h1>A chord chart<br/>for your music stand.</h1><p class="lead">Print the original 16-chord starter selection with their notes and original keyboard diagrams. Use your browser's Print command to save as PDF or print to A4 / US Letter paper.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print / Save as PDF</button><a class="btn" href="/chords/">Browse chord lessons</a></div></div>
+<BaseLayout title="Free Printable Piano Chord Charts | 24 Triads & 36 Sevenths" description="Download free one-page A4 and US Letter piano chord charts: all 24 major and minor triads plus 36 common seventh chords, with note spellings and keyboard maps." canonicalPath="/printables/piano-chord-chart/" crumbs={[{name:'Printable Chord Chart',href:'/printables/piano-chord-chart/'}]}>
+  <div class="container page-hero print-chart-hero"><span class="eyebrow">Free printable resource</span><h1>Piano chord charts<br/>for your music stand.</h1><p class="lead">Download print-ready A4 or US Letter PDF charts for all 24 major and minor triads and 36 common seventh chords. Keep the original 16-chord illustrated starter sheet below for a compact first reference.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print starter chart</button><a class="btn" href="/chords/">Browse chord lessons</a></div></div>
+  <section class="container section-compact printable-downloads" aria-labelledby="download-charts-title">
+    <div class="section-head"><div><span class="eyebrow">FREE PDF DOWNLOADS</span><h2 id="download-charts-title">Choose a complete chord chart</h2><p>Each file is a single-page vector PDF with chord spellings and a one-octave keyboard map. Choose the paper size that matches your printer.</p></div></div>
+    <div class="card-grid">
+      <article class="panel">
+        <span class="eyebrow">24 TRIADS</span><h3>Major &amp; minor piano chords</h3>
+        <p>All 12 major and 12 minor triads, grouped by chord quality.</p>
+        <div class="button-row">
+          <a class="btn btn-primary" href="/downloads/piano-chord-24-triads-a4.pdf" download>↓ A4 PDF</a>
+          <a class="btn" href="/downloads/piano-chord-24-triads-letter.pdf" download>↓ US Letter PDF</a>
+        </div>
+      </article>
+      <article class="panel">
+        <span class="eyebrow">36 SEVENTH CHORDS</span><h3>Dominant, major &amp; minor sevenths</h3>
+        <p>12 each of dominant seventh, major seventh and minor seventh chords.</p>
+        <div class="button-row">
+          <a class="btn btn-primary" href="/downloads/piano-chord-36-sevenths-a4.pdf" download>↓ A4 PDF</a>
+          <a class="btn" href="/downloads/piano-chord-36-sevenths-letter.pdf" download>↓ US Letter PDF</a>
+        </div>
+      </article>
+    </div>
+    <p class="help-text">PDFs are generated as static files during the site build. No account, upload, server-side conversion or paid PDF API is required.</p>
+  </section>
   <section class="container section-compact print-chart-page"><div class="panel"><div class="section-head no-print"><div><h2>16-chord reference</h2><p>Each diagram covers a reference keyboard range, with its notes written beside it.</p></div></div><div class="print-chart-heading" aria-hidden="true"><strong>Piano Chord Explorer</strong><span>16 original chord diagrams · Notes &amp; keys</span></div><div class="print-sheet print-chart-grid">
   {starterPrintableChords.map(entry=>{const c=createChord(entry);return <article class="print-cell"><strong>{prettyNote(c.symbol)} · {c.qualityName}</strong><span>{c.notes.map(prettyNote).join(' – ')}</span><img src={`/diagrams/${entry.slug}.svg`} alt={`${c.name}: ${c.notes.map(prettyNote).join(', ')}`} width="692" height="195" loading="lazy" /></article>})}
 </div></div><p class="print-note">Print uses the paper size selected in your browser dialog. For physical accuracy, review printer scale settings; fit-to-page can resize diagrams.</p></section>
