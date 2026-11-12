@@ -20,6 +20,14 @@ test('non-chord slash bass does not masquerade as an inversion',()=>{
   assert.deepEqual(d.playMidi,[50,60,64,67],'External D bass must sound below the C major chord tones');
   assert.throws(()=>describeChordBass(C,'27'),RangeError);
 });
+test('four-note dominant seventh identifies and plays its third inversion',()=>{
+  const C7=coreChords.find(x=>x.root==='C'&&x.quality==='7');
+  const result=describeChordBass(C7,'10');
+  assert.equal(result.slashName,'C7/B♭');
+  assert.equal(result.inversion,3);
+  assert.match(result.description,/Third inversion/);
+  assert.deepEqual(result.playMidi,[70,72,76,79]);
+});
 test('enharmonic root spelling follows chord tones when bass is an inversion',()=>{
   const Bb=coreChords.find(x=>x.root==='Bb'&&x.quality==='major');
   assert.match(describeChordBass(Bb,'10').description,/Root position/);

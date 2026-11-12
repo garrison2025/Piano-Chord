@@ -4,11 +4,11 @@ const labels=Object.freeze(['C','C♯','D','E♭','E','F','F♯','G','A♭','A',
 const ordinal=Object.freeze(['Root position','First inversion','Second inversion','Third inversion']);
 export function describeChordBass(chord,rawBass){
   if(!chord||!Array.isArray(chord.notes))throw new Error('Chord note list required');
+  if(!Array.isArray(chord.midi)||!chord.midi.length)throw new Error('Chord MIDI voicing required');
   if(rawBass===''||rawBass===null||rawBass===undefined)
     return {slashName:chord.symbol,description:'Bass not specified · root position preview',kind:'unspecified',inversion:null,playMidi:[...chord.midi]};
   const bass=Number(rawBass);
   if(!Number.isInteger(bass)||bass<0||bass>11)throw new RangeError('Bass must be one of 12 pitch classes');
-  if(!Array.isArray(chord.midi)||!chord.midi.length)throw new Error('Chord MIDI voicing required');
   const index=chord.notes.findIndex(note=>pitchClass(note)===bass);
   if(index>=0){
     const bassLabel=prettyNote(chord.notes[index]),playMidi=[...chord.midi];

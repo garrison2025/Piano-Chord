@@ -269,6 +269,13 @@ try{
   await page.locator('#clear-pitches').click();
   assert.equal(await page.locator('#finder-bass').inputValue(),'');
   assert.match(await page.locator('#finder-results').innerText(),/0 notes selected/);
+  for(const pc of [0,4,7,10])await page.locator('[data-pitch="'+pc+'"]').click();
+  await page.locator('#finder-bass').selectOption('10');
+  assert.match(await page.locator('#finder-results').innerText(),/C7\/B♭/);
+  assert.match(await page.locator('#finder-results').innerText(),/Third inversion/);
+  const c7Third=page.locator('#finder-results li').filter({hasText:'C Dominant 7th'}).first();
+  assert.equal(await c7Third.locator('button[data-play-midi]').getAttribute('data-play-midi'),'70,72,76,79');
+  await page.locator('#clear-pitches').click();
   for(const pc of [0,5,7])await page.locator('[data-pitch="'+pc+'"]').click();
   assert.match(await page.locator('#finder-results').innerText(),/Csus4/);
   await page.locator('#finder-results a[href="/tools/inversion-explorer/?root=C&quality=sus4"]').click();
