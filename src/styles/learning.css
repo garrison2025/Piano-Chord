@@ -98,3 +98,7 @@
 .piano-key.practice-target.black{background:linear-gradient(100deg,#2ab792,#136958)!important}
 .piano-key.practice-target.pressed.white{background:#b4a5ff!important}
 .piano-key.practice-target.pressed.black{background:#8b75ed!important}
+
+/* Three-bar cadence and four-bar turnaround share a responsive practice board. */
+.practice-bars.is-three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:640px){.practice-bars.is-three{grid-template-columns:repeat(2,minmax(0,1fr))}}
