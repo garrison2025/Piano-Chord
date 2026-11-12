@@ -29,8 +29,11 @@ test('finder recognizes C minor and C major separately',()=>{
   assert(findChordMatches([0,3,7]).some(v=>v.root==='C'&&v.quality==='minor'));
   assert(!findChordMatches([0,3,7]).some(v=>v.root==='C'&&v.quality==='major'));
 });
-test('exactly 16 SEO chords without duplicate canonical slugs',()=>{
-  assert.equal(releaseChords.length,16);
+test('24 major/minor + C7 chord lessons without duplicate canonical slugs',()=>{
+  assert.equal(releaseChords.length,25);
+  assert.equal(releaseChords.filter(c=>c.quality==='major').length,12);
+  assert.equal(releaseChords.filter(c=>c.quality==='minor').length,12);
+  assert.equal(releaseChords.filter(c=>c.quality==='dominant7').length,1);
   assert.equal(new Set(releaseChords.map(c=>c.slug)).size,16);
   assert(releaseChords.every(c=>chordNotes(c.root,c.quality).length>=3));
 });
@@ -40,12 +43,22 @@ test('keyboard SVG includes original image and accessible labels',()=>{
   assert.equal((svg.match(/<rect x=/g)||[]).length,36);
 });
 
-test('all 16 SEO chord lessons contain distinct authored exercises',()=>{
+test('all 25 SEO chord lessons contain distinct authored exercises',()=>{
  const lessons=releaseChords.map(x=>chordLessons[x.slug]);
  assert(lessons.every(x=>x && x.character.length>60 && x.comparison.length>70 && x.exercise.length>70 && x.pitfall.length>50));
- assert.equal(new Set(lessons.map(x=>x.exercise)).size,16);
+ assert.equal(new Set(lessons.map(x=>x.exercise)).size,25);
 });
 
 import {coreChords,roots,qualities} from '../src/lib/coreCatalog.js';
 test('120-core-chord atlas has ten types in each of twelve roots',()=>{assert.equal(coreChords.length,120);assert.equal(roots.length,12);assert.equal(qualities.length,10);assert.equal(new Set(coreChords.map(c=>c.root+':'+c.quality)).size,120);});
 test('new chord atlas preserves theoretical spellings',()=>{const lookup=(r,q)=>coreChords.find(x=>x.root===r&&x.quality===q).notes;assert.deepEqual(lookup('C','sus2'),['C','D','G']);assert.deepEqual(lookup('C','m7b5'),['C','Eb','Gb','Bb']);assert.deepEqual(lookup('Gb','maj7'),['Gb','Bb','Db','F']);});
+
+// The nine new lesson roots are deliberately sharp/flat-spelled for learner clarity.
+test('new major/minor lessons have correct note names',()=>{
+ const expected={"d-flat-major":["Db","F","Ab"],"g-flat-major":["Gb","Bb","Db"],"a-flat-major":["Ab","C","Eb"],"a-major":["A","C#","E"],"c-sharp-minor":["C#","E","G#"],"e-flat-minor":["Eb","Gb","Bb"],"f-sharp-minor":["F#","A","C#"],"g-sharp-minor":["G#","B","D#"],"b-flat-minor":["Bb","Db","F"]};
+ for(const [slug,spelling] of Object.entries(expected)){
+  const entry=releaseChords.find(c=>c.slug===slug);
+  assert.ok(entry,'Missing '+slug);
+  assert.deepEqual(chordNotes(entry.root,entry.quality),spelling,slug);
+ }
+});

@@ -1,4 +1,4 @@
-// Original, chord-specific editorial lessons for the 16 reviewed V1.3 SEO pages.
+// Original, chord-specific editorial lessons: 24 chromatic major/minor triads and C7.
 // These describe concrete ways to hear/use each chord, not generic spun templates.
 export const chordLessons={
  'b-minor': {
@@ -96,5 +96,60 @@ export const chordLessons={
    comparison:'Switch between F major and F minor (F–A♭–C). Only the middle note changes, so the difference is easy to hear.',
    exercise:'Hold F and C while alternating A natural and A♭. Describe the sound of each version before checking its name.',
    pitfall:'Do not confuse A natural and A♭ here; only A natural completes the F major triad.',
+ },
+ // Nine individually authored major/minor lessons (2026-11-12).
+ 'd-flat-major': {
+   character:"D♭ major (D♭–F–A♭) pairs a white-key third, F, with two black keys. It is a comfortable way to learn that a flat-key chord still has a normal major-third interval of four semitones from its root.",
+   comparison:"Compare D♭ major with B♭ minor (B♭–D♭–F). D♭ and F are common tones; the other note changes from A♭ to B♭. Keep the shared notes under the same fingers and listen to how the bass changes the harmonic center.",
+   exercise:"Locate D♭ immediately to the left of D, then add F and A♭. Play the notes separately on beats one, two and three; on beat four, play all three together. Next, sustain D♭ and F while changing A♭ to B♭ to hear B♭ minor.",
+   pitfall:"D♭ major is not written C♯–F–G♯. Even though those keys sound the same in equal temperament, the chord's written third is F and its fifth is A♭.",
+ },
+ 'g-flat-major': {
+   character:"G♭ major (G♭–B♭–D♭) is an all-black-key triad. Its visual symmetry makes the fingering approachable, while its spelling reinforces that a major chord is built with successive letter-name thirds, not arbitrary sharps.",
+   comparison:"Compare G♭ major with E♭ minor (E♭–G♭–B♭). G♭ and B♭ stay the same, while D♭ can rise to E♭. This is a direct way to hear the relationship between a major key's tonic and its relative-minor chord.",
+   exercise:"Play G♭–B♭–D♭ once together, then arpeggiate upward and back down. Without moving G♭ or B♭, replace D♭ with E♭ and play E♭ minor. Repeat slowly until the switch takes one deliberate finger movement.",
+   pitfall:"Do not name the third A♯ merely because it shares B♭'s key. The G♭ major triad is spelled G♭–B♭–D♭, using a G, a B and a D.",
+ },
+ 'a-flat-major': {
+   character:"A♭ major consists of A♭–C–E♭. The natural C in the middle is a useful landmark between two black keys; raising that third is not necessary because C is already four semitones above A♭.",
+   comparison:"Compare A♭ major with F minor (F–A♭–C). A♭ and C remain in common while the third note moves from E♭ to F. The two chords share enough notes that the shift can feel connected rather than abrupt.",
+   exercise:"Start with A♭–C–E♭ in root position. Hold A♭ and C, then remove E♭ and introduce F as the lower note of F minor. Reverse the movement and try it again without looking at either keyboard diagram.",
+   pitfall:"A♭ major has C natural, not C♭. Substituting C♭ changes the interval above A♭ from a major third to a minor third, so the result is A♭ minor.",
+ },
+ 'a-major': {
+   character:"A major is spelled A–C♯–E. Its single black-key third makes it easy to see and hear the exact semitone that separates A major from the all-white-key A minor triad.",
+   comparison:"Alternate A major (A–C♯–E) with A minor (A–C–E). A and E do not move; only the middle note changes. Then compare A major with F♯ minor (F♯–A–C♯), which shares A and C♯ instead.",
+   exercise:"Keep A and E held softly, moving C♯ down to C natural and back as a listening drill. Next play F♯–A–C♯ and return to A major while keeping A and C♯ in place. Name which note moved in each change.",
+   pitfall:"The note between A and E must be C♯ in A major. C natural makes A minor, while calling C♯ 'D♭' conceals the chord's written third.",
+ },
+ 'c-sharp-minor': {
+   character:"C♯ minor (C♯–E–G♯) combines two black-key outer notes with a white-key minor third. It is more commonly written with sharps than as the enharmonic D♭ minor for beginner piano instruction.",
+   comparison:"Compare C♯ minor with E major (E–G♯–B). E and G♯ are shared. Replace C♯ with B to hear the relative-major connection, then return to C♯ minor by moving only that one chord tone.",
+   exercise:"First find C♯ directly to the right of C; add E and G♯. Play the triad as single notes, then as a block. Leave E and G♯ in place and replace C♯ with B to form E major, returning to C♯ minor without resetting your hand.",
+   pitfall:"C♯ minor contains E natural, not E♯. Raising E to E♯ creates C♯ major; relabeling E as F also hides the correct minor-third interval.",
+ },
+ 'e-flat-minor': {
+   character:"E♭ minor (E♭–G♭–B♭) uses three black keys. Although those keys may resemble a sharp-based pattern, the E♭–G♭–B♭ note names show the correct root, minor third and perfect fifth.",
+   comparison:"Compare E♭ minor with G♭ major (G♭–B♭–D♭). G♭ and B♭ are common tones; E♭ moves down to D♭. The shared notes make this a useful black-key practice pair with very little hand movement.",
+   exercise:"Play E♭–G♭–B♭ as a slow ascending arpeggio and descend in reverse. Repeat with all three notes together. Keep G♭ and B♭ held, switch E♭ to D♭ for G♭ major, and switch back for E♭ minor.",
+   pitfall:"The minor third of E♭ is G♭, not G natural. G natural would make E♭ major even though the root and fifth remain E♭ and B♭.",
+ },
+ 'f-sharp-minor': {
+   character:"F♯ minor has F♯–A–C♯: two black keys surrounding the white-key minor third A. It is the relative-minor triad of A major and an effective way to practise black-white-black key shapes.",
+   comparison:"Compare F♯ minor with A major (A–C♯–E). A and C♯ remain common; F♯ can move down to E. Both chords are simple to play close together because two of their three pitch classes overlap.",
+   exercise:"Arpeggiate F♯–A–C♯ slowly three times with equal note lengths. Hold A and C♯ for a moment, replace F♯ with E, and play the A major chord. Switch back without lifting the shared pair.",
+   pitfall:"F♯ minor uses A natural. A♯ would change it into F♯ major. The sharp sign belongs to the root and fifth here, not to the third.",
+ },
+ 'g-sharp-minor': {
+   character:"G♯ minor (G♯–B–D♯) has a white-key third between two black-key chord tones. It connects naturally to B major while retaining the correctly spelled minor third B above G♯.",
+   comparison:"Compare G♯ minor with B major (B–D♯–F♯). B and D♯ stay in both chords. Moving G♯ down to F♯ creates B major; reversing that movement returns to the relative-minor harmony.",
+   exercise:"Find G♯ immediately above G, then locate B and D♯. Play the notes individually, then together. Hold B and D♯ steady while alternating the remaining note between G♯ for G♯ minor and F♯ for B major.",
+   pitfall:"The third of G♯ minor is B natural, not B♯; B♯ would make the major triad. Do not substitute the enharmonic A♭ minor spelling without explaining why it looks different.",
+ },
+ 'b-flat-minor': {
+   character:"B♭ minor (B♭–D♭–F) places two black keys below a white-key fifth. The D♭ is the minor third that distinguishes it from B♭ major, which instead contains D natural.",
+   comparison:"Compare B♭ minor with D♭ major (D♭–F–A♭). D♭ and F remain unchanged while B♭ moves down to A♭. The same pair of notes can support a minor or a major chord depending on the third tone.",
+   exercise:"Play B♭–D♭–F separately, then as a chord. Without moving D♭ and F, change B♭ to A♭ to make D♭ major. Finish by alternating D♭ and D natural over a steady B♭–F to hear the minor/major third difference.",
+   pitfall:"B♭ minor uses D♭, not D natural. Writing C♯ instead of D♭ hides the written third from B♭ and makes the notation harder to understand.",
  },
 };

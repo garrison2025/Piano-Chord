@@ -1,4 +1,4 @@
-// This list is the V1.3 release gate: exactly 16 reviewed SEO chord detail pages.
+// 24 major/minor roots with appropriate spellings, plus the original C7 lesson.
 export const releaseChords = [
   ['b-minor','B','minor','Bm','B minor','Bm chord piano'],
   ['b-flat-major','Bb','major','Bb','B-flat major','bb piano chord'],
@@ -16,7 +16,21 @@ export const releaseChords = [
   ['c-7','C','dominant7','C7','C dominant seventh','c7 chord'],
   ['c-minor','C','minor','Cm','C minor','cm chord piano'],
   ['f-major','F','major','F','F major','f major chord in piano'],
+,
+  // Full chromatic major/minor lesson coverage added as individually authored pages.
+  ["d-flat-major","Db","major","Db","D-flat major","db major chord piano"],
+  ["g-flat-major","Gb","major","Gb","G-flat major","gb major chord piano"],
+  ["a-flat-major","Ab","major","Ab","A-flat major","ab major chord piano"],
+  ["a-major","A","major","A","A major","a major chord piano"],
+  ["c-sharp-minor","C#","minor","C#m","C-sharp minor","c sharp minor chord piano"],
+  ["e-flat-minor","Eb","minor","Ebm","E-flat minor","eb minor piano chord"],
+  ["f-sharp-minor","F#","minor","F#m","F-sharp minor","f sharp minor piano chord"],
+  ["g-sharp-minor","G#","minor","G#m","G-sharp minor","g sharp minor piano chord"],
+  ["b-flat-minor","Bb","minor","Bbm","B-flat minor","bb minor piano chord"]
 ].map(([slug, root, quality, symbol, name, keyword])=>({ slug,root,quality,symbol,name,keyword }));
+
+// Stable original printable selection: do not silently expand A4/Letter print layouts.
+export const starterPrintableChords = releaseChords.slice(0,16);
 
 export const navigation = [
   {href:'/chords/',label:'Chord Lessons'},
