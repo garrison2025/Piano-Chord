@@ -128,6 +128,52 @@ try{
   assert.match(await page.locator('#vp-readout').innerText(),/Playing MIDI 60/);
   console.log('PASS original 88-key piano and embedded metronome');
 
+  // Validate actual generated lesson routes and diagrams, not only theory formulas.
+  const addedLessons=[
+    ['d-flat-major','D-flat major'],['g-flat-major','G-flat major'],
+    ['a-flat-major','A-flat major'],['a-major','A major'],
+    ['c-sharp-minor','C-sharp minor'],['e-flat-minor','E-flat minor'],
+    ['f-sharp-minor','F-sharp minor'],['g-sharp-minor','G-sharp minor'],
+    ['b-flat-minor','B-flat minor']
+  ];
+  await go('/chords/');
+  assert.equal(await page.locator('[data-searchable-chord]').count(),25);
+  await page.locator('#chord-search').fill('F#m');
+  assert.equal(await page.locator('[data-searchable-chord]:visible').count(),1,'F#m search should find one authored lesson');
+  await page.screenshot({path:'test-results/learning/25-chord-search.png',fullPage:true});
+  for(const [slug,name] of addedLessons){
+    await go('/chords/'+slug+'/');
+    assert.match(await page.locator('h1').innerText(),new RegExp(name+' piano chord','i'));
+    assert.equal(await page.locator('[data-inversion-button]').count(),3,slug+' inversion count');
+    const paragraphs=await page.locator('#practice .prose p').allTextContents();
+    assert.ok(paragraphs.some(p=>p.length>90),slug+' needs authored explanation');
+    const img='/diagrams/'+slug+'.svg';
+    const response=await page.request.get(origin+img);
+    assert.equal(response.status(),200,img+' HTTP');
+    assert.match(await response.text(),/Highlighted piano keys/);
+  }
+  await go('/chords/f-sharp-minor/');
+  await page.locator('[data-inversion-button="1"]').click();
+  assert.equal(await page.locator('[data-inversion-view="1"]').isVisible(),true);
+  await page.locator('[data-inversion-view="1"] button[data-play-midi]').click();
+  await delay(200);
+  assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
+  await page.screenshot({path:'test-results/learning/f-sharp-minor-inversion.png',fullPage:true});
+  await go('/printables/piano-chord-chart/');
+  assert.equal(await page.locator('.print-cell').count(),16,'Original starter printable should not silently grow');
+  console.log('PASS nine authored chord pages, SVG routes, inversions, audio and fixed 16-chord printable');
+
+  for(const path of ['/chords/f-sharp-minor/','/chords/b-flat-minor/']){
+    const mobileLesson=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const mobileLessonPage=await mobileLesson.newPage();
+    const response=await mobileLessonPage.goto(origin+path,{waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200);
+    const width=await mobileLessonPage.evaluate(()=>({scroll:document.documentElement.scrollWidth,view:document.documentElement.clientWidth}));
+    assert.ok(width.scroll<=width.view+2,'Mobile chord page overflow '+path+': '+JSON.stringify(width));
+    await mobileLessonPage.screenshot({path:'test-results/learning/mobile-'+path.split('/')[2]+'.png',fullPage:true});
+    await mobileLesson.close();
+  }
+
   for(const path of ['/tools/scales-and-keys/','/tools/chord-progressions/','/tools/metronome/']){
     const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
     const p=await mobile.newPage();p.on('pageerror',e=>errors.push('mobile '+path+': '+e.message));
