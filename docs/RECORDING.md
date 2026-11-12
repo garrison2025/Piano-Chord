@@ -58,3 +58,17 @@ The H.264/AAC checker now parses real MP4 video/audio track handlers and `stsd` 
 ## Social upload encoding correction — 2026-11-12
 
 TikTok's [official media transfer guide](https://developers.tiktok.com/docs/en/content-posting-api-media-transfer-guide) specifies **23–60 FPS**. The old 20 FPS MP4 conversion setting did not meet that documented minimum, even though it produced valid H.264/AAC files. The conversion profile is now **24 FPS (matching the source Canvas capture), 540x960, H.264 / yuv420p, AAC 128 kbps**. CRF was improved to 25 for more legible key animations. Automated tests enforce this profile; file upload remains a separate manual acceptance gate. The [X Media Studio guide](https://help.x.com/en/using-x/media-studio-faqs) recommends H.264 video with AAC audio.
+
+
+## Current verified release gate: 24 FPS, 90-second performance (2026-11-12)
+
+- Implementation: [24 FPS correction](https://github.com/garrison2025/Piano-Chord/commit/06d0038263f38e61623ae0214940365b15e8096c); [real MP4 FPS assertion](https://github.com/garrison2025/Piano-Chord/commit/8cb4dda36d3cd7b6dc1cbb81e56c0b1208d6c89e).
+- Real-browser 90-second stress and Chromium mobile-emulation run: [GitHub Actions 43125583010](https://github.com/garrison2025/Piano-Chord/actions/runs/43125583010) — **SUCCESS**. Its `piano-stress-diagnostics` artifact contains both original/converted videos and a 390px mobile interaction screenshot. This supersedes the historical 20 FPS test data in earlier sections.
+- Independently inspected 90-second **MP4**: **91.329002 s**, **540×960**, constant **24 FPS**, **H.264 video**, **AAC audio**, both tracks begin at **0.000 s**, file size **2,419,156 bytes**.
+- Corresponding **WebM**: **91.344 s**, **720×1280**, **VP9 + Opus**; Matroska reports a nonfatal unknown-sized-element warning even though duration is readable.
+- The MP4 encoder **requests** 128 kbps AAC; actual average bitrate can be lower for sparse piano notes/silence. Do not misstate the requested bitrate as a measured file property.
+- The 390px **Chromium mobile-emulation** flow and 90-second **desktop Chromium** flow passed; neither is evidence of a successful recording on actual iPhone Safari or Android hardware.
+- TikTok developer's [media transfer guide](https://developers.tiktok.com/docs/en/content-posting-api-media-transfer-guide) documents 23–60 FPS and MP4/H.264 compatibility. The verified 24-FPS MP4 now satisfies those documented format parameters. X Media Studio's [media requirements](https://help.x.com/en/using-x/media-studio-faqs) recommend MP4/H.264/AAC, but the guide applies specifically to Media Studio.
+- No real upload to TikTok/X/Shorts or real device share-sheet acceptance has been verified. No social-account tokens, uploads, databases or paid transcode server were added.
+
+The latest release is ready for physical-device/user-operated upload acceptance tests, **not** for claiming guaranteed cross-platform social publishing.
