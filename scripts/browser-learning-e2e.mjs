@@ -186,11 +186,12 @@ try{
     assert.equal(await dMobile.evaluate(el=>el.classList.contains('pressed')),true);
     assert.equal(await eMobile.evaluate(el=>el.classList.contains('pressed')),true);
     assert.equal(await cMobile.evaluate(el=>el.classList.contains('pressed')),false);
-    await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[finger(em,12)]});
-    assert.equal(await dMobile.evaluate(el=>el.classList.contains('pressed')),false);
-    assert.equal(await eMobile.evaluate(el=>el.classList.contains('pressed')),true);
+    // CDP touchEnd requires an empty touchPoints list. Ending one contact
+    // with a non-empty list does NOT model an individual pointer release.
     await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    assert.equal(await dMobile.evaluate(el=>el.classList.contains('pressed')),false);
     assert.equal(await eMobile.evaluate(el=>el.classList.contains('pressed')),false);
+    assert.equal(await cMobile.evaluate(el=>el.classList.contains('pressed')),false);
     await touchPage.screenshot({path:'test-results/learning/mobile-two-finger-glide.png',fullPage:true});
   }finally{
     await session.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]}).catch(()=>{});

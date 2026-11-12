@@ -178,6 +178,11 @@ for(const b of keys.values()){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])
     b.addEventListener(name,e=>off('p'+e.pointerId));
 }
+// Fallback if capture is interrupted and the release targets another element.
+// A second release is harmless because off() is idempotent.
+for(const name of ['pointerup','pointercancel'])
+  document.addEventListener(name,e=>off('p'+e.pointerId),true);
+
 document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,textarea,select,a,button:not(.piano-key),[contenteditable]'))return;
 const focus=e.target.closest('.piano-key');if(focus&&['ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();const next=Math.max(21,Math.min(108,+focus.dataset.midi+(e.code==='ArrowRight'?1:-1)));focus.tabIndex=-1;keys.get(next).tabIndex=0;keys.get(next).focus();return;}
 if(focus&&['Enter','Space'].includes(e.code)){e.preventDefault();if(!e.repeat)on(+focus.dataset.midi,'f'+focus.dataset.midi);return;}
