@@ -30,3 +30,36 @@ export const chordSearchDescriptions=Object.freeze({
   "d-minor-7": "Learn Dm7 on piano (D–F–A–C), play its four voicings and hear how the shared D and F carry into G7 in a ii–V–I cadence.",
   "g-7": "Play the G7 piano chord G–B–D–F, compare it to Gmaj7 and practice resolving its dominant-seventh sound toward Cmaj7."
 });
+
+/** Distinct, query-aligned search titles for the 29 indexable chord lessons. */
+export const chordSearchTitles=Object.freeze({
+  "b-minor": "Bm Piano Chord (B Minor): Notes & Inversions",
+  "b-flat-major": "Bb Major Piano Chord: B♭–D–F Keys & Inversions",
+  "d-minor": "Dm Piano Chord (D Minor): Notes & Inversions",
+  "c-major": "C Major Piano Chord: C–E–G Keys & Inversions",
+  "e-minor": "Em Piano Chord (E Minor): Notes & Inversions",
+  "b-major": "B Major Piano Chord: B–D♯–F♯ Keys & Inversions",
+  "g-minor": "Gm Piano Chord (G Minor): Notes & Inversions",
+  "e-flat-major": "Eb Major Piano Chord: E♭–G–B♭ Notes & Inversions",
+  "e-major": "E Major Piano Chord: E–G♯–B Notes & Inversions",
+  "d-major": "D Major Piano Chord: D–F♯–A Notes & Inversions",
+  "a-minor": "Am Piano Chord (A Minor): Notes & Inversions",
+  "g-major": "G Major Piano Chord: G–B–D Keys & Inversions",
+  "f-minor": "Fm Piano Chord (F Minor): Notes & Inversions",
+  "c-7": "C7 Piano Chord: Dominant 7 Notes & Inversions",
+  "c-minor": "Cm Piano Chord (C Minor): Notes & Inversions",
+  "f-major": "F Major Piano Chord: F–A–C Keys & Inversions",
+  "d-flat-major": "Db Major Piano Chord: D♭–F–A♭ Notes & Inversions",
+  "g-flat-major": "Gb Major Piano Chord: G♭–B♭–D♭ & Inversions",
+  "a-flat-major": "Ab Major Piano Chord: A♭–C–E♭ & Inversions",
+  "a-major": "A Major Piano Chord: A–C♯–E Notes & Inversions",
+  "c-sharp-minor": "C#m Piano Chord: C♯–E–G♯ Notes & Inversions",
+  "e-flat-minor": "Ebm Piano Chord: E♭–G♭–B♭ & Inversions",
+  "f-sharp-minor": "F#m Piano Chord: F♯–A–C♯ Notes & Inversions",
+  "g-sharp-minor": "G#m Piano Chord: G♯–B–D♯ Notes & Inversions",
+  "b-flat-minor": "Bbm Piano Chord: B♭–D♭–F Notes & Inversions",
+  "c-major-7": "Cmaj7 Piano Chord: Notes, Keys & Inversions",
+  "a-minor-7": "Am7 Piano Chord: Notes, Keys & Inversions",
+  "d-minor-7": "Dm7 Piano Chord: Notes, Keys & Inversions",
+  "g-7": "G7 Piano Chord: Dominant Seventh Notes & Inversions"
+});

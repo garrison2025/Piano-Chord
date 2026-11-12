@@ -23,6 +23,13 @@ const siteName='Piano Chord Explorer';
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
     <title>{title}</title>
+    {Astro.url.pathname==='/' && <script type="application/ld+json" set:html={JSON.stringify({
+      '@context':'https://schema.org',
+      '@type':'WebSite',
+      name:siteName,
+      url:new URL('/',Astro.site || Astro.url).toString(),
+      inLanguage:'en'
+    })} />}
     {crumbs.length>0 && <script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{ '@type':'ListItem',position:1,name:'Home',item:new URL('/',Astro.site||Astro.url).toString()},...crumbs.map((x,i)=>({'@type':'ListItem',position:i+2,name:x.name,item:new URL(x.href,Astro.site||Astro.url).toString()}))]})} />}
   </head>
   <body>

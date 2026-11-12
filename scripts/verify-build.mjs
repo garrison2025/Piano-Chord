@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { releaseChords } from '../src/data/chords.js';
 import {lessonEarDrills} from '../src/data/lessonPathways.js';
-import {chordSearchDescriptions} from '../src/data/chordSeo.js';
+import {chordSearchDescriptions,chordSearchTitles} from '../src/data/chordSeo.js';
 import {lessonPracticeHandoff} from '../src/lib/lessonPracticeHandoff.mjs';
 const dist = path.resolve('dist');
 const publishedPages = [
@@ -45,6 +45,8 @@ for(const entry of releaseChords){
    errors.push('Missing validated lesson-to-progression link: '+entry.slug);
  const meta=html.match(/<meta\s+name="description"\s+content="([^"]*)"/)?.[1];
  const expected=chordSearchDescriptions[entry.slug];
+ const heading=html.match(/<title>([^<]+)</title>/)?.[1];
+ if(heading!==chordSearchTitles[entry.slug])errors.push('Wrong authored title: '+entry.slug);
  if(!expected||meta!==expected)errors.push('Missing or inconsistent authored meta description: '+entry.slug);
  if(drill){
    const pair='/tools/chord-compare/?a='+encodeURIComponent(entry.slug)+'&b='+encodeURIComponent(drill.target);
@@ -105,6 +107,9 @@ if(fs.existsSync(notFoundPath)){
    errors.push('404 page must be noindex');
 }
 
+const home=read(getFile('/'));
+if(!home.includes('"@type":"WebSite"')||!home.includes('"url":"'+absoluteSite+'/"'))
+ errors.push('Homepage missing canonical WebSite JSON-LD');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
 else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, ${releaseChords.length} authored SVG diagrams, ${releaseChords.length} unique chord meta descriptions and interactive two-chord drills, canonical/metadata, sitemap, image sitemap, internal links and robots.`);
