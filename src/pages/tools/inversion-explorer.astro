@@ -1,11 +1,24 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import {releaseChords} from '../../data/chords.js';
-import {createChord,prettyNote} from '../../lib/music.js';
+import {roots,qualities} from '../../lib/coreCatalog.js';
+import {coreChordByKey,coreChordKeyboard} from '../../lib/chordAtlas.mjs';
+import {prettyNote} from '../../lib/music.js';
 import PianoKeyboard from '../../components/PianoKeyboard.astro';
-const starter=createChord(releaseChords[0]);
+const starter=coreChordKeyboard(coreChordByKey.get('C:major'));
 ---
-<BaseLayout title="Piano Chord Inversion Explorer | Hear Root, 1st & 2nd Inversions" description="Explore piano chord inversions with correct lowest notes, keyboard diagrams and interactive audio. Understand how voicing changes without changing chord identity." canonicalPath="/tools/inversion-explorer/" crumbs={[{name:'Inversion Explorer',href:'/tools/inversion-explorer/'}]}>
-  <div class="container page-hero tool-hero"><span class="eyebrow">Free interactive tool</span><h1>Move the bass.<br/>Keep the harmony.</h1><p class="lead">An inversion keeps a chord's pitch classes but chooses a different note as the lowest voice. Select a chord, then listen to each voicing.</p></div>
-  <section class="container section-compact"><div class="two-col"><div class="panel tool-panel"><label for="inversion-chord" class="input-label">Choose a chord</label><select class="field" id="inversion-chord">{releaseChords.map(e=><option value={e.slug}>{e.name} ({e.symbol})</option>)}</select><div id="inversion-tool" style="margin-top:20px" aria-live="polite"><h2>{starter.name}</h2><p>{starter.notes.map(prettyNote).join(' · ')}</p><PianoKeyboard chord={starter}/><div class="button-row"><button type="button" class="btn btn-primary" data-play-midi={starter.inversions[0].midi.join(',')}>▶ Play root position</button></div></div></div><aside class="panel tool-panel"><h2>What changes?</h2><p>Root position has the chord root on the bottom. First inversion places the third on the bottom; second inversion places the fifth on the bottom. Four-note seventh chords also have a third inversion.</p><div class="note-explainer"><h3>Remember</h3><p>Bm/D is still B minor. The slash means D is the bass. The other notes remain B and F♯, arranged above D.</p></div></aside></div></section>
+<BaseLayout title="Piano Chord Inversion Explorer | All 120 Chords & Slash Bass Notes" description="Explore root position and piano inversions for 120 chords across ten families. Hear each voicing, view correctly spelled notes and identify slash-chord bass notes." canonicalPath="/tools/inversion-explorer/" crumbs={[{name:'Inversion Explorer',href:'/tools/inversion-explorer/'}]}>
+  <div class="container page-hero tool-hero"><span class="eyebrow">120 CHORDS · 10 FAMILIES</span><h1>Move the bass.<br/>Keep the harmony.</h1><p class="lead">From major and minor triads to suspended and half-diminished sevenths: every chord in our 120-chord atlas has a root position and all of its inversions. Select a chord to see its lowest note and hear each voicing.</p></div>
+  <section class="container section-compact"><div class="two-col">
+    <div class="panel tool-panel"><label for="inversion-chord" class="input-label">Choose one of 120 chords</label><select class="field" id="inversion-chord">
+      {roots.map(root=><optgroup label={prettyNote(root)+' chords'}>{qualities.map(q=>{
+        const c=coreChordByKey.get(root+':'+q.id);
+        return <option value={root+':'+q.id} selected={root==='C'&&q.id==='major'}>{c.symbol} · {q.name}</option>;
+      })}</optgroup>)}
+    </select>
+    <div id="inversion-tool" style="margin-top:20px" aria-live="polite">
+      <h2>{starter.name}</h2><p>Original notes: <strong>{starter.notes.map(prettyNote).join(' · ')}</strong></p>
+      <PianoKeyboard chord={starter}/><div class="button-row"><button type="button" class="btn btn-primary" data-play-midi={starter.inversions[0].midi.join(',')}>▶ Play root position</button></div>
+    </div></div>
+    <aside class="panel tool-panel"><h2>What changes?</h2><p>Root position starts on the root. First inversion places the second chord tone in the bass, second inversion the third, and a four-note chord also has a third inversion.</p><div class="note-explainer"><h3>Read slash chords</h3><p>Bm/D still means B minor, with D as the lowest chord tone. For a suspended chord, “first inversion” means the second note in that chord's stack is now the lowest, not necessarily a major or minor third.</p></div><p class="help-text">The displayed keyboard gives one reference octave, not a mandatory fingering. Move the voicing to a comfortable register as needed.</p><p><a class="text-link" href="/tools/chord-library/">Browse the 120-chord atlas ↗</a></p></aside>
+  </div></section>
 </BaseLayout>

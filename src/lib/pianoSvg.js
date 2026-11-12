@@ -3,7 +3,7 @@ const WHITE_PCS=new Set([0,2,4,5,7,9,11]);
 const BLACK_AFTER=new Set([0,2,5,7,9]);
 const XML_ESCAPE = s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 export function keyboardSvg(chord,{inversion=0,small=false}={}){
-  const voice=midiVoicing(chord.root,chord.quality,inversion);
+  const voice=chord.inversions?.[inversion]||midiVoicing(chord.root,chord.quality,inversion);
   const highlight=new Set(voice.midi);
   const whites=[],blacks=[],labels=[];
   const left=20, keyWidth=30.5,keyH=146, blackW=17, blackH=91;
