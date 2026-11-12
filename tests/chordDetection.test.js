@@ -26,7 +26,7 @@ test('live piano recognizes suspended triads and half-diminished sevenths from t
   assert.equal(sus4.kind,'triad');
   assert.match(sus4.detail,/C · F · G/);
   const halfdim=describeHeldChord([60,63,66,70]);
-  assert.equal(halfdim.title,'Cm7b5');
+  assert.equal(halfdim.title,'Cm7♭5');
   assert.equal(halfdim.kind,'seventh');
   assert.ok(halfdim.matches.some(m=>m.quality==='m7b5'));
 });
