@@ -102,3 +102,21 @@
 /* Three-bar cadence and four-bar turnaround share a responsive practice board. */
 .practice-bars.is-three{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:640px){.practice-bars.is-three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Bar-level reports are derived from local note-event overlap, not AI grading. */
+.practice-report[hidden]{display:none!important}
+.practice-report{margin-top:21px;padding:clamp(15px,2.5vw,23px);background:#fff;border:1px solid #dad3f0;border-radius:17px;box-shadow:0 10px 26px -23px #33277b;scroll-margin-top:90px}
+.practice-report-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.practice-report-heading h3{color:#332b63;font-size:clamp(20px,2.4vw,27px);margin:5px 0}
+.practice-report-heading output{font-weight:850;font-size:clamp(24px,3.5vw,38px);font-variant-numeric:tabular-nums;color:#4d3fbe}
+.practice-report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:16px 0}
+.practice-result-card{display:grid;align-content:start;gap:6px;min-width:0;padding:13px;background:#fff8f4;border:1px solid #efded1;border-radius:12px}
+.practice-result-card[data-status="matched"]{background:#ebfbf5;border-color:#a7dfc9}
+.practice-result-card[data-status="not-reached"]{background:#f4f3f8;border-color:#e1dfea}
+.practice-result-card small{color:#74667a;font-size:10px;font-weight:800;letter-spacing:.035em}
+.practice-result-card strong{color:#372d67;font-size:clamp(18px,2.6vw,24px)}
+.practice-result-card span{font-size:12px;line-height:1.5;color:#635d76;overflow-wrap:anywhere}
+.practice-copy-fallback{display:block;width:100%;min-height:110px;margin-top:8px;padding:10px;border:1px solid #b4ace5;border-radius:10px;background:#fff;color:#392f6b;font-size:12px}
+.practice-copy-fallback[hidden]{display:none}
+@media(max-width:850px){.practice-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.practice-report-grid{gap:7px}.practice-result-card{padding:10px}}

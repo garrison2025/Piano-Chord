@@ -23,6 +23,20 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
     <button id="practice-record" class="action-primary" type="button">● Record & follow guide</button>
   </div>
   <p id="practice-status" class="learning-status" role="status" aria-live="polite">Play the highlighted chord on the piano below.</p>
+  <section id="practice-report" class="practice-report" aria-labelledby="practice-report-title" hidden>
+    <div class="practice-report-heading">
+      <div><span class="eyebrow">YOUR RECORDING · LOCAL REVIEW</span><h3 id="practice-report-title">Your chord coverage</h3></div>
+      <output id="practice-report-count" aria-label="Matched bars out of total">0 / 0</output>
+    </div>
+    <p id="practice-report-summary"></p>
+    <ol id="practice-report-bars" class="practice-report-grid" aria-label="Recorded chord results by bar"></ol>
+    <div class="learning-actions">
+      <button id="practice-copy" type="button">Copy results for your post</button>
+      <button id="practice-save" type="button">↓ Save practice summary</button>
+    </div>
+    <p id="practice-report-notice" class="learning-status" role="status" aria-live="polite"></p>
+    <textarea id="practice-report-text" class="practice-copy-fallback" readonly hidden aria-label="Select and copy practice results"></textarea>
+  </section>
  </div>
 </section>
 <section class="container section-compact"><div id="playable-piano" class="piano-shell"><header class="piano-head"><strong>VIRTUAL PIANO · A0–C8</strong><span id="vp-readout" role="status" aria-live="polite">Touch a piano key to begin</span></header><div class="piano-controls"><span>Computer octave</span><button id="vp-down" type="button">−</button><output id="vp-oct">C4</output><button id="vp-up" type="button">+</button><button id="vp-sustain" type="button" aria-pressed="false">Sustain: Off</button><label>Volume <input id="vp-vol" type="range" min="0" max="100" value="55"/></label><button id="vp-stop" type="button">Stop</button></div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><div id="vp-chord-detect" class="piano-detection" data-kind="idle" role="status" aria-live="polite" aria-atomic="true"><span>LIVE CHORD RECOGNITION</span><strong id="vp-chord-name">Play a chord</strong><p id="vp-chord-notes">Hold three notes for a triad, or four different pitch classes for a seventh chord.</p></div><footer class="piano-foot">52 white · 36 black · Synthesized browser audio (not acoustic samples) · The separate metronome does not become part of the recorded performance.</footer></div></section>
@@ -107,7 +121,8 @@ function setOctave(v){octave=Math.max(1,Math.min(7,v));document.getElementById('
 function updateSustain(){const b=document.getElementById('vp-sustain');b.textContent='Sustain: '+(sustain||space?'On':'Off');b.setAttribute('aria-pressed',String(sustain));drain();}
 document.getElementById('vp-down').addEventListener('click',()=>setOctave(octave-1));document.getElementById('vp-up').addEventListener('click',()=>setOctave(octave+1));document.getElementById('vp-stop').addEventListener('click',stop);document.getElementById('vp-sustain').addEventListener('click',()=>{sustain=!sustain;updateSustain();});
 document.getElementById('vp-vol').addEventListener('input',e=>{if(master)master.gain.value=e.target.value/100*.45;});app.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>jump(+b.dataset.jump)));window.addEventListener('blur',()=>{space=false;stop();updateSustain();});window.addEventListener('pagehide',stop);requestAnimationFrame(()=>jump(60));
-recorderHooks=setupPianoRecorder({on:midi=>on(midi,'replay'+midi),off:midi=>off('replay'+midi),stop});
+recorderHooks=setupPianoRecorder({on:midi=>on(midi,'replay'+midi),off:midi=>off('replay'+midi),stop,
+  onCaptureStart:()=>practiceGuide?.recordingStart(),onCaptureEnd:take=>practiceGuide?.recordingEnd(take)});
 practiceGuide=setupProgressionGuide({keys,scroll});
 </script>
 <style>

@@ -3,7 +3,7 @@ import { CORE_BASE, MP4_WIDTH, MP4_HEIGHT, mp4Args, isSocialMp4 } from '../lib/v
 import { renderPerformanceFrame } from '../lib/performanceVideo.mjs';
 
 /** Browser-only recording studio; no upload, cookie, account or third-party API. */
-export function setupPianoRecorder({on,off,stop}) {
+export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
@@ -50,6 +50,7 @@ export function setupPianoRecorder({on,off,stop}) {
     timer=setInterval(()=>{controls.clock.textContent=clock(Math.min(MAX_RECORDING_MS,performance.now()-startedAt));},120);
     timeout=setTimeout(endRecord,MAX_RECORDING_MS);
     updateUI();
+    try{onCaptureStart?.();}catch{ /* Solo recording remains available. */ }
   }
   function endRecord(){
     if(!capturing)return;
@@ -62,6 +63,7 @@ export function setupPianoRecorder({on,off,stop}) {
     const count=noteIntervals(take).length;
     status(count?`Saved ${count} notes locally (${clock(take.duration)}). Replay, export MIDI or create a video.`:'No notes captured. Press Record and play a few piano keys.');
     updatePoster();updateUI();
+    try{onCaptureEnd?.(take);}catch{status('Recording saved; practice assessment unavailable. MIDI and video export still work.');}
   }
   function noteOn(midi){if(capturing)captured.push({type:'on',midi,t:performance.now()-startedAt});}
   function noteOff(midi){if(capturing)captured.push({type:'off',midi,t:performance.now()-startedAt});}
