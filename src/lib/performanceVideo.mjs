@@ -1,4 +1,5 @@
 /** Original, local-only piano-roll social video renderer. No recordings leave the device. */
+import {performanceOverlayAt} from './performanceOverlay.mjs';
 export const VIDEO_THEMES = Object.freeze({
   midnight: Object.freeze({label:'Midnight',top:'#10112b',mid:'#27224f',bottom:'#10182b',accent:'#a99bff',secondary:'#8de2d3',glow:'rgba(170,151,255,.22)'}),
   aurora: Object.freeze({label:'Aurora',top:'#082b32',mid:'#174354',bottom:'#071d2c',accent:'#87ead4',secondary:'#9daaff',glow:'rgba(102,238,215,.2)'}),
@@ -69,12 +70,26 @@ export function renderPerformanceFrame(ctx, elapsedSeconds, notes, title, option
   ctx.font=(heading.length>30?'700 39px':'700 51px')+' system-ui';
   ctx.fillText(heading,360,172,635);
   ctx.fillStyle='#c4bfdd';ctx.font='22px system-ui';ctx.fillText('A moment played, a melody shared',360,220);
-  // Live listening indicator, activity bar and elapsed time.
+  // Source-of-truth overlay: the detected chord comes only from held recorded
+  // notes. The planned chord is explicitly labelled TARGET, never "played".
   const active=notes.filter(n=>n.start<=t&&n.end>=t);
-  for(let i=0;i<30;i++){
-    const h=7+Math.sin(i*.82+t/220)*3 + (active.length?Math.abs(Math.sin(i*.55+t/115))*20:0);
-    ctx.fillStyle=i%3===0?theme.secondary:theme.accent;
-    pathRect(ctx,186+i*12,291-h/2,7,h,3);ctx.fill();
+  const overlay=options.showChordLabels===false?null:performanceOverlayAt(notes,t,options.guide);
+  if(overlay&&(overlay.guide||overlay.detected)){
+    ctx.fillStyle='rgba(5,8,28,.65)';pathRect(ctx,40,242,640,77,14);ctx.fill();
+    ctx.textAlign='left';ctx.font='700 18px system-ui';ctx.fillStyle=theme.secondary;
+    if(overlay.guide){
+      const g=overlay.guide;
+      ctx.fillText((g.completed?'GUIDE FINISHED':'BAR '+g.barIndex+' / '+g.total+' · BEAT '+g.beat)+
+        ' · TARGET '+g.target,62,267,596);
+    }else ctx.fillText('DETECTED FROM YOUR RECORDED NOTES',62,267,596);
+    ctx.font='700 30px system-ui';ctx.fillStyle=overlay.matchedNow?'#bdf7d7':'#ffffff';
+    ctx.fillText(overlay.detected?'Played: '+overlay.detected:'No chord detected',62,302,590);
+  }else{
+    for(let i=0;i<30;i++){
+      const h=7+Math.sin(i*.82+t/220)*3 + (active.length?Math.abs(Math.sin(i*.55+t/115))*20:0);
+      ctx.fillStyle=i%3===0?theme.secondary:theme.accent;
+      pathRect(ctx,186+i*12,291-h/2,7,h,3);ctx.fill();
+    }
   }
   ctx.fillStyle='rgba(255,255,255,.07)';pathRect(ctx,27,337,666,800,25);ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=2;ctx.stroke();
@@ -129,6 +144,10 @@ export function renderPerformanceFrame(ctx, elapsedSeconds, notes, title, option
   ctx.textAlign='right';ctx.fillText(String(active.length)+' notes sounding',680,1176);
   ctx.fillStyle='rgba(255,255,255,.12)';pathRect(ctx,40,1203,640,7,3);ctx.fill();
   ctx.fillStyle=theme.accent;pathRect(ctx,40,1203,Math.max(2,640*progress),7,3);ctx.fill();
+  if(overlay?.guide && overlay.guide.total>1){
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    for(let i=1;i<overlay.guide.total;i++)ctx.fillRect(40+640*i/overlay.guide.total-1,1202,2,9);
+  }
   ctx.textAlign='center';ctx.fillStyle='#aaa5c3';ctx.font='16px system-ui';
   ctx.fillText('Your own piano performance · Made on this device',360,1248);
 }

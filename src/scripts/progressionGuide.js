@@ -292,22 +292,25 @@ export function setupProgressionGuide({keys,scroll}){
       guideRecording=armed;armed=false;guideInvalid=false;clearReport();
       showPulse(guideRecording?'playing':'idle',guideRecording?'1':'READY',
         guideRecording?'BAR 1 / '+steps.length:'Solo recording',guideRecording?1:null);
+      return guideRecording?{bpm:data.bpm,steps:steps.map(s=>({symbol:s.symbol,notes:[...s.notes]}))}:null;
     },
     recordingEnd(take){
       const scored=guideRecording,invalid=guideInvalid;
       guideRecording=false;guideInvalid=false;armed=false;
       stopGuide(true);
-      if(!scored)return;
+      if(!scored)return null;
       if(invalid){
         status.textContent='Guide timing changed during the recording, so chord coverage was not calculated. MIDI and video exports still work.';
-        return;
+        return false;
       }
       try{
         const result=assessGuidedTake(take,steps,data.bpm);
         showReport(result);
         status.textContent='Recording reviewed: '+result.matched+'/'+result.total+' scheduled chords matched. See the practice report.';
+        return true;
       }catch{
         status.textContent='Recording saved, but practice assessment was unavailable. MIDI and video export still work.';
+        return false;
       }
     },
     noteOn(midis){

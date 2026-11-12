@@ -87,6 +87,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
     <div class="recording-stage">
       <h3>Make a TikTok / X / Shorts video</h3>
       <p>Create a 720 × 1280 (9:16) piano-roll video and audio in your browser. Rendering runs in real time; keep this tab open. No automatic social posting or platform authorization.</p>
+      <label class="recording-caption-option"><input id="vp-show-chords" type="checkbox" checked /> Show detected chords and guided bar/beat targets in the video <small>(Targets and actually played chords are labelled separately.)</small></label>
       <div class="recording-actions">
         <button id="vp-export" type="button" class="record-main" disabled>🎬 Create 9:16 video</button>
         <button id="vp-cancel-export" type="button" class="record-danger" hidden>Cancel export</button>

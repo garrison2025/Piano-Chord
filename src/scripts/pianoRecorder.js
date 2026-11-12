@@ -7,8 +7,8 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
-  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','poster','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
-  let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null;
+  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','show-chords','poster','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
+  let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null,videoGuide=null;
   let playing=false,playFrame=0,playStart=0,playIndex=0;
   let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null,originalWebmFile=null;
   let converting=false,cancelMp4=false,ffmpegWorker=null,coreAbortController=null;
@@ -44,13 +44,13 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   function startRecord(){
     if(exporting||converting)return;
     stopReplay();stop();resetVideo();controls.poster.hidden=true;
-    captured=[];take=null;capturing=true;startedAt=performance.now();
+    captured=[];take=null;videoGuide=null;capturing=true;startedAt=performance.now();
     controls.clock.textContent='00:00';
     status('Recording locally. Play the piano; stop when finished (90-second maximum).');
     timer=setInterval(()=>{controls.clock.textContent=clock(Math.min(MAX_RECORDING_MS,performance.now()-startedAt));},120);
     timeout=setTimeout(endRecord,MAX_RECORDING_MS);
     updateUI();
-    try{onCaptureStart?.();}catch{ /* Solo recording remains available. */ }
+    try{videoGuide=onCaptureStart?.()||null;}catch{videoGuide=null; /* Solo recording remains available. */ }
   }
   function endRecord(){
     if(!capturing)return;
@@ -63,7 +63,12 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     const count=noteIntervals(take).length;
     status(count?`Saved ${count} notes locally (${clock(take.duration)}). Replay, export MIDI or create a video.`:'No notes captured. Press Record and play a few piano keys.');
     updatePoster();updateUI();
-    try{onCaptureEnd?.(take);}catch{status('Recording saved; practice assessment unavailable. MIDI and video export still work.');}
+    try{
+      if(onCaptureEnd?.(take)===false){videoGuide=null;updatePoster();}
+    }catch{
+      videoGuide=null;updatePoster();
+      status('Recording saved; practice assessment unavailable. MIDI and video export still work.');
+    }
   }
   function noteOn(midi){if(capturing)captured.push({type:'on',midi,t:performance.now()-startedAt});}
   function noteOff(midi){if(capturing)captured.push({type:'off',midi,t:performance.now()-startedAt});}
@@ -92,7 +97,10 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     return chooseVideoFormat(type=>MediaRecorder.isTypeSupported(type));
   }
   function drawFrame(context,elapsed,notes,title){
-    renderPerformanceFrame(context,elapsed,notes,title,{theme:controls.theme.value,durationMs:take?.duration||0});
+    renderPerformanceFrame(context,elapsed,notes,title,{
+      theme:controls.theme.value,durationMs:take?.duration||0,
+      showChordLabels:controls['show-chords'].checked,guide:videoGuide
+    });
   }
   function updatePoster(){
     if(!take || !noteIntervals(take).length){controls.poster.hidden=true;return;}
@@ -283,6 +291,9 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     catch(error){if(error.name!=='AbortError')status('System share was unavailable; please download and upload manually.');}
   }
   controls.theme.addEventListener('change',()=>{updatePoster();status('Video style updated. Export again to apply it to the file.');});
+  controls['show-chords'].addEventListener('change',()=>{
+    updatePoster();status('Chord captions updated in the preview. Export again to apply this choice to your video.');
+  });
   controls.title.addEventListener('input',updatePoster);
   controls.record.addEventListener('click',startRecord);
   controls['end-record'].addEventListener('click',endRecord);

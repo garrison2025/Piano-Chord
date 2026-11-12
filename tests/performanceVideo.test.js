@@ -45,3 +45,28 @@ test('extreme top C8 always remains visible in the rendered piano',()=>{
   assert.ok(layout.map.has(108));
   assert.ok(layout.keys.every(k=>k.midi>=21&&k.midi<=108));
 });
+
+
+test('video overlay visually distinguishes detected playing and target on guided clips',()=>{
+  const entries=[],gradient={addColorStop(){}};
+  const ctx=new Proxy({},{
+    get(target,key){
+      if(key==='createLinearGradient'||key==='createRadialGradient')return ()=>gradient;
+      if(key==='fillText')return (...args)=>{entries.push(String(args[0]));};
+      if(['beginPath','rect','roundRect','fill','fillRect','stroke','moveTo','lineTo','clip','save','restore'].includes(key))return ()=>{};
+      return target[key];
+    },set(target,key,val){target[key]=val;return true;}
+  });
+  const notes=[62,65,69,72].map(midi=>({midi,start:0,end:4000}));
+  const guide={bpm:80,steps:[
+    {symbol:'Dm7',notes:['D','F','A','C']},
+    {symbol:'G7',notes:['G','B','D','F']},
+    {symbol:'Cmaj7',notes:['C','E','G','B']},
+  ]};
+  renderPerformanceFrame(ctx,3.2,notes,'Guided piano',{guide,durationMs:9000});
+  assert.ok(entries.some(x=>x.includes('TARGET G7')),'Target should identify bar two');
+  assert.ok(entries.some(x=>x.includes('Played: Dm7')),'Played chord must not be replaced by target');
+  entries.length=0;
+  renderPerformanceFrame(ctx,3.2,notes,'Guided piano',{guide,durationMs:9000,showChordLabels:false});
+  assert.ok(!entries.some(x=>x.includes('TARGET')||x.includes('Played:')));
+});
