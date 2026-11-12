@@ -120,3 +120,52 @@
 .practice-copy-fallback[hidden]{display:none}
 @media(max-width:850px){.practice-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.practice-report-grid{gap:7px}.practice-result-card{padding:10px}}
+
+
+/* Four-beat count-in and a mobile-friendly sticky beat display beside the playable keys. */
+.practice-transport{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:16px 0 19px}
+.practice-pulse{display:flex;align-items:center;gap:13px;min-width:210px;padding:10px 13px;background:#eeeafb;border:1px solid #d3caf0;border-radius:13px}
+.practice-count-number{display:block;flex:none;min-width:63px;color:#5644ae;font-size:26px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums;text-align:center}
+.practice-pulse-middle{display:grid;gap:8px;min-width:0}
+.practice-pulse-caption{font-size:11px;font-weight:700;line-height:1.35;color:#5b4b8d;overflow-wrap:anywhere}
+.practice-beat-dots{display:flex;gap:7px}
+.practice-beat-dot{width:13px;height:13px;border-radius:100%;background:#c7bce4;box-shadow:inset 0 1px 2px #7e69a122;transition:background-color 120ms,transform 120ms}
+.practice-beat-dot.is-current{background:#6652d1;transform:scale(1.13);box-shadow:0 0 0 3px #6652d122}
+.practice-pulse[data-phase="countin"]{background:#fff4e2;border-color:#f5cf91}
+.practice-pulse[data-phase="countin"] .practice-count-number,.practice-pulse[data-phase="countin"] .practice-beat-dot.is-current{color:#b7631b;background:#e99d48}
+.practice-pulse[data-phase="countin"] .practice-count-number{background:transparent}
+.practice-pulse[data-phase="finished"]{background:#e8faf3;border-color:#99d8c4}
+.practice-pulse[data-phase="finished"] .practice-count-number{color:#167d60}
+.practice-click-label{display:flex;align-items:center;gap:8px;font-size:13px;color:#564b7b;font-weight:750}
+.practice-click-label input{accent-color:#6756c7;width:18px;height:18px}
+.practice-click-label small{font-size:11px;font-weight:500;color:#716b86}
+.practice-cancel{background:#fbeae6;color:#a13b32;border:1px solid #edc9c0;border-radius:10px;padding:11px 14px;min-height:42px;cursor:pointer}
+.practice-cancel[hidden]{display:none!important}
+.vp-practice-hud[hidden]{display:none!important}
+.vp-practice-hud{position:sticky;top:8px;z-index:12;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:11px;background:linear-gradient(115deg,#423864,#333455);border:1px solid #7469a0;border-radius:14px;margin:16px 0 12px;padding:12px;box-shadow:0 9px 22px -11px #17102b}
+.vp-practice-hud-chord{display:grid;gap:3px;min-width:116px}
+.vp-practice-hud-chord span{font-size:10px;font-weight:800;letter-spacing:.09em;color:#c4c0ed}
+.vp-practice-hud-chord strong{font-size:16px;color:#fff;line-height:1.3}
+.vp-practice-hud .practice-pulse{background:#312c4d;border-color:#796da4;padding:7px 11px;min-width:150px}
+.vp-practice-hud .practice-count-number{font-size:25px;min-width:58px;color:#e2d5ff}
+.vp-practice-hud .practice-pulse-caption{color:#dfd6ff}
+.vp-practice-hud .practice-beat-dot{background:#756991}
+.vp-practice-hud .practice-beat-dot.is-current{background:#b9a7ff}
+.vp-practice-hud .practice-pulse[data-phase="countin"]{background:#514129;border-color:#b08046}
+.vp-practice-hud .practice-pulse[data-phase="countin"] .practice-count-number{color:#ffe2b1}
+.vp-practice-hud .practice-pulse[data-phase="countin"] .practice-beat-dot.is-current{background:#e9a552}
+.vp-practice-hud .practice-pulse[data-phase="finished"] .practice-count-number{color:#92e6c4}
+.vp-practice-hud-actions{display:flex;gap:7px}
+.vp-practice-hud-actions button{font-size:12px;font-weight:750;min-height:43px;border-radius:9px;border:1px solid #aa96e0;color:#fff;background:#5d4c8b;padding:9px 12px;cursor:pointer}
+.vp-practice-hud-actions button[hidden]{display:none!important}
+.vp-practice-hud-actions #vp-practice-stop-take{background:#b44550;border-color:#d76c76}
+@media(max-width:620px){
+  .practice-transport{align-items:stretch}.practice-transport .practice-pulse{flex:1 1 190px}
+  .practice-click-label{width:100%}
+  .vp-practice-hud{top:4px;margin:10px 0;padding:10px;gap:8px}
+  .vp-practice-hud-chord{flex:1 1 115px}
+  .vp-practice-hud .practice-pulse{flex:1 1 135px;min-width:0}
+  .vp-practice-hud-actions{flex:1 1 100%}
+  .vp-practice-hud-actions button{width:100%;min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){.practice-beat-dot{transition:none;transform:none!important}}

@@ -15,6 +15,19 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
   <div class="practice-heading"><div><span class="eyebrow" id="practice-kicker">YOUR FOUR-BAR PRACTICE</span><h2 id="practice-title">Follow the chords. Play your own part.</h2><p class="practice-caption" id="practice-caption">Colored keys are silent hints. Only notes you play are recorded; the guide never adds accompaniment to MIDI or video.</p></div><a id="practice-edit" class="practice-edit" href="/tools/chord-progressions/">Edit in trainer ↗</a></div>
   <div id="practice-bars" class="practice-bars" role="group" aria-label="Selected practice bars"></div>
   <p id="practice-current" class="practice-current"></p>
+  <div class="practice-transport">
+    <div id="practice-pulse" class="practice-pulse" data-phase="idle" aria-label="Timed practice beat indicator">
+      <output id="practice-count-number" class="practice-count-number" aria-live="off">READY</output>
+      <div class="practice-pulse-middle">
+        <span id="practice-pulse-caption" class="practice-pulse-caption">Four-beat count-in</span>
+        <div class="practice-beat-dots" aria-hidden="true">
+          <span class="practice-beat-dot"></span><span class="practice-beat-dot"></span><span class="practice-beat-dot"></span><span class="practice-beat-dot"></span>
+        </div>
+      </div>
+    </div>
+    <label class="practice-click-label"><input id="practice-clicks" type="checkbox" checked/> Soft beat clicks <small>(visual-only when off)</small></label>
+    <button id="practice-count-cancel" class="practice-cancel" type="button" hidden>Cancel count-in</button>
+  </div>
   <div class="learning-actions practice-actions">
     <button id="practice-prev" type="button">← Previous bar</button>
     <button id="practice-next" type="button">Next bar →</button>
@@ -39,7 +52,17 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
   </section>
  </div>
 </section>
-<section class="container section-compact"><div id="playable-piano" class="piano-shell"><header class="piano-head"><strong>VIRTUAL PIANO · A0–C8</strong><span id="vp-readout" role="status" aria-live="polite">Touch a piano key to begin</span></header><div class="piano-controls"><span>Computer octave</span><button id="vp-down" type="button">−</button><output id="vp-oct">C4</output><button id="vp-up" type="button">+</button><button id="vp-sustain" type="button" aria-pressed="false">Sustain: Off</button><label>Volume <input id="vp-vol" type="range" min="0" max="100" value="55"/></label><button id="vp-stop" type="button">Stop</button></div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><div id="vp-chord-detect" class="piano-detection" data-kind="idle" role="status" aria-live="polite" aria-atomic="true"><span>LIVE CHORD RECOGNITION</span><strong id="vp-chord-name">Play a chord</strong><p id="vp-chord-notes">Hold three notes for a triad, or four different pitch classes for a seventh chord.</p></div><footer class="piano-foot">52 white · 36 black · Synthesized browser audio (not acoustic samples) · The separate metronome does not become part of the recorded performance.</footer></div></section>
+<section class="container section-compact"><div id="playable-piano" class="piano-shell"><header class="piano-head"><strong>VIRTUAL PIANO · A0–C8</strong><span id="vp-readout" role="status" aria-live="polite">Touch a piano key to begin</span></header>
+<div id="vp-practice-hud" class="vp-practice-hud" hidden aria-label="Live piano practice controls">
+  <div class="vp-practice-hud-chord"><span id="vp-practice-hud-label">FOUR-BAR PRACTICE</span><strong id="vp-practice-hud-title">Ready to practice</strong></div>
+  <div id="vp-practice-pulse" class="practice-pulse" data-phase="idle" aria-label="Current practice beat">
+    <output id="vp-practice-count-number" class="practice-count-number" aria-live="off">READY</output>
+    <div class="practice-pulse-middle"><span id="vp-practice-pulse-caption" class="practice-pulse-caption">4/4 · 80 BPM</span><div class="practice-beat-dots" aria-hidden="true">
+      <span class="practice-beat-dot"></span><span class="practice-beat-dot"></span><span class="practice-beat-dot"></span><span class="practice-beat-dot"></span>
+    </div></div>
+  </div>
+  <div class="vp-practice-hud-actions"><button id="vp-practice-cancel" type="button" hidden>Cancel count-in</button><button id="vp-practice-stop-take" type="button" hidden>■ Stop &amp; review</button></div>
+</div><div class="piano-controls"><span>Computer octave</span><button id="vp-down" type="button">−</button><output id="vp-oct">C4</output><button id="vp-up" type="button">+</button><button id="vp-sustain" type="button" aria-pressed="false">Sustain: Off</button><label>Volume <input id="vp-vol" type="range" min="0" max="100" value="55"/></label><button id="vp-stop" type="button">Stop</button></div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><div id="vp-chord-detect" class="piano-detection" data-kind="idle" role="status" aria-live="polite" aria-atomic="true"><span>LIVE CHORD RECOGNITION</span><strong id="vp-chord-name">Play a chord</strong><p id="vp-chord-notes">Hold three notes for a triad, or four different pitch classes for a seventh chord.</p></div><footer class="piano-foot">52 white · 36 black · Synthesized browser audio (not acoustic samples) · The separate metronome does not become part of the recorded performance.</footer></div></section>
 <section class="container section-compact" id="piano-metronome"><MetronomePanel /></section>
 <section class="container section-compact" id="recording-studio">
   <div id="vp-recording-studio" class="recording-shell">
