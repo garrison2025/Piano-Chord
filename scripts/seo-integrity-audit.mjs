@@ -46,9 +46,9 @@ for(const p of paths){
     issues.push('Twitter/X must use large image card on '+p);
   if(headings!==1)issues.push('Must have exactly one H1 on '+p+': '+headings);
   if(p.startsWith('/chords/')&&p!=='/chords/'){
-    if(!html.includes('id="chord-answer"')||
-      !/What notes are in the [^<]+ piano chord\?/.test(html))
-      issues.push('Missing human-readable, answer-first notes on '+p);
+    if(!html.includes('id="chord-quick-answer"')||
+       !html.includes('data-chord-answer')||!html.includes('data-inversion-answer'))
+      issues.push('Missing human-readable GEO notes and inversions on '+p);
     if(!html.includes('How does ')||!html.includes('compare with a related chord?'))
       issues.push('Missing original chord relationship explanation on '+p);
   }
@@ -109,6 +109,9 @@ for(const p of paths){
 for(const row of rows)row.internalInlinks=incoming.get(row.path)?.size??0;
 const orphans=rows.filter(r=>r.path!=='/'&&r.internalInlinks===0).map(r=>r.path);
 if(orphans.length)issues.push('Orphan indexable pages: '+orphans.join(', '));
+const robots=fs.readFileSync(path.join(dist,'robots.txt'),'utf8');
+if(!/User-agent:\s*\*\s*\nAllow:\s*\//.test(robots)||/Disallow:\s*\//i.test(robots))
+  issues.push('Public robots rules block or fail to allow broad search crawlers');
 const privacy=fs.readFileSync(fileFor('/privacy/'),'utf8');
 if(!privacy.includes('name="robots" content="noindex,follow"'))issues.push('Privacy must be noindex');
 const notFound=fs.readFileSync(path.join(dist,'404.html'),'utf8');

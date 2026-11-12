@@ -22,6 +22,21 @@ try{
     assert.equal(res?.status(),200,path+' HTTP');
   };
   const texts=async selector=>page.locator(selector).allTextContents();
+  // Static human-facing answers, source context and AI-search eligible markup.
+  await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
+  for(const question of ['What is a piano chord?','What notes make C major?',
+    'How is B minor different from D major?','Is C7 the same as Cmaj7?'])
+    assert.equal(await page.getByRole('heading',{name:question}).count(),1);
+  await page.goto(origin+'/chords/c-major/',{waitUntil:'domcontentloaded'});
+  assert.equal(await page.locator('#chord-quick-answer [data-chord-answer]').count(),1);
+  assert.match(await page.locator('#chord-quick-answer').innerText(),/C.*E.*G/s);
+  await page.goto(origin+'/chords/c-7/',{waitUntil:'domcontentloaded'});
+  assert.equal(await page.locator('#chord-quick-answer [data-inversion-answer]').count(),1);
+  assert.match(await page.locator('#chord-quick-answer').innerText(),/B♭/);
+  await page.goto(origin+'/about/',{waitUntil:'domcontentloaded'});
+  assert.equal(await page.getByRole('heading',{name:'Source, calculation and review boundaries'}).count(),1);
+  console.log('PASS visible GEO answers, musical definitions and transparent source methodology');
+
   // 16 V1.3 priority plus 13 individually authored supplemental lessons.
   await go('/chords/b-minor/');
   const minorProgression=page.locator('a[href^="/tools/chord-progressions/?root=B&mode=minor&preset=cadence"]');
