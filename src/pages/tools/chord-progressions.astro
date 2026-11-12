@@ -6,7 +6,7 @@ const defaultPractice=progression('C','major','pop');
 ---
 <BaseLayout title="Piano Chord Progression Trainer – Play & Practice in Any Key" description="Practice four-chord progressions in all 12 major and 12 minor keys. Change chords, set BPM, add a metronome and hear each progression without signup." canonicalPath="/tools/chord-progressions/" crumbs={[{name:'Chord Progressions',href:'/tools/chord-progressions/'}]}>
 <section class="container page-hero tool-hero"><span class="eyebrow">CHORD PROGRESSION TRAINER</span><h1>Four chords.<br/><em>Countless songs.</em></h1><p class="lead">Choose a key and a progression, swap any of its four chords, and practice with real-time piano audio and an optional four-beat click.</p><div class="button-row"><a class="btn btn-primary" href="/tools/scales-and-keys/">Explore scales & keys ↗</a><a class="btn" href="/tools/virtual-piano/">Play on virtual piano</a></div></section>
-<section class="container section-compact">
+<section class="container section-compact" id="progression-builder">
 <div class="learning-panel">
   <h2>Build your practice loop</h2>
   <div class="learning-controls">
@@ -134,7 +134,10 @@ if(restored){
 }else{
   if(KEY_ROOTS[params.get('mode')]?.includes(params.get('root')))mode.value=params.get('mode');
   setRoots();if(KEY_ROOTS[mode.value].includes(params.get('root')))root.value=params.get('root');
-  setPresets();refresh();
+  setPresets();
+  const requestedPreset=params.get('preset');
+  if(PROGRESSION_PRESETS[mode.value].some(p=>p.id===requestedPreset))preset.value=requestedPreset;
+  refresh();
 }
 window.addEventListener('pagehide',()=>stop(true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)stop(true);});

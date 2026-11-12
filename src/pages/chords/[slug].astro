@@ -8,6 +8,7 @@ import {lessonEarDrills} from '../../data/lessonPathways.js';
 import {chordSearchDescriptions} from '../../data/chordSeo.js';
 import {createChord,prettyNote} from '../../lib/music.js';
 import {relatedLessons} from '../../lib/chordRelations.mjs';
+import {lessonPracticeHandoff} from '../../lib/lessonPracticeHandoff.mjs';
 export function getStaticPaths(){return releaseChords.map(entry=>({params:{slug:entry.slug},props:{entry}}));}
 const {entry}=Astro.props;
 const chord=createChord(entry);
@@ -17,6 +18,7 @@ const drill=lessonEarDrills[entry.slug];
 const drillPartnerEntry=drill?releaseChords.find(e=>e.slug===drill.target):null;
 const drillPartner=drillPartnerEntry?createChord(drillPartnerEntry):null;
 const compareHref=drillPartner?'/tools/chord-compare/?a='+encodeURIComponent(entry.slug)+'&b='+encodeURIComponent(drillPartner.slug):'/tools/chord-compare/?a='+encodeURIComponent(entry.slug);
+const progressionHandoff=lessonPracticeHandoff(entry);
 const spelled=chord.notes.map(prettyNote).join(' – ');
 const qualityTip={major:'A major triad contains a root, major third (4 semitones) and perfect fifth (7 semitones).',minor:'A minor triad contains a root, minor third (3 semitones) and perfect fifth (7 semitones).',dominant7:'A dominant seventh contains root (0), major third (4), perfect fifth (7) and minor seventh (10 semitones).',major7:'A major seventh contains root (0), major third (4), perfect fifth (7) and major seventh (11 semitones).',minor7:'A minor seventh contains root (0), minor third (3), perfect fifth (7) and minor seventh (10 semitones).'}[chord.quality];
 const thirdKind=['minor','minor7'].includes(chord.quality)?'minor':'major';
@@ -42,7 +44,7 @@ const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.
     </div>
   </section>
   <section id="practice" class="container section-compact lesson-practice"><div class="two-col"><article class="prose"><span class="eyebrow">Learn the shape</span><h2>How to play {prettyNote(chord.symbol)} on piano</h2><p>First, find <strong>{prettyNote(chord.root)}</strong>, the root of this chord. Then add <strong>{prettyNote(chord.notes[1])}</strong>, the {thirdKind} third. Add <strong>{prettyNote(chord.notes[2])}</strong> to complete the triad. {chord.notes.length===4?`The fourth note, ${prettyNote(chord.notes[3])}, is a ${seventhKind} above the root.`:''}</p><p>Play the notes together to hear the harmony, or one at a time to hear how the intervals form the chord. Start at a comfortable octave; the diagram shows one reference voicing, not the only valid place to play it.</p><h3>What makes {prettyNote(chord.symbol)} distinctive?</h3><p>{lesson.character}</p><h3>Compare this chord with another</h3><p>{lesson.comparison}</p><h3>A practice exercise for {prettyNote(chord.symbol)}</h3><p>{lesson.exercise}</p><h3>One mistake to avoid</h3><p>{lesson.pitfall}</p><p>Finger numbers depend on your hand size, octave and musical context; there isn't one universally correct fingering for every voicing.</p></article>
-      <aside class="panel"><h3>Practice beyond this chord</h3><p>Compare the notes with another harmony, or keep a printed reference on your music stand.</p><div style="display:grid;gap:10px"><a class="btn" href={compareHref}>⇄ {drillPartner?"Compare with "+prettyNote(drillPartner.symbol):"Compare this chord"}</a><a class="btn" href="/printables/piano-chord-chart/">↓ Printable chord chart</a><a class="btn" href="/guides/how-to-read-piano-chords/">↗ Read chord diagrams</a>{chord.notes.length===4&&<a class="btn" href="/guides/seventh-chords-piano/">♬ Compare seventh chords</a>}</div></aside></div>
+      <aside class="panel"><h3>Practice beyond this chord</h3><p>Compare the notes with another harmony, or keep a printed reference on your music stand.</p><div style="display:grid;gap:10px"><a class="btn" href={compareHref}>⇄ {drillPartner?"Compare with "+prettyNote(drillPartner.symbol):"Compare this chord"}</a><a class="btn" href={progressionHandoff.href}>♫ {progressionHandoff.label}</a><p class="help-text" style="margin:0">{progressionHandoff.description}</p><a class="btn" href="/printables/piano-chord-chart/">↓ Printable chord chart</a><a class="btn" href="/guides/how-to-read-piano-chords/">↗ Read chord diagrams</a>{chord.notes.length===4&&<a class="btn" href="/guides/seventh-chords-piano/">♬ Compare seventh chords</a>}</div></aside></div>
   </section>
   {drill && drillPartner && <section id="ear-training" class="container section-compact lesson-ear-training" aria-labelledby="ear-training-heading">
     <div class="panel ear-training-panel">

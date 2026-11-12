@@ -14,7 +14,8 @@ export function setupSeventhPractice(){
   const timers=new Set();
   let running=false,session=0,current=null;
   selection.replaceChildren(...SEVENTH_PATTERNS.map(item=>new Option(item.label,item.id)));
-  selection.value='ii-v-i';
+  const requested=new URLSearchParams(window.location.search).get('pattern');
+  selection.value=SEVENTH_PATTERNS.some(p=>p.id===requested)?requested:'ii-v-i';
   function clearTimers(){for(const t of timers)clearTimeout(t);timers.clear();}
   function later(fn,ms){
     const id=setTimeout(()=>{timers.delete(id);fn();},Math.max(0,ms));
