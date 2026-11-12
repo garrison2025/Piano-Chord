@@ -96,6 +96,12 @@ try{
   await mobilePage.screenshot({path:'test-results/learning/piano-guided-practice-mobile.png',fullPage:true});
   await mobileGuide.close();
   await page.locator('#practice-edit').click();
+  // Static Astro HTML initially shows the C-major default; query-state restoration
+  // runs after the client module loads. Wait for the user-visible restored state.
+  await page.waitForFunction(()=>
+    document.querySelector('#prog-bpm')?.value==='120' &&
+    [...document.querySelectorAll('#progression-steps strong')].map(e=>e.textContent.trim()).join(',')==='Am,Dm,E,Am',
+    null,{timeout:10000});
   assert.deepEqual((await texts('#progression-steps strong')).map(x=>x.trim()),['Am','Dm','E','Am']);
   assert.equal(await page.locator('#prog-bpm').inputValue(),'120');
   await page.screenshot({path:'test-results/learning/progression-piano-roundtrip.png',fullPage:true});
