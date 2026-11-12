@@ -39,3 +39,7 @@
 - G2: browser functional / mobile / accessibility / print verification.
 - G3: deployment, canonical domain and Search Console verification.
 - G4: days 30/60/90/180 GSC review; expand only where new content adds unique value.
+
+## 2026-11-12: complete 12 major + 12 minor triad lessons
+
+Added nine specifically authored lesson pages to the original 16: D-flat major, G-flat major, A-flat major, A major, C-sharp minor, E-flat minor, F-sharp minor, G-sharp minor and B-flat minor. Totals: 12 major, 12 minor, plus C7 = **25 detailed chord lessons**; the broader 120-chord interactive catalogue is unchanged. Every lesson renders three inversions, audio, a stable SVG image and chord-specific practice, contrast, character and spelling pitfall paragraphs. Build inventory: 38 canonical HTML pages and 25 SVG chord diagrams. The original 16-chord beginner printable remains 16 by design; it does not silently grow to 25 and break its paper layout. New pages are original coverage additions, **not individually validated using live Semrush traffic data**; traffic impact must be assessed with GSC after indexing. Avoid claims of verified SEO demand or actual rankings.

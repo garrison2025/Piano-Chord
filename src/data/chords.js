@@ -16,7 +16,6 @@ export const releaseChords = [
   ['c-7','C','dominant7','C7','C dominant seventh','c7 chord'],
   ['c-minor','C','minor','Cm','C minor','cm chord piano'],
   ['f-major','F','major','F','F major','f major chord in piano'],
-,
   // Full chromatic major/minor lesson coverage added as individually authored pages.
   ["d-flat-major","Db","major","Db","D-flat major","db major chord piano"],
   ["g-flat-major","Gb","major","Gb","G-flat major","gb major chord piano"],

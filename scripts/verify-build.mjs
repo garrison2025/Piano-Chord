@@ -15,7 +15,7 @@ const read=(p)=>fs.readFileSync(p,'utf8');
 const sitemap=read(path.join(dist,'sitemap.xml'));
 const absoluteSite=(process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev').replace(/\/$/,'');
 const canonicalURLs=new Set();
-if(publishedPages.length!==29)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
+if(publishedPages.length!==38)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
 for(const url of publishedPages){
  const target=getFile(url);
  if(!fs.existsSync(target)){errors.push(`Missing HTML: ${url}`);continue;}
@@ -40,7 +40,7 @@ for(const {slug} of releaseChords){
  if(!sitemap.includes(`/diagrams/${slug}.svg`))errors.push(`SVG omitted from image sitemap: ${slug}`);
 }
 if((sitemap.match(/<url>/g)||[]).length!==publishedPages.length)errors.push(`Sitemap has ${(sitemap.match(/<url>/g)||[]).length} HTML URLs but ${publishedPages.length} pages are published`);
-if((sitemap.match(/<image:image>/g)||[]).length!==16)errors.push('Sitemap must have exactly 16 image URLs');
+if((sitemap.match(/<image:image>/g)||[]).length!==releaseChords.length)errors.push('Sitemap image count must match chord lesson count');
 const pianoHtml=read(path.join(dist,'tools/virtual-piano/index.html'));
 if((pianoHtml.match(/data-midi="[0-9]+"/g)||[]).length!==88)errors.push('Virtual piano must contain 88 key buttons');
 const atlasHtml=read(path.join(dist,'tools/chord-library/index.html'));
@@ -57,4 +57,4 @@ for(const [page,selectors] of [
 if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
-else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, 16 SVG diagrams, canonical/metadata, sitemap, image sitemap, internal links and robots.`);
+else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, ${releaseChords.length} SVG diagrams, canonical/metadata, sitemap, image sitemap, internal links and robots.`);

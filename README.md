@@ -1,6 +1,6 @@
 # Piano Chord Explorer
 
-A static, accessible piano chord learning site built with Astro. This is the implementation of the V1.3 SEO-first feasibility plan: 16 reviewed chord detail pages plus 7 meaningful learning and tool pages. No database, account, audio API or paid AI service required.
+A static, accessible piano chord learning site built with Astro. This is the implementation of the V1.3 SEO-first feasibility plan: 25 individually authored chord detail pages (12 major, 12 minor and C7), alongside practical learning tools. No database, account, audio API or paid AI service required.
 
 ## Run
 
@@ -15,7 +15,7 @@ Cloudflare Pages: connect `garrison2025/Piano-Chord`; build command `npm run bui
 
 ## What's included
 
-- 16 statically prerendered chord detail pages, a browseable chord index and a practical learning guide.
+- 25 statically prerendered chord detail pages, a browseable chord index and a practical learning guide.
 - Browser-first chord finder, inversion explorer and chord comparison (no remote processing).
 - Original keyboard diagrams as stable indexable SVG images; accessible note lists and print-friendly reference chart.
 - Browser Web Audio polyphonic sine/triangle synth, activated only by explicit user interaction, with Stop control.
