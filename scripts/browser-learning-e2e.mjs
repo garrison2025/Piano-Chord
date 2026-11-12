@@ -92,7 +92,7 @@ try{
   await stability.waitForFunction(()=>!document.getElementById('vp-midi')?.disabled,null,{timeout:8000});
   assert.match(await stability.locator('#vp-message').innerText(),/Restored the most recent/);
   await stability.locator('#vp-clear-saved').click();
-  assert.match(await stability.locator('#vp-message').innerText(),/draft cleared/);
+  await stability.locator('#vp-message').getByText(/draft cleared/).waitFor({timeout:8000});
   await stability.reload({waitUntil:'domcontentloaded'});
   await stability.waitForTimeout(650);
   assert.equal(await stability.locator('#vp-midi').isDisabled(),true,
