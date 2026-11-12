@@ -5,7 +5,7 @@ import { releaseChords } from '../src/data/chords.js';
 const dist = path.resolve('dist');
 const publishedPages = [
   '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
-  '/tools/chord-compare/', '/tools/virtual-piano/', '/tools/chord-library/', '/printables/piano-chord-chart/',
+  '/tools/chord-compare/', '/tools/virtual-piano/', '/tools/chord-library/', '/tools/scales-and-keys/', '/tools/chord-progressions/', '/tools/metronome/', '/printables/piano-chord-chart/',
   '/guides/how-to-read-piano-chords/', '/open-source/', 
   ...releaseChords.map(chord=>`/chords/${chord.slug}/`),
 ];
@@ -15,7 +15,7 @@ const read=(p)=>fs.readFileSync(p,'utf8');
 const sitemap=read(path.join(dist,'sitemap.xml'));
 const absoluteSite=(process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev').replace(/\/$/,'');
 const canonicalURLs=new Set();
-if(publishedPages.length!==26)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
+if(publishedPages.length!==29)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
 for(const url of publishedPages){
  const target=getFile(url);
  if(!fs.existsSync(target)){errors.push(`Missing HTML: ${url}`);continue;}
@@ -45,6 +45,15 @@ const pianoHtml=read(path.join(dist,'tools/virtual-piano/index.html'));
 if((pianoHtml.match(/data-midi="[0-9]+"/g)||[]).length!==88)errors.push('Virtual piano must contain 88 key buttons');
 const atlasHtml=read(path.join(dist,'tools/chord-library/index.html'));
 if((atlasHtml.match(/class="atlas-card"/g)||[]).length!==120)errors.push('Chord atlas must contain 120 core chord cards');
+for(const [page,selectors] of [
+ ['/tools/scales-and-keys/',['id="scale-mode"','id="scale-root"','id="scale-chords"']],
+ ['/tools/chord-progressions/',['id="prog-mode"','id="prog-start"','id="progression-steps"']],
+ ['/tools/metronome/',['id="practice-metronome"','id="metro-toggle"']],
+ ['/tools/virtual-piano/',['id="practice-metronome"']]
+]){
+ const source=read(getFile(page));
+ for(const marker of selectors)if(!source.includes(marker))errors.push('Missing functional learning control on '+page+': '+marker);
+}
 if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}

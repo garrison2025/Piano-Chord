@@ -7,7 +7,7 @@ import {createChord,prettyNote} from '../lib/music.js';
 const picks=['b-minor','c-major','c-7'].map(slug=>createChord(releaseChords.find(e=>e.slug===slug)));
 const spotlightNames=['B minor','C major','C seventh'];
 ---
-<BaseLayout title="Learn Piano Chords Visually | Piano Chord Explorer" description="Explore 16 free piano chord lessons with playable notes, interactive keyboard diagrams, inversions and printable charts. No sign-up required." canonicalPath="/">
+<BaseLayout title="Learn Piano Chords Visually | Piano Chord Explorer" description="Play a free 88-key piano, explore 120 chords and 24 major/minor scales, practise progressions and record shareable performances. No signup." canonicalPath="/">
   <section class="hero studio-hero">
     <div class="hero-orb hero-orb-a" aria-hidden="true"></div><div class="hero-orb hero-orb-b" aria-hidden="true"></div>
     <div class="container hero-grid">
@@ -20,7 +20,7 @@ const spotlightNames=['B minor','C major','C seventh'];
           <a class="btn btn-ghost btn-large" href="/tools/chord-finder/"><span aria-hidden="true">⌕</span> Find a chord</a>
         </div>
         <div class="hero-trust"><span><span aria-hidden="true">✦</span> Completely free</span><span>No account needed</span><span>Learn at your own pace</span></div>
-        <div class="stat-strip"><div class="stat"><strong>16</strong><span>Illustrated chords</span></div><div class="stat"><strong>05</strong><span>Interactive tools</span></div><div class="stat"><strong>∞</strong><span>Moments to explore</span></div></div>
+        <div class="stat-strip"><div class="stat"><strong>16</strong><span>Illustrated chords</span></div><div class="stat"><strong>08</strong><span>Interactive tools</span></div><div class="stat"><strong>∞</strong><span>Moments to explore</span></div></div>
       </div>
       <div class="studio-wrap">
         <div class="studio-floating studio-floating-top" aria-hidden="true">♫</div>
@@ -48,6 +48,12 @@ const spotlightNames=['B minor','C major','C seventh'];
       <a class="feature-card reveal-on-scroll" href="/tools/chord-finder/"><span class="feature-num">01 / DISCOVER</span><div class="feature-icon" aria-hidden="true">⌕</div><h3>Chord finder</h3><p>Tap the notes you know. Discover which chords they make.</p><span class="feature-cta">Find my chord <span aria-hidden="true">↗</span></span></a>
       <a class="feature-card reveal-on-scroll" style="--reveal-delay:80ms" href="/tools/inversion-explorer/"><span class="feature-num">02 / LISTEN</span><div class="feature-icon" aria-hidden="true">♬</div><h3>Inversion explorer</h3><p>Same notes, new feeling. Hear how moving one note changes everything.</p><span class="feature-cta">Try inversions <span aria-hidden="true">↗</span></span></a>
       <a class="feature-card reveal-on-scroll" style="--reveal-delay:160ms" href="/tools/chord-compare/"><span class="feature-num">03 / UNDERSTAND</span><div class="feature-icon" aria-hidden="true">⇄</div><h3>Chord comparison</h3><p>Two chords, side by side. See what stays and what moves.</p><span class="feature-cta">Compare chords <span aria-hidden="true">↗</span></span></a>
+    </div></div></section>
+  <section class="section tools-showcase"><div class="container"><div class="section-head"><div><span class="eyebrow">03 / BUILD YOUR SKILLS</span><h2>From a single note<br/><span class="accent-heading">to a song.</span></h2><p>Learn the notes in a key, practise four-chord changes, and keep the beat while you play.</p></div></div>
+    <div class="feature-grid">
+      <a class="feature-card reveal-on-scroll" href="/tools/scales-and-keys/"><span class="feature-num">01 / LEARN</span><div class="feature-icon" aria-hidden="true">♮</div><h3>Scales &amp; Keys</h3><p>Explore all 12 major and 12 natural minor scales with the diatonic chords in each key.</p><span class="feature-cta">Explore all scales ↗</span></a>
+      <a class="feature-card reveal-on-scroll" href="/tools/chord-progressions/"><span class="feature-num">02 / PLAY</span><div class="feature-icon" aria-hidden="true">♫</div><h3>Chord progressions</h3><p>Hear and edit four-bar loops with your choice of key, tempo and rhythmic accents.</p><span class="feature-cta">Build a progression ↗</span></a>
+      <a class="feature-card reveal-on-scroll" href="/tools/metronome/"><span class="feature-num">03 / PRACTISE</span><div class="feature-icon" aria-hidden="true">♩</div><h3>Metronome</h3><p>Keep time with an accurate browser metronome, adjustable BPM and tap tempo.</p><span class="feature-cta">Start a steady beat ↗</span></a>
     </div></div></section>
   <section class="section print-section"><div class="container"><div class="cta-band"><div class="cta-copy"><span class="eyebrow">03 / TAKE IT OFFLINE</span><h2>Make room for<br/>a little practice.</h2><p>Bring 16 beautifully clear chord diagrams to your music stand. No account, no fuss.</p><a class="btn btn-light btn-large" href="/printables/piano-chord-chart/">Get the printable chart <span aria-hidden="true">↗</span></a></div><div class="cta-sheet" aria-hidden="true"><div class="sheet-top"><span>Piano Chord Explorer</span><span>CHORD SHEET / 01</span></div><div class="sheet-title">The essentials.</div><div class="sheet-chords"><span>C</span><span>Dm</span><span>Em</span><span>F</span><span>G</span><span>Am</span></div><div class="sheet-keys">{Array.from({length:13},(_,i)=><i class={i===0||i===3||i===7?'selected':''}></i>)}</div><div class="sheet-footer">Learn it. Play it. Love it.</div></div></div></div></section>
 </BaseLayout>

@@ -22,8 +22,7 @@ export const navigation = [
   {href:'/chords/',label:'Chord Lessons'},
   {href:'/tools/virtual-piano/',label:'Virtual Piano'},
   {href:'/tools/chord-library/',label:'120 Chords'},
-  {href:'/tools/chord-finder/',label:'Chord Finder'},
-  {href:'/tools/inversion-explorer/',label:'Inversions'},
-  {href:'/tools/chord-compare/',label:'Compare'},
-  {href:'/printables/piano-chord-chart/',label:'Printables'},
+  {href:'/tools/scales-and-keys/',label:'Scales & Keys'},
+  {href:'/tools/chord-progressions/',label:'Progressions'},
+  {href:'/tools/metronome/',label:'Metronome'},
 ];
