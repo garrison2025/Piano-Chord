@@ -296,6 +296,24 @@ try{
   await page.locator('#vp-touch-scroll').click();
   console.log('PASS captured glissando re-entry, background-release safety, scroll restoration');
 
+  // Synthesized sustain has bounded polyphony; additional keys must not
+  // multiply oscillator nodes without limit on resource-constrained phones.
+  await page.evaluate(()=>{
+    for(let i=0;i<35;i++){
+      document.querySelector('.piano-key[data-midi="'+(30+i)+'"]').dispatchEvent(
+        new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch',pointerId:100+i,button:0}));
+    }
+  });
+  assert.equal(await page.locator('.piano-key.pressed').count(),24,
+    'Piano must bound simultaneous sounding voices while allowing new notes');
+  await page.evaluate(()=>{
+    for(let i=0;i<35;i++)
+      document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerType:'touch',pointerId:100+i,button:0}));
+  });
+  assert.equal(await page.locator('.piano-key.pressed').count(),0,
+    'Synthetic multi-note session must not leave held keys behind');
+  console.log('PASS 24-voice Web Audio polyphony limit and complete source cleanup');
+
   // Two independent mobile touch contacts: hold E4, drag C4 to D4, release.
   const touchContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const touchPage=await touchContext.newPage();
