@@ -27,6 +27,15 @@ jobs:
           test -f dist/sitemap.xml
       - name: Validate generated SEO and internal links
         run: node scripts/verify-build.mjs
+      - name: Audit indexable HTML, metadata, JSON-LD, links, images and orphan pages
+        run: node scripts/seo-integrity-audit.mjs
+      - name: Upload full SEO audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-chord-seo-audit
+          path: test-results/seo/
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload built static website for review
         uses: actions/upload-artifact@v4
         with:
