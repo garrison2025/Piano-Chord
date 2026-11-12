@@ -246,11 +246,33 @@ try{
   await page.mouse.move(boxD.x+boxD.width/2,boxD.y+boxD.height-19,{steps:4});
   assert.equal(await d4.evaluate(el=>el.classList.contains('pressed')),true);
   assert.equal(await c4.evaluate(el=>el.classList.contains('pressed')),false);
+  // Move entirely outside the keybed while the pointer is captured, then back
+  // onto a key. A temporary gap must not permanently forget the finger.
+  await page.mouse.move(boxC.x+boxC.width/2,boxC.y-35,{steps:2});
+  assert.equal(await d4.evaluate(el=>el.classList.contains('pressed')),false);
+  await page.mouse.move(boxD.x+boxD.width/2,boxD.y+boxD.height-19,{steps:3});
+  assert.equal(await d4.evaluate(el=>el.classList.contains('pressed')),true,
+    'Glide must resume when a held finger re-enters the keyboard');
   await page.mouse.up();
   assert.equal(await d4.evaluate(el=>el.classList.contains('pressed')),false);
   await page.locator('#vp-touch-scroll').click();
   assert.equal(await page.locator('#vp-scroll').getAttribute('data-touch-mode'),'scroll');
-  console.log('PASS actual pointer glide, captured hit-testing and scroll restoration');
+  // A backgrounded mobile page must not leave a held voice sounding.
+  await page.locator('#vp-touch-glide').click();
+  await c4.scrollIntoViewIfNeeded();
+  const hiddenBox=await c4.boundingBox();
+  await page.mouse.move(hiddenBox.x+hiddenBox.width/2,hiddenBox.y+hiddenBox.height-18);
+  await page.mouse.down();
+  assert.equal(await c4.evaluate(el=>el.classList.contains('pressed')),true);
+  await page.evaluate(()=>{
+    Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  assert.equal(await c4.evaluate(el=>el.classList.contains('pressed')),false);
+  await page.mouse.up();
+  await page.evaluate(()=>{delete document.hidden;});
+  await page.locator('#vp-touch-scroll').click();
+  console.log('PASS captured glissando re-entry, background-release safety, scroll restoration');
 
   // Two independent mobile touch contacts: hold E4, drag C4 to D4, release.
   const touchContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});

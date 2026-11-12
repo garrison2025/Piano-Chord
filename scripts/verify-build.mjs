@@ -76,7 +76,31 @@ for(const [page,selectors] of [
  const source=read(getFile(page));
  for(const marker of selectors)if(!source.includes(marker))errors.push('Missing functional learning control on '+page+': '+marker);
 }
-if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
+// Crawl readiness: ensure sitemap and robots refer to the same canonical
+// origin (and do not leak a stale pages.dev URL after a custom domain change).
+const sitemapLocs=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x=>x[1]);
+const expectedLocs=publishedPages.map(x=>absoluteSite+x);
+if(sitemapLocs.length!==publishedPages.length ||
+   new Set(sitemapLocs).size!==sitemapLocs.length ||
+   expectedLocs.some(x=>!sitemapLocs.includes(x)))
+   errors.push('Sitemap XML locations must be exact, unique published canonical HTML URLs');
+const robotsPath=path.join(dist,'robots.txt');
+if(!fs.existsSync(robotsPath))errors.push('Missing robots.txt');
+else{
+  const robots=read(robotsPath);
+  if(!/User-agent:\s*\*\s*\nAllow:\s*\//.test(robots))
+    errors.push('Robots.txt must explicitly allow public learning content');
+  if(!robots.includes('Sitemap: '+absoluteSite+'/sitemap.xml'))
+    errors.push('Robots.txt Sitemap must match the configured canonical host');
+}
+// The 404 error page must not become an indexable lesson; it is not in sitemap.
+const notFoundPath=path.join(dist,'404.html');
+if(fs.existsSync(notFoundPath)){
+ const notFound=read(notFoundPath);
+ if(!notFound.includes('name="robots" content="noindex,follow"'))
+   errors.push('404 page must be noindex');
+}
+
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
 else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, ${releaseChords.length} authored SVG diagrams, ${releaseChords.length} unique chord meta descriptions and interactive two-chord drills, canonical/metadata, sitemap, image sitemap, internal links and robots.`);
