@@ -18,3 +18,15 @@ test('triads, doubled octaves, incomplete and non-chord combinations',()=>{
   assert.equal(describeHeldChord([60,64,67,70,73]).kind,'unknown');
   assert.equal(describeHeldChord([0,999,'60']).kind,'idle');
 });
+
+
+test('live piano recognizes suspended triads and half-diminished sevenths from the 120 atlas',()=>{
+  const sus4=describeHeldChord([60,65,67]);
+  assert.equal(sus4.title,'Csus4');
+  assert.equal(sus4.kind,'triad');
+  assert.match(sus4.detail,/C · F · G/);
+  const halfdim=describeHeldChord([60,63,66,70]);
+  assert.equal(halfdim.title,'Cm7b5');
+  assert.equal(halfdim.kind,'seventh');
+  assert.ok(halfdim.matches.some(m=>m.quality==='m7b5'));
+});
