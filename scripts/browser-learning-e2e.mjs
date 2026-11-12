@@ -37,7 +37,8 @@ try{
   assert.match(await page.locator('#compare-result').innerText(),/D · F♯/);
   await page.screenshot({path:'test-results/learning/bm-to-d-compare.png',fullPage:true});
   await go('/chords/c-7/');
-  assert.match(await page.locator('#ear-training').innerText(),/tritone E–B♭/);
+  await page.locator('#ear-training .ear-training-reveal summary').click();
+  assert.match(await page.locator('#ear-training .ear-training-reveal').innerText(),/tritone E–B♭/);
   await page.locator('#ear-training a[href="/tools/chord-compare/?a=c-7&b=f-major"]').click();
   await page.waitForFunction(()=>document.getElementById('compare-a')?.value==='c-7' &&
     document.getElementById('compare-b')?.value==='f-major',null,{timeout:9000});
