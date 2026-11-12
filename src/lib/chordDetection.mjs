@@ -18,7 +18,7 @@ export function describeHeldChord(midis){
   // The physical lowest MIDI note determines the slash bass. Pitch-class
   // inversion is not inferred from key-press order, nor from note spellings.
   const voicing=reference?describeChordBass(reference,String(mod(Math.min(...valid),12))):null;
-  const displayed=voicing?.slashName||prettySymbol(primary.symbol);
+  const displayed=prettySymbol(voicing?.slashName||primary.symbol);
   const inversionNote=voicing&&voicing.inversion>0
     ?' · '+voicing.description:'';
   return {kind:pcs.size===4?'seventh':'triad',title:displayed,
