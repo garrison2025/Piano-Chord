@@ -30,4 +30,6 @@ Never claim upload success from file encoding tests, navigator.share resolution,
 - OPEN: TikTok, X and YouTube Shorts account-side uploads.
 - NONBLOCKING: original WebM still has a Matroska warning under ffprobe; use verified MP4 for platform upload.
 
-Evidence: [90-second GitHub Actions run](https://github.com/garrison2025/Piano-Chord/actions/runs/43125583010), artifact `piano-stress-diagnostics`.
+Evidence: [V1.9 new-renderer 90-second GitHub Actions run](https://github.com/garrison2025/Piano-Chord/actions/runs/43128378650), artifact `piano-stress-diagnostics`; [V1.9 short WASM and poster theme test](https://github.com/garrison2025/Piano-Chord/actions/runs/43128378728), artifact `video-browser-e2e-diagnostics`.
+
+Verified independently on 2026-11-12: V1.9 long MP4 is H.264 + AAC at 540×960 and 24 FPS, duration 91.333333 s, both media tracks start at 0 s. The short MP4 is 3.850 s with the same encoding. Browser-rendered Midnight and Aurora screenshots were saved and visually reviewed.
