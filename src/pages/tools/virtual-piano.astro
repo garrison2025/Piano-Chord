@@ -67,7 +67,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
   <button id="vp-touch-scroll" class="vp-touch-mode is-selected" type="button" aria-pressed="true">↔ Scroll keys</button>
   <button id="vp-touch-glide" class="vp-touch-mode" type="button" aria-pressed="false">♪ Glide to play</button>
   <span id="vp-touch-hint">Scroll mode: swipe to reach another octave. Tap several keys for chords.</span>
-</div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" data-touch-mode="scroll" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><div id="vp-chord-detect" class="piano-detection" data-kind="idle" role="status" aria-live="polite" aria-atomic="true"><span>LIVE CHORD RECOGNITION</span><strong id="vp-chord-name">Play a chord</strong><p id="vp-chord-notes">Hold three notes for a triad, or four different pitch classes for a seventh chord.</p></div><footer class="piano-foot">52 white · 36 black · Synthesized browser audio (not acoustic samples) · The separate metronome does not become part of the recorded performance.</footer></div></section>
+</div><nav class="piano-jumps" aria-label="Jump to a piano register"><button type="button" data-jump="36">Low C</button><button type="button" data-jump="60">Middle C</button><button type="button" data-jump="84">High C</button><span>Scroll horizontally to play all 88 keys →</span></nav><div id="vp-scroll" class="piano-scroller" data-touch-mode="scroll" tabindex="0" aria-label="Horizontal scrollable 88-key piano"><div class="piano-keybed" style="width:2184px">{keys.map(k=><button class:list={['piano-key',k.black?'black':'white']} type="button" style={'left:'+k.left+'px'} data-midi={k.midi} tabindex={k.midi===60?0:-1} aria-label={'Play '+k.note}><span>{k.note.startsWith('C')?k.note:''}</span></button>)}</div></div><div id="vp-chord-detect" class="piano-detection" data-kind="idle" role="status" aria-live="polite" aria-atomic="true"><span>LIVE CHORD RECOGNITION</span><strong id="vp-chord-name">Play a chord</strong><p id="vp-chord-notes">Hold three notes for a triad, or four different pitch classes for a seventh chord.</p></div><footer class="piano-foot">52 white · 36 black · Browser-synthesized tones (no sample downloads) · Up to 24 simultaneous sounding notes · Metronome audio is not recorded.</footer></div></section>
 <section class="container section-compact" id="piano-metronome"><MetronomePanel /></section>
 <section class="container section-compact" id="recording-studio">
   <div id="vp-recording-studio" class="recording-shell">
@@ -137,6 +137,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
 import {setupPianoRecorder} from '../../scripts/pianoRecorder.js';
 import {setupProgressionGuide} from '../../scripts/progressionGuide.js';
 import {describeHeldChord} from '../../lib/chordDetection.mjs';
+import {MAX_ACTIVE_PIANO_VOICES,selectVoiceToEvict} from '../../lib/pianoPolyphony.mjs';
 const app=document.getElementById('playable-piano'),scroll=document.getElementById('vp-scroll'),readout=document.getElementById('vp-readout'),keys=new Map([...app.querySelectorAll('[data-midi]')].map(n=>[+n.dataset.midi,n]));
 const codes={KeyA:0,KeyW:1,KeyS:2,KeyE:3,KeyD:4,KeyF:5,KeyT:6,KeyG:7,KeyY:8,KeyH:9,KeyU:10,KeyJ:11,KeyK:12,KeyO:13,KeyL:14,KeyP:15,Semicolon:16};
 let octave=4,ctx=null,master=null,sustain=false,space=false;
@@ -146,7 +147,14 @@ const voices=new Map(),sources=new Map();
 const glidePointers=new Set();
 function updateChordDetection(){const chord=describeHeldChord([...voices.keys()]);const el=document.getElementById('vp-chord-detect');el.dataset.kind=chord.kind;document.getElementById('vp-chord-name').textContent=chord.title;document.getElementById('vp-chord-notes').textContent=chord.detail;}
 function audio(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C){readout.textContent='Web Audio not supported';return false;}ctx=new C();master=ctx.createGain();master.gain.value=.25;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return true;}
-function on(midi,source){if(midi<21||midi>108||sources.has(source))return;sources.set(source,midi);keys.get(midi)?.classList.add('pressed');if(voices.has(midi))return;if(!audio())return;
+function on(midi,source){if(midi<21||midi>108||sources.has(source))return;sources.set(source,midi);keys.get(midi)?.classList.add('pressed');if(voices.has(midi))return;
+if(!audio()){sources.delete(source);keys.get(midi)?.classList.remove('pressed');return;}
+// 88 playable keys, but bounded oscillator count prevents a long sustain
+// session from accumulating hundreds of always-running oscillator nodes.
+if(voices.size>=MAX_ACTIVE_PIANO_VOICES){
+  const victim=selectVoiceToEvict(voices.keys(),sources.values());
+  if(victim!==null)release(victim);
+}
 const t=ctx.currentTime,g=ctx.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+.015);g.gain.exponentialRampToValueAtTime(.04,t+.6);g.gain.exponentialRampToValueAtTime(.015,t+2.7);g.connect(master);
 const f=440*Math.pow(2,(midi-69)/12),os=[];for(const [v,type,level] of [[1,'triangle',1],[2,'sine',.18],[3,'sine',.05]]){const o=ctx.createOscillator(),a=ctx.createGain();o.type=type;o.frequency.value=f*v;a.gain.value=level;o.connect(a);a.connect(g);o.start();os.push(o);}voices.set(midi,{g,os});recorderHooks?.noteOn(midi);updateChordDetection();if(!source.startsWith('replay'))practiceGuide?.noteOn([...voices.keys()]);readout.textContent='Playing MIDI '+midi;
 }
