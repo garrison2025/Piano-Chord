@@ -62,3 +62,19 @@ test('new major/minor lessons have correct note names',()=>{
   assert.deepEqual(chordNotes(entry.root,entry.quality),spelling,slug);
  }
 });
+
+import {relatedLessons} from '../src/lib/chordRelations.mjs';
+test('related chord lessons prefer shared tones and meaningful contrast',()=>{
+  const find=slug=>releaseChords.find(e=>e.slug===slug);
+  const fsharp=relatedLessons(find('f-sharp-minor')).map(e=>e.slug);
+  assert.ok(fsharp.includes('a-major'),'Relative A major should be recommended for F# minor');
+  assert.ok(fsharp.includes('d-major'),'D major shares F# and A with F# minor');
+  const dflat=relatedLessons(find('d-flat-major')).map(e=>e.slug);
+  assert.ok(dflat.includes('b-flat-minor'),'Relative B-flat minor should be recommended for D-flat major');
+  for(const entry of releaseChords){
+    const matches=relatedLessons(entry);
+    assert.equal(matches.length,3);
+    assert.equal(new Set(matches.map(e=>e.slug)).size,3);
+    assert.ok(matches.every(e=>e.slug!==entry.slug));
+  }
+});

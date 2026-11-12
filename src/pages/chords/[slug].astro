@@ -5,11 +5,12 @@ import ChordCard from '../../components/ChordCard.astro';
 import {releaseChords} from '../../data/chords.js';
 import {chordLessons} from '../../data/editorials.js';
 import {createChord,prettyNote} from '../../lib/music.js';
+import {relatedLessons} from '../../lib/chordRelations.mjs';
 export function getStaticPaths(){return releaseChords.map(entry=>({params:{slug:entry.slug},props:{entry}}));}
 const {entry}=Astro.props;
 const chord=createChord(entry);
 const lesson=chordLessons[entry.slug];
-const related=releaseChords.filter(e=>e.slug!==entry.slug&&(e.root===entry.root||e.quality===entry.quality)).slice(0,3);
+const related=relatedLessons(entry);
 const spelled=chord.notes.map(prettyNote).join(' – ');
 const qualityTip=chord.quality==='major'?'A major triad contains a root, major third (4 semitones) and perfect fifth (7 semitones).':chord.quality==='minor'?'A minor triad contains a root, minor third (3 semitones) and perfect fifth (7 semitones).':'A dominant seventh adds a minor seventh (10 semitones) above the root to a major triad.';
 const description=`Learn the ${chord.name} piano chord (${prettyNote(chord.symbol)}): notes ${spelled}, keyboard diagram, audio, root position and ${chord.inversions.length-1} inversions.`;

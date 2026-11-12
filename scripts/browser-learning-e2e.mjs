@@ -153,6 +153,7 @@ try{
     assert.match(await response.text(),/Highlighted piano keys/);
   }
   await go('/chords/f-sharp-minor/');
+  assert.ok(await page.locator('a[href="/chords/a-major/"]').count()>=1,'F-sharp minor should link its relative A major');
   await page.locator('[data-inversion-button="1"]').click();
   assert.equal(await page.locator('[data-inversion-view="1"]').isVisible(),true);
   await page.locator('[data-inversion-view="1"] button[data-play-midi]').click();
