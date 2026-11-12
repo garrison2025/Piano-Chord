@@ -4,8 +4,35 @@ import {starterPrintableChords} from '../../data/chords.js';
 import {createChord,prettyNote} from '../../lib/music.js';
 ---
 <BaseLayout title="Free Printable Piano Chord Chart | 16 Core Chords" description="Print an original piano chord reference sheet with 16 major, minor and seventh chords, notes and accurate keyboard diagrams. A4 and US Letter friendly." canonicalPath="/printables/piano-chord-chart/" crumbs={[{name:'Printable Chord Chart',href:'/printables/piano-chord-chart/'}]}>
-  <div class="container page-hero"><span class="eyebrow">Free printable resource</span><h1>A chord chart<br/>for your music stand.</h1><p class="lead">Print the original 16-chord starter selection with their notes and original keyboard diagrams. Use your browser's Print command to save as PDF or print to A4 / US Letter paper.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print / Save as PDF</button><a class="btn" href="/chords/">Browse chord lessons</a></div></div>
-  <section class="container section-compact"><div class="panel"><div class="section-head no-print"><div><h2>16-chord reference</h2><p>Each diagram covers a reference keyboard range, with its notes written beside it.</p></div></div><div class="print-sheet">
+  <div class="container page-hero print-chart-hero"><span class="eyebrow">Free printable resource</span><h1>A chord chart<br/>for your music stand.</h1><p class="lead">Print the original 16-chord starter selection with their notes and original keyboard diagrams. Use your browser's Print command to save as PDF or print to A4 / US Letter paper.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print / Save as PDF</button><a class="btn" href="/chords/">Browse chord lessons</a></div></div>
+  <section class="container section-compact print-chart-page"><div class="panel"><div class="section-head no-print"><div><h2>16-chord reference</h2><p>Each diagram covers a reference keyboard range, with its notes written beside it.</p></div></div><div class="print-chart-heading" aria-hidden="true"><strong>Piano Chord Explorer</strong><span>16 original chord diagrams · Notes &amp; keys</span></div><div class="print-sheet print-chart-grid">
   {starterPrintableChords.map(entry=>{const c=createChord(entry);return <article class="print-cell"><strong>{prettyNote(c.symbol)} · {c.qualityName}</strong><span>{c.notes.map(prettyNote).join(' – ')}</span><img src={`/diagrams/${entry.slug}.svg`} alt={`${c.name}: ${c.notes.map(prettyNote).join(', ')}`} width="692" height="195" loading="lazy" /></article>})}
 </div></div><p class="print-note">Print uses the paper size selected in your browser dialog. For physical accuracy, review printer scale settings; fit-to-page can resize diagrams.</p></section>
 </BaseLayout>
+
+<style>
+.print-chart-heading{display:none}
+@media print {
+  /* The page size is chosen in the native browser print dialog. Both A4 and
+     US Letter portrait retain four compact columns within 10mm margins. */
+  @page{size:auto;margin:10mm}
+  :global(body){background:#fff!important;color:#111!important}
+  :global(.print-chart-hero){display:none!important}
+  :global(.print-chart-page){padding:0!important;margin:0!important;break-before:avoid}
+  :global(.print-chart-page > .panel){padding:0!important;border:0!important;box-shadow:none!important;background:#fff!important}
+  :global(.print-chart-page .section-head),:global(.print-chart-page .print-note){display:none!important}
+  .print-chart-heading{display:flex!important;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5mm;border-bottom:1px solid #aaa;padding-bottom:2mm}
+  .print-chart-heading strong{font-size:14pt;color:#222}
+  .print-chart-heading span{font-size:8pt;color:#444}
+  :global(.print-chart-grid){display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:3mm!important}
+  :global(.print-chart-grid .print-cell){
+    min-width:0!important;min-height:0!important;border:1px solid #bbb!important;
+    border-radius:3px!important;padding:2mm!important;background:#fff!important;
+    box-shadow:none!important;break-inside:avoid!important;page-break-inside:avoid!important;
+  }
+  :global(.print-chart-grid .print-cell strong){display:block;font-size:9pt!important;line-height:1.2!important;color:#141414!important;white-space:normal}
+  :global(.print-chart-grid .print-cell span){display:block;font-size:7.5pt!important;line-height:1.25!important;margin:1mm 0 1.5mm!important;color:#333!important;white-space:normal}
+  :global(.print-chart-grid .print-cell img){display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain}
+  :global(.print-chart-grid img){filter:none!important}
+}
+</style>
