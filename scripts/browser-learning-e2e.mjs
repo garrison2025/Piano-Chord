@@ -44,6 +44,8 @@ try{
   assert.equal(await page.locator('.atlas-card:visible').count(),12);
   await page.locator('#atlas-reset').click();
   await page.locator('.atlas-card a[href="/tools/inversion-explorer/?root=Db&quality=maj7"]').click();
+  assert.match(page.url(),/root=Db.*quality=maj7/);
+  await page.waitForFunction(()=>document.getElementById('inversion-chord')?.value==='Db:maj7',null,{timeout:10000});
   assert.equal(await page.locator('#inversion-chord').inputValue(),'Db:maj7');
   assert.equal(await page.locator('#inversion-tool .inversion-card').count(),4);
   assert.match(await page.locator('#inversion-tool').innerText(),/D♭ · F · A♭ · C/);
@@ -57,6 +59,8 @@ try{
   for(const pc of [0,5,7])await page.locator('[data-pitch="'+pc+'"]').click();
   assert.match(await page.locator('#finder-results').innerText(),/Csus4/);
   await page.locator('#finder-results a[href="/tools/inversion-explorer/?root=C&quality=sus4"]').click();
+  assert.match(page.url(),/root=C.*quality=sus4/);
+  await page.waitForFunction(()=>document.getElementById('inversion-chord')?.value==='C:sus4',null,{timeout:10000});
   assert.equal(await page.locator('#inversion-chord').inputValue(),'C:sus4');
   await go('/tools/chord-finder/');
   for(const pc of [0,3,6,10])await page.locator('[data-pitch="'+pc+'"]').click();
