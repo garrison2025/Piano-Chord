@@ -21,6 +21,42 @@ try{
     assert.equal(res?.status(),200,path+' HTTP');
   };
   const texts=async selector=>page.locator(selector).allTextContents();
+  // 16 unique priority lesson exercises: actual audio, reveal and A/B deep-link.
+  await go('/chords/b-minor/');
+  assert.equal(await page.locator('#ear-training').isVisible(),true);
+  assert.equal(await page.locator('.ear-training-chord').count(),2);
+  assert.equal(await page.locator('.ear-training-reveal').getAttribute('open'),null);
+  await page.locator('.ear-training-reveal summary').click();
+  assert.match(await page.locator('.ear-training-reveal').innerText(),/D and F♯ are shared/);
+  await page.locator('.ear-training-chord').first().click();
+  assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
+  await page.locator('.ear-training-chord').last().click();
+  await page.locator('#ear-training a[href="/tools/chord-compare/?a=b-minor&b=d-major"]').click();
+  await page.waitForFunction(()=>document.getElementById('compare-a')?.value==='b-minor' &&
+    document.getElementById('compare-b')?.value==='d-major',null,{timeout:9000});
+  assert.match(await page.locator('#compare-result').innerText(),/D · F♯/);
+  await page.screenshot({path:'test-results/learning/bm-to-d-compare.png',fullPage:true});
+  await go('/chords/c-7/');
+  assert.match(await page.locator('#ear-training').innerText(),/tritone E–B♭/);
+  await page.locator('#ear-training a[href="/tools/chord-compare/?a=c-7&b=f-major"]').click();
+  await page.waitForFunction(()=>document.getElementById('compare-a')?.value==='c-7' &&
+    document.getElementById('compare-b')?.value==='f-major',null,{timeout:9000});
+  assert.match(await page.locator('#compare-result').innerText(),/Shared sounding notes/);
+  await go('/chords/c-major-7/');
+  assert.equal(await page.locator('#ear-training').count(),0,'Additional lesson must not receive templated drill');
+  const practiceMobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  const practicePage=await practiceMobile.newPage();
+  await practicePage.goto(origin+'/chords/b-minor/',{waitUntil:'domcontentloaded'});
+  assert.equal(await practicePage.locator('#ear-training').isVisible(),true);
+  const practiceMetrics=await practicePage.evaluate(()=>({
+    scroll:document.documentElement.scrollWidth,
+    viewport:document.documentElement.clientWidth
+  }));
+  assert.ok(practiceMetrics.scroll<=practiceMetrics.viewport+2,'Mobile lesson ear drill overflow: '+JSON.stringify(practiceMetrics));
+  await practicePage.screenshot({path:'test-results/learning/mobile-chord-ear-drill.png',fullPage:true});
+  await practiceMobile.close();
+  console.log('PASS authored priority-ear drills, two-chord deep links and mobile lesson layout');
+
   await go('/tools/scales-and-keys/');
   assert.deepEqual((await texts('#scale-degree-row strong')).map(s=>s.trim()),['C','D','E','F','G','A','B']);
   await page.locator('#scale-root').selectOption('Gb');

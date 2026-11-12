@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { releaseChords } from '../src/data/chords.js';
+import {priorityEarDrills} from '../src/data/lessonPathways.js';
 const dist = path.resolve('dist');
 const publishedPages = [
   '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
@@ -31,6 +32,20 @@ for(const url of publishedPages){
   const file=getFile(resource);
   if(!fs.existsSync(file) && !fs.existsSync(path.join(dist,resource.slice(1))))errors.push(`Broken internal asset/link on ${url}: ${resource}`);
  }
+}
+// Only the 16 evidenced V1.3 priority lessons receive the new authored
+// ear-training section. Check the actual static HTML, not just the source model.
+for(const entry of releaseChords){
+ const html=read(getFile('/chords/'+entry.slug+'/')).replaceAll('&amp;','&');
+ const drill=priorityEarDrills[entry.slug];
+ if(drill){
+   const pair='/tools/chord-compare/?a='+encodeURIComponent(entry.slug)+'&b='+encodeURIComponent(drill.target);
+   if(!html.includes('id="ear-training"'))errors.push('Missing individual ear-training section: '+entry.slug);
+   if(!html.includes('class="ear-training-reveal"'))errors.push('Missing accessible answer reveal: '+entry.slug);
+   if(!html.includes('href="'+pair+'"'))errors.push('Missing actual preselected compare link: '+entry.slug);
+   if(!html.includes('href="/chords/'+drill.target+'/'))errors.push('Broken ear-training partner link: '+entry.slug);
+   if((html.match(/class="ear-training-chord"/g)||[]).length!==2)errors.push('Pair needs two playable chords: '+entry.slug);
+ }else if(html.includes('id="ear-training"'))errors.push('Unapproved generic ear-training expansion: '+entry.slug);
 }
 for(const {slug} of releaseChords){
  const svgPath=path.join(dist,'diagrams',slug+'.svg');
