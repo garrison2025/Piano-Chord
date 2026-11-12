@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mp4Args,isSocialMp4,CORE_BASE,MP4_WIDTH,MP4_HEIGHT} from '../src/lib/videoConversion.mjs';
+import {mp4Args,isSocialMp4,CORE_BASE,MP4_WIDTH,MP4_HEIGHT,MP4_FPS} from '../src/lib/videoConversion.mjs';
 const atom=(name,bytes=[])=>{
   const out=new Uint8Array(8+bytes.length);
   new DataView(out.buffer).setUint32(0,out.length,false);
@@ -15,7 +15,9 @@ test('MP4 converter requests H.264/AAC and 9:16 faststart',()=>{
   const str=mp4Args().join(' ');
   assert.match(str,/libx264/);assert.match(str,/-c:a aac/);
   assert.match(str,/yuv420p/);assert.match(str,/movflags \+faststart/);
-  assert.match(str,/fps=20,scale=540:960/);
+  assert.match(str,/fps=24,scale=540:960/);
+  assert.match(str,/-b:a 128k/);
+  assert.ok(MP4_FPS>=23 && MP4_FPS<=60,'TikTok video FPS must be 23–60');
   assert.equal(MP4_WIDTH*16,MP4_HEIGHT*9);
 });
 test('core URL pinned, input/output filenames local only',()=>{

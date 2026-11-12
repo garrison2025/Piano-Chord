@@ -53,3 +53,8 @@ The H.264/AAC checker now parses real MP4 video/audio track handlers and `stsd` 
 - The same workflow successfully executed **390px Chromium touch/mobile emulation**, checked page horizontal overflow, recorded tapped keys, downloaded audio-bearing WebM/MP4, and exercised the unavailable-file-sharing fallback. This is *not* a real Android device and cannot establish iOS Safari compatibility.
 - Original performance, converted MP4 and mobile screenshot are in the GitHub run's `piano-stress-diagnostics` artifact.
 - The independent test's `PIANO_STRESS_SECONDS` variable also supports a 90-second capture. Upload acceptance on TikTok/X and physical-device verification remain open.
+
+
+## Social upload encoding correction — 2026-11-12
+
+TikTok's [official media transfer guide](https://developers.tiktok.com/docs/en/content-posting-api-media-transfer-guide) specifies **23–60 FPS**. The old 20 FPS MP4 conversion setting did not meet that documented minimum, even though it produced valid H.264/AAC files. The conversion profile is now **24 FPS (matching the source Canvas capture), 540x960, H.264 / yuv420p, AAC 128 kbps**. CRF was improved to 25 for more legible key animations. Automated tests enforce this profile; file upload remains a separate manual acceptance gate. The [X Media Studio guide](https://help.x.com/en/using-x/media-studio-faqs) recommends H.264 video with AAC audio.

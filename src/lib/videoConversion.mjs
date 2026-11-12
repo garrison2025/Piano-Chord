@@ -1,11 +1,11 @@
 /** Browser-local WebM -> MP4 encoding profile. No media is uploaded. */
 export const CORE_BASE='https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
-export const MP4_WIDTH=540,MP4_HEIGHT=960;
+export const MP4_WIDTH=540,MP4_HEIGHT=960,MP4_FPS=24;
 export function mp4Args(){
   return ['-hide_banner','-i','take.webm','-map','0:v:0','-map','0:a:0',
-    '-vf','fps=20,scale='+MP4_WIDTH+':'+MP4_HEIGHT+':flags=fast_bilinear',
-    '-c:v','libx264','-preset','ultrafast','-crf','28','-pix_fmt','yuv420p',
-    '-c:a','aac','-b:a','96k','-ar','44100','-movflags','+faststart',
+    '-vf','fps='+MP4_FPS+',scale='+MP4_WIDTH+':'+MP4_HEIGHT+':flags=fast_bilinear',
+    '-c:v','libx264','-preset','ultrafast','-crf','25','-pix_fmt','yuv420p',
+    '-c:a','aac','-b:a','128k','-ar','44100','-movflags','+faststart',
     '-threads','1','take.mp4'];
 }
 /**
