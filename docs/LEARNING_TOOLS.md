@@ -46,3 +46,13 @@ The seventh-chord comparison guide now has a browser-only Web Audio continuous p
 ### 2026-11-12 dynamic card styling regression
 
 Actual Chromium screenshots exposed unstyled bars: cards inserted by JavaScript lacked Astro's compile-time scoped CSS attribute. The guide now uses `:global(#seventh-player-bars …)` selectors scoped under the unique player ID. A hydration-ready marker and a 390px Playwright computed-style/geometry test verify that dynamically generated cards have a visible border, flex content and a true two-column mobile layout.
+
+
+## Seventh-chord practice → 88-key piano → recording (2026-11-12)
+
+- Entry: \`/guides/seventh-chords-piano/\`; the CTA beside the seventh-chord playback controls carries the selected **pattern and BPM** to \`/tools/virtual-piano/?practice=7&pattern=ii-v-i&bpm=80\`. The URL is validated against just two authored patterns and integer 50–180 BPM. Duplicates, extra keys and malformed values are rejected without affecting normal piano play.
+- The guide shows **three** steps for ii–V–I or **four** for the turnaround. Every step uses the true four-note seventh voicing (for example Dm7 = D–F–A–C). Silent key highlights are only guidance; recognition checks all **four distinct pitch classes**, accepting octave changes and inversions, but rejecting missing/extra pitch classes. The legacy 4-bar triad handoff remains compatible.
+- Live chord feedback now names played triads and seventh chords independently from the exercise. Automatic chord symbols preserve the quality suffix: \`C7\`, \`Cmaj7\`, \`Am7\`, \`Dm7\` (previously auto-generated \`maj7\` / \`m7\` symbols could be mislabeled).
+- Pressing **Record & follow guide** starts the existing local note-event recorder and timed guide. Only notes played by the user enter the MIDI/audio/video take; hints and the separate metronome remain silent to the recording. Stop recording before replay, MIDI download or browser-rendered 9:16 video share. Native codec compatibility depends on the device; WebM fallback and optional local MP4 conversion are unchanged.
+- Unit coverage: \`tests/seventhTransfer.test.js\`, \`tests/chordDetection.test.js\`; Chromium integration: \`scripts/browser-learning-e2e.mjs\` checks selected BPM, three/four step counts, key hints, live Dm7 feedback, recording/MIDI controls, duplicate-query rejection and 390px mobile overflow.
+- No additional server, database, paid audio service, direct TikTok/X posting API, user account or background upload is introduced. Native iOS/Android browser recording compatibility and real social-platform ingestion remain separate device acceptance gates.
