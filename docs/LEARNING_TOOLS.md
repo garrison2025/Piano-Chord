@@ -38,3 +38,7 @@ This release expands the earlier 16 individually authored chord lessons, 120-cho
 - Virtual Piano highlights a target C4-octave voicing, provides a four-bar silent visual guide (manual/timed), exact pitch-class chord matching with octave freedom, and a Record & Follow button that invokes the existing recording studio.
 - The guide produces **no audio of its own**, and only real keyboard notes are recorded. Replayed takes do not mark a practice target as correctly played. Edited sequences can be returned to the trainer with BPM preserved.
 - Local unit test `tests/practiceTransfer.test.js` checks C pop, harmonic-minor V, edits, URL rejection and octave-invariant recognition. Learning browser E2E covers roundtrip navigation.
+
+## Seventh chord continuous practice player (2026-11-12)
+
+The seventh-chord comparison guide now has a browser-only Web Audio continuous player for Dm7–G7–Cmaj7 and Cmaj7–Am7–Dm7–G7. Chord attacks are scheduled against a single AudioContext timeline (four quarter-note beats per bar), with optional beat click/accent, 50–180 BPM, restart, stop and loop, and real-time highlighted bar. New deterministic `src/lib/seventhPractice.mjs` plus `tests/seventhPractice.test.js` validate exact chord spellings, bar timing and allowed tempos. Unlike the silent visual guide in Virtual Piano, this tool synthesizes the backing chords; it does not record or transmit the user's keyboard input. Opening another page or hiding the tab stops playback. The published chord lesson/SVG count is unchanged.
