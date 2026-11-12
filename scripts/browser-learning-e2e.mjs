@@ -21,7 +21,7 @@ try{
     assert.equal(res?.status(),200,path+' HTTP');
   };
   const texts=async selector=>page.locator(selector).allTextContents();
-  // 16 unique priority lesson exercises: actual audio, reveal and A/B deep-link.
+  // 16 V1.3 priority plus 13 individually authored supplemental lessons.
   await go('/chords/b-minor/');
   assert.equal(await page.locator('#ear-training').isVisible(),true);
   assert.equal(await page.locator('.ear-training-chord').count(),2);
@@ -44,7 +44,20 @@ try{
     document.getElementById('compare-b')?.value==='f-major',null,{timeout:9000});
   assert.match(await page.locator('#compare-result').innerText(),/Shared sounding notes/);
   await go('/chords/c-major-7/');
-  assert.equal(await page.locator('#ear-training').count(),0,'Additional lesson must not receive templated drill');
+  assert.equal(await page.locator('#ear-training .ear-training-chord').count(),2);
+  assert.match(await page.locator('#ear-training').innerText(),/Cmaj7.*C7/s);
+  await page.locator('#ear-training a[href="/tools/chord-compare/?a=c-major-7&b=c-7"]').click();
+  await page.waitForFunction(()=>document.getElementById('compare-a')?.value==='c-major-7' &&
+    document.getElementById('compare-b')?.value==='c-7',null,{timeout:9000});
+  await go('/chords/d-flat-major/');
+  assert.equal(await page.locator('#ear-training .ear-training-chord').count(),2);
+  await page.locator('#ear-training .ear-training-reveal summary').click();
+  assert.match(await page.locator('#ear-training .ear-training-reveal').innerText(),/D♭ and F/);
+  await page.locator('#ear-training a[href="/tools/chord-compare/?a=d-flat-major&b=b-flat-minor"]').click();
+  await page.waitForFunction(()=>document.getElementById('compare-a')?.value==='d-flat-major' &&
+    document.getElementById('compare-b')?.value==='b-flat-minor',null,{timeout:9000});
+  assert.match(await page.locator('#compare-result').innerText(),/D♭.*F/s);
+  console.log('PASS full lesson categories: triads, sharp/flat spellings and sevenths');
   const practiceMobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const practicePage=await practiceMobile.newPage();
   await practicePage.goto(origin+'/chords/b-minor/',{waitUntil:'domcontentloaded'});
@@ -56,7 +69,7 @@ try{
   assert.ok(practiceMetrics.scroll<=practiceMetrics.viewport+2,'Mobile lesson ear drill overflow: '+JSON.stringify(practiceMetrics));
   await practicePage.screenshot({path:'test-results/learning/mobile-chord-ear-drill.png',fullPage:true});
   await practiceMobile.close();
-  console.log('PASS authored priority-ear drills, two-chord deep links and mobile lesson layout');
+  console.log('PASS authored ear drills and preselected A/B comparisons across lesson families, 390px mobile layout');
 
   await go('/tools/scales-and-keys/');
   assert.deepEqual((await texts('#scale-degree-row strong')).map(s=>s.trim()),['C','D','E','F','G','A','B']);

@@ -2,7 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { releaseChords } from '../src/data/chords.js';
-import {priorityEarDrills} from '../src/data/lessonPathways.js';
+import {lessonEarDrills} from '../src/data/lessonPathways.js';
+import {chordSearchDescriptions} from '../src/data/chordSeo.js';
 const dist = path.resolve('dist');
 const publishedPages = [
   '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
@@ -33,11 +34,14 @@ for(const url of publishedPages){
   if(!fs.existsSync(file) && !fs.existsSync(path.join(dist,resource.slice(1))))errors.push(`Broken internal asset/link on ${url}: ${resource}`);
  }
 }
-// Only the 16 evidenced V1.3 priority lessons receive the new authored
-// ear-training section. Check the actual static HTML, not just the source model.
+// All 29 authored pages have chord-specific interactive drills.
+// Test actual generated HTML and real A/B targets, not just source data.
 for(const entry of releaseChords){
  const html=read(getFile('/chords/'+entry.slug+'/')).replaceAll('&amp;','&');
- const drill=priorityEarDrills[entry.slug];
+ const drill=lessonEarDrills[entry.slug];
+ const meta=html.match(/<meta\s+name="description"\s+content="([^"]*)"/)?.[1];
+ const expected=chordSearchDescriptions[entry.slug];
+ if(!expected||meta!==expected)errors.push('Missing or inconsistent authored meta description: '+entry.slug);
  if(drill){
    const pair='/tools/chord-compare/?a='+encodeURIComponent(entry.slug)+'&b='+encodeURIComponent(drill.target);
    if(!html.includes('id="ear-training"'))errors.push('Missing individual ear-training section: '+entry.slug);
@@ -45,7 +49,7 @@ for(const entry of releaseChords){
    if(!html.includes('href="'+pair+'"'))errors.push('Missing actual preselected compare link: '+entry.slug);
    if(!html.includes('href="/chords/'+drill.target+'/'))errors.push('Broken ear-training partner link: '+entry.slug);
    if((html.match(/class="ear-training-chord"/g)||[]).length!==2)errors.push('Pair needs two playable chords: '+entry.slug);
- }else if(html.includes('id="ear-training"'))errors.push('Unapproved generic ear-training expansion: '+entry.slug);
+ }else errors.push('Missing specifically authored drill for '+entry.slug);
 }
 for(const {slug} of releaseChords){
  const svgPath=path.join(dist,'diagrams',slug+'.svg');
@@ -75,4 +79,4 @@ for(const [page,selectors] of [
 if(!fs.existsSync(path.join(dist,'robots.txt')))errors.push('Missing robots.txt');
 if(!fs.existsSync(path.join(dist,'favicon.svg')))errors.push('Missing favicon');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
-else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, ${releaseChords.length} SVG diagrams, canonical/metadata, sitemap, image sitemap, internal links and robots.`);
+else console.log(`Generated artifact verified: ${publishedPages.length} HTML URLs, ${releaseChords.length} authored SVG diagrams, ${releaseChords.length} unique chord meta descriptions and interactive two-chord drills, canonical/metadata, sitemap, image sitemap, internal links and robots.`);

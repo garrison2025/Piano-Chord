@@ -19,6 +19,8 @@ on:
       - 'src/pages/tools/inversion-explorer.astro'
       - 'src/pages/chords/[slug].astro'
       - 'src/data/lessonPathways.js'
+      - 'src/data/chordSeo.js'
+      - 'tests/chordSeo.test.js'
       - 'tests/lessonPathways.test.js'
       - 'src/styles/studio.css'
       - 'src/pages/tools/chord-compare.astro'
