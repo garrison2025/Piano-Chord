@@ -82,6 +82,8 @@ try{
   await delay(150);await page.keyboard.up('k');await page.keyboard.up('y');await page.keyboard.up('d');
   await page.locator('#vp-end-record').click();
   assert.equal(await page.locator('#vp-midi').isDisabled(),false);
+  assert.equal(await page.locator('#practice-report').isVisible(),true);
+  assert.match(await page.locator('#practice-report-summary').innerText(),/Matched 0 of 4 scheduled bars/);
   // Ensure target key color is actually painted, not merely a JS class.
   const hintColor=await page.locator('.piano-key.practice-target.white').first().evaluate(el=>getComputedStyle(el).backgroundImage);
   const regularColor=await page.locator('.piano-key.white:not(.practice-target)').first().evaluate(el=>getComputedStyle(el).backgroundImage);
@@ -242,6 +244,13 @@ try{
   await page.locator('#vp-end-record').click();
   assert.equal(await page.locator('#vp-midi').isDisabled(),false);
   assert.equal(await page.locator('#vp-export').isDisabled(),false);
+  assert.equal(await page.locator('#practice-report').isVisible(),true);
+  assert.match(await page.locator('#practice-report-summary').innerText(),/Matched 1 of 3 scheduled bars \(33% chord coverage\)/);
+  assert.equal(await page.locator('#practice-report-bars [data-status="matched"]').count(),1);
+  assert.equal(await page.locator('#practice-report-bars [data-status="not-reached"]').count(),2);
+  const practiceDownload=page.waitForEvent('download');
+  await page.locator('#practice-save').click();
+  assert.equal((await practiceDownload).suggestedFilename(),'piano-chord-practice-report.txt');
   await page.locator('#practice-bars button:nth-child(3)').click();
   assert.match(await page.locator('#practice-current').innerText(),/Cmaj7/);
   assert.equal(await page.locator('.piano-key.practice-target').count(),4);
