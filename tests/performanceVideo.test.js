@@ -39,3 +39,9 @@ test('renders a 9:16 original performance poster without DOM globals',()=>{
   assert.ok(events.some(args=>args[0]==='Original session'));
   assert.ok(events.some(args=>String(args[0]).includes('notes sounding')));
 });
+
+test('extreme top C8 always remains visible in the rendered piano',()=>{
+  const layout=makePerformanceLayout([{midi:108,start:0,end:500}]);
+  assert.ok(layout.map.has(108));
+  assert.ok(layout.keys.every(k=>k.midi>=21&&k.midi<=108));
+});

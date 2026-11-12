@@ -49,6 +49,17 @@ try{
   }
   if(!await page.locator('#vp-end-record').isDisabled())await page.locator('#vp-end-record').click();
   assert.equal(await page.locator('#vp-export').isDisabled(),false,'No notes captured');
+  // Verify actual visible pre-export poster and that theme selection redraws it.
+  const poster=page.locator('#vp-poster');
+  await poster.waitFor({state:'visible',timeout:10000});
+  const before=await poster.evaluate(canvas=>[...canvas.getContext('2d').getImageData(12,12,1,1).data]);
+  await poster.screenshot({path:outputDir+'/video-poster-midnight.png'});
+  await page.locator('#vp-theme').selectOption('aurora');
+  const after=await poster.evaluate(canvas=>[...canvas.getContext('2d').getImageData(12,12,1,1).data]);
+  assert.notDeepEqual(after,before,'Video theme selection failed to redraw the 9:16 poster');
+  await poster.screenshot({path:outputDir+'/video-poster-aurora.png'});
+  console.log('Poster preview and Aurora theme redraw OK');
+
   await page.locator('#vp-export').click();
   await page.locator('#vp-convert-mp4').waitFor({state:'visible',timeout:stress?seconds*1000+60000:30000});
   await page.locator('#vp-convert-mp4').click();

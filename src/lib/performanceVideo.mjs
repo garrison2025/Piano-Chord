@@ -17,7 +17,8 @@ export function makePerformanceLayout(notes){
   const min=pitches.length?Math.min(...pitches):60, max=pitches.length?Math.max(...pitches):72;
   const span=clamp(Math.max(24,max-min+7),24,88);
   let low=clamp(min-3,21,109-span);
-  if(isBlack(low) && low>21) low--;
+  // Only shift the window if doing so cannot hide its highest sounding note.
+  if(isBlack(low) && low>21 && max < low+span-1) low--;
   const map=new Map(), keys=[];
   let whites=0;
   for(let midi=low;midi<low+span;midi++){
