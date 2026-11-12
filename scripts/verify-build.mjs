@@ -45,7 +45,7 @@ for(const entry of releaseChords){
    errors.push('Missing validated lesson-to-progression link: '+entry.slug);
  const meta=html.match(/<meta\s+name="description"\s+content="([^"]*)"/)?.[1];
  const expected=chordSearchDescriptions[entry.slug];
- const heading=html.match(/<title>([^<]+)</title>/)?.[1];
+ const heading=html.split('<title>')[1]?.split('</title>')[0];
  if(heading!==chordSearchTitles[entry.slug])errors.push('Wrong authored title: '+entry.slug);
  if(!expected||meta!==expected)errors.push('Missing or inconsistent authored meta description: '+entry.slug);
  if(drill){
