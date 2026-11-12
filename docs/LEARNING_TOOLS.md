@@ -42,3 +42,7 @@ This release expands the earlier 16 individually authored chord lessons, 120-cho
 ## Seventh chord continuous practice player (2026-11-12)
 
 The seventh-chord comparison guide now has a browser-only Web Audio continuous player for Dm7–G7–Cmaj7 and Cmaj7–Am7–Dm7–G7. Chord attacks are scheduled against a single AudioContext timeline (four quarter-note beats per bar), with optional beat click/accent, 50–180 BPM, restart, stop and loop, and real-time highlighted bar. New deterministic `src/lib/seventhPractice.mjs` plus `tests/seventhPractice.test.js` validate exact chord spellings, bar timing and allowed tempos. Unlike the silent visual guide in Virtual Piano, this tool synthesizes the backing chords; it does not record or transmit the user's keyboard input. Opening another page or hiding the tab stops playback. The published chord lesson/SVG count is unchanged.
+
+### 2026-11-12 dynamic card styling regression
+
+Actual Chromium screenshots exposed unstyled bars: cards inserted by JavaScript lacked Astro's compile-time scoped CSS attribute. The guide now uses `:global(#seventh-player-bars …)` selectors scoped under the unique player ID. A hydration-ready marker and a 390px Playwright computed-style/geometry test verify that dynamically generated cards have a visible border, flex content and a true two-column mobile layout.

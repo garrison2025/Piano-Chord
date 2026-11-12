@@ -186,6 +186,7 @@ try{
   assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
   await page.screenshot({path:'test-results/learning/cmaj7-third-inversion.png',fullPage:true});
   await go('/guides/seventh-chords-piano/');
+  await page.locator('#seventh-player[data-ready="true"]').waitFor({timeout:10000});
   await page.locator('#seventh-pattern').selectOption('ii-v-i');
   assert.deepEqual((await texts('#seventh-player-bars strong')).map(s=>s.trim()),['Dm7','G7','Cmaj7']);
   assert.equal(await page.locator('#seventh-stop').isDisabled(),true);
@@ -236,6 +237,19 @@ try{
       assert.equal(cards.length,3);
       assert.ok(cards.every(x=>Math.abs(x.x-cards[0].x)<2),'Mobile seventh cards must stack vertically');
       assert.ok(cards.every(x=>x.w>280),'Mobile seventh cards need readable full width');
+      await mobileLessonPage.locator('#seventh-player[data-ready="true"]').waitFor({timeout:10000});
+      await mobileLessonPage.locator('#seventh-pattern').selectOption('turnaround');
+      await mobileLessonPage.locator('#seventh-player-bars .seventh-play-bar').nth(3).waitFor({state:'visible'});
+      const tiles=await mobileLessonPage.locator('#seventh-player-bars .seventh-play-bar').evaluateAll(nodes=>
+        nodes.map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y,
+          width:el.getBoundingClientRect().width,display:getComputedStyle(el).display,
+          border:getComputedStyle(el).borderTopStyle})));
+      assert.equal(tiles.length,4,'Turnaround must render four dynamic practice cards');
+      assert.ok(tiles.every(el=>el.display==='flex'&&el.border==='solid'&&el.width>130),
+        'Dynamic cards lost Astro CSS styling: '+JSON.stringify(tiles));
+      assert.ok(Math.abs(tiles[0].y-tiles[1].y)<2&&tiles[2].y>tiles[0].y+30,
+        'Mobile turnaround must be a two-column grid: '+JSON.stringify(tiles));
+
     }
     const width=await mobileLessonPage.evaluate(()=>({scroll:document.documentElement.scrollWidth,view:document.documentElement.clientWidth}));
     assert.ok(width.scroll<=width.view+2,'Mobile chord page overflow '+path+': '+JSON.stringify(width));

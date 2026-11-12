@@ -96,17 +96,17 @@ setupSeventhPractice();
 .seventh-player-toggles label{display:flex;gap:8px;align-items:center}
 .seventh-player-toggles input{accent-color:#6657cb;width:18px;height:18px}
 .seventh-play-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:17px 0}
-.seventh-play-bar{min-width:0;border:1px solid #dfd7f6;border-radius:15px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:5px;transition:border-color .12s,background .12s,transform .12s}
-.seventh-play-bar small{font-size:11px;font-weight:800;color:#8e83ae}
-.seventh-play-bar strong{font-size:clamp(22px,2.4vw,30px);color:#4f43a1}
-.seventh-play-bar span{font-size:12px;color:#756b97;overflow-wrap:anywhere}
-.seventh-play-bar.is-current{background:#e6e1ff;border-color:#7061da;box-shadow:0 8px 20px -13px #41318d;transform:translateY(-2px)}
+:global(#seventh-player-bars .seventh-play-bar){min-width:0;border:1px solid #dfd7f6;border-radius:15px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:5px;transition:border-color .12s,background .12s,transform .12s}
+:global(#seventh-player-bars .seventh-play-bar small){font-size:11px;font-weight:800;color:#8e83ae}
+:global(#seventh-player-bars .seventh-play-bar strong){font-size:clamp(22px,2.4vw,30px);color:#4f43a1}
+:global(#seventh-player-bars .seventh-play-bar span){font-size:12px;color:#756b97;overflow-wrap:anywhere}
+:global(#seventh-player-bars .seventh-play-bar.is-current){background:#e6e1ff;border-color:#7061da;box-shadow:0 8px 20px -13px #41318d;transform:translateY(-2px)}
 .seventh-player-status{font-size:14px;color:#4b4183;min-height:24px}
 .seventh-player .help-text{font-size:12px;color:#776d94;margin:5px 0}
 .seventh-player .help-text a{color:#4f3ec3;text-decoration:underline}
 @media(max-width:850px){.seventh-player-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.seventh-player-controls output{grid-column:1/-1}}
 @media(max-width:600px){.seventh-player-controls{grid-template-columns:minmax(0,1fr)}.seventh-player-controls output{grid-column:auto}.seventh-play-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.seventh-player .button-row{display:flex;flex-wrap:wrap}.seventh-player .button-row button{flex:1 1 120px}}
-@media(prefers-reduced-motion:reduce){.seventh-play-bar{transition:none}.seventh-play-bar.is-current{transform:none}}
+@media(prefers-reduced-motion:reduce){:global(#seventh-player-bars .seventh-play-bar){transition:none}:global(#seventh-player-bars .seventh-play-bar.is-current){transform:none}}
 .seventh-card,.seventh-step{min-width:0;overflow:hidden}
 #listen .card-grid,#cadence .card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 @media(max-width:920px){#listen .card-grid,#cadence .card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

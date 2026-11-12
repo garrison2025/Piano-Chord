@@ -83,4 +83,5 @@ export function setupSeventhPractice(){
   window.addEventListener('pagehide',()=>halt(true));
   render();
   tempo.textContent=slider.value+' BPM';
+  region.dataset.ready='true';
 }
