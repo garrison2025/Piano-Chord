@@ -6,7 +6,7 @@ const dist = path.resolve('dist');
 const publishedPages = [
   '/', '/chords/', '/tools/chord-finder/', '/tools/inversion-explorer/',
   '/tools/chord-compare/', '/tools/virtual-piano/', '/tools/chord-library/', '/tools/scales-and-keys/', '/tools/chord-progressions/', '/tools/metronome/', '/printables/piano-chord-chart/',
-  '/guides/how-to-read-piano-chords/', '/open-source/', 
+  '/guides/how-to-read-piano-chords/', '/guides/seventh-chords-piano/', '/open-source/', 
   ...releaseChords.map(chord=>`/chords/${chord.slug}/`),
 ];
 const errors=[];
@@ -15,7 +15,7 @@ const read=(p)=>fs.readFileSync(p,'utf8');
 const sitemap=read(path.join(dist,'sitemap.xml'));
 const absoluteSite=(process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev').replace(/\/$/,'');
 const canonicalURLs=new Set();
-if(publishedPages.length!==38)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
+if(publishedPages.length!==43)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
 for(const url of publishedPages){
  const target=getFile(url);
  if(!fs.existsSync(target)){errors.push(`Missing HTML: ${url}`);continue;}

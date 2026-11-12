@@ -1,6 +1,6 @@
 # Piano Chord Explorer
 
-A static, accessible piano chord learning site built with Astro. This is the implementation of the V1.3 SEO-first feasibility plan: 25 individually authored chord detail pages (12 major, 12 minor and C7), alongside practical learning tools. No database, account, audio API or paid AI service required.
+A static, accessible piano chord learning site built with Astro. This is the implementation of the V1.3 SEO-first feasibility plan: 29 individually authored chord detail pages (12 major, 12 minor and five selected sevenths), alongside practical learning tools. No database, account, audio API or paid AI service required.
 
 ## Run
 
@@ -15,7 +15,7 @@ Cloudflare Pages: connect `garrison2025/Piano-Chord`; build command `npm run bui
 
 ## What's included
 
-- 25 statically prerendered chord detail pages, a browseable chord index and a practical learning guide.
+- 29 statically prerendered chord detail pages, a browseable chord index and a practical learning guide.
 - Browser-first chord finder, inversion explorer and chord comparison (no remote processing).
 - Original keyboard diagrams as stable indexable SVG images; accessible note lists and print-friendly reference chart.
 - Browser Web Audio polyphonic sine/triangle synth, activated only by explicit user interaction, with Stop control.
@@ -30,7 +30,7 @@ Research used user-provided Semrush US exports (1,600 positions, 1,142 normalize
 
 1. `npm run check` green in GitHub Actions.
 2. Verify actual mobile and desktop pages, audio controls, and A4/Letter paper print.
-3. Verify deployed canonical origin, 23 intentional URLs, SVG images, robots and sitemap over HTTP 200.
+3. Verify deployed canonical origin, 43 intentional HTML URLs, 29 SVG images, robots and sitemap over HTTP 200.
 4. Submit sitemap to Search Console after the final domain is configured; inspect real indexing and image impressions before expansion.
 
 No ads or analytics are loaded without explicit deployment configuration. Music notation examples are original and contain no third-party sheet music or recordings.

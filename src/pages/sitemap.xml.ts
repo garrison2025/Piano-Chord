@@ -1,5 +1,5 @@
 import {releaseChords} from '../data/chords.js';
-const staticPages=['/','/chords/','/tools/chord-finder/','/tools/inversion-explorer/','/tools/chord-compare/','/tools/virtual-piano/','/tools/chord-library/','/tools/scales-and-keys/','/tools/chord-progressions/','/tools/metronome/','/printables/piano-chord-chart/','/guides/how-to-read-piano-chords/','/open-source/'];
+const staticPages=['/','/chords/','/tools/chord-finder/','/tools/inversion-explorer/','/tools/chord-compare/','/tools/virtual-piano/','/tools/chord-library/','/tools/scales-and-keys/','/tools/chord-progressions/','/tools/metronome/','/printables/piano-chord-chart/','/guides/how-to-read-piano-chords/','/guides/seventh-chords-piano/','/open-source/'];
 const esc=s=>s.replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');
 export function GET({site,url}){
  const origin=(site||url).origin;

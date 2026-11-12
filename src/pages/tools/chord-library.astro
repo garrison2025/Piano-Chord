@@ -3,7 +3,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import {coreChords,qualities} from '../../lib/coreCatalog.js';
 import {releaseChords} from '../../data/chords.js';
 import {pitchClass} from '../../lib/music.js';
-const links=new Map(releaseChords.map(v=>[v.root+':'+(v.quality==='dominant7'?'7':v.quality),'/chords/'+v.slug+'/']));
+const atlasQuality={dominant7:'7',major7:'maj7',minor7:'m7'};
+const links=new Map(releaseChords.map(v=>[v.root+':'+(atlasQuality[v.quality]||v.quality),'/chords/'+v.slug+'/']));
 const lessonFor=c=>{
  const direct=links.get(c.root+':'+c.quality);
  if(direct)return {href:direct,label:'Lesson ↗'};
@@ -13,11 +14,11 @@ const lessonFor=c=>{
 };
 ---
 <BaseLayout title="120 Piano Chords – Interactive Chord Library" description="Explore and play 120 common piano chords, with correct note spelling. Learn major, minor, seventh, sus2, sus4 and diminished chords free." canonicalPath="/tools/chord-library/" crumbs={[{name:'120 Chords',href:'/tools/chord-library/'}]}>
-<section class="container page-hero"><span class="eyebrow">THE INTERACTIVE CHORD ATLAS</span><h1>120 chords.<br/><em>One place to explore.</em></h1><p class="lead">Twelve roots, ten useful chord families. Every chord can be heard and searched instantly. Our 25 individually authored major, minor and C7 chord lessons remain available for deeper learning.</p><div class="button-row"><a class="btn btn-primary" href="/tools/virtual-piano/">Play the 88-key piano ↗</a><a class="btn" href="/chords/">Read chord lessons</a></div></section>
+<section class="container page-hero"><span class="eyebrow">THE INTERACTIVE CHORD ATLAS</span><h1>120 chords.<br/><em>One place to explore.</em></h1><p class="lead">Twelve roots, ten useful chord families. Every chord can be heard and searched instantly. Our 29 individually authored chord lessons include major, minor, dominant seventh, major seventh and minor seventh examples.</p><div class="button-row"><a class="btn btn-primary" href="/tools/virtual-piano/">Play the 88-key piano ↗</a><a class="btn" href="/chords/">Read chord lessons</a></div></section>
 <section class="container section-compact">
 <div class="panel"><div class="atlas-controls"><label>Find a chord<input id="atlas-search" class="field" type="search" placeholder="Cmaj7, Bm, Gb, sus4…" autocomplete="off"/></label><label>Chord family<select id="atlas-type" class="field"><option value="all">All ten families</option>{qualities.map(q=><option value={q.id}>{q.name}</option>)}</select></label><button class="btn" type="button" id="atlas-reset">Reset</button></div><p id="atlas-count" role="status" aria-live="polite">120 playable chords</p><div class="atlas-grid">{coreChords.map(c=><article class="atlas-card" data-quality={c.quality} data-search={(c.name+' '+c.symbol+' '+c.root+' '+c.notes.join(' ')).toLowerCase()}><div><strong>{c.symbol}</strong><small>{c.name}</small></div><p>{c.notes.map(n=>n.replaceAll('#','♯').replaceAll('b','♭')).join(' · ')}</p><div class="atlas-foot"><button type="button" class="btn btn-primary" data-play-midi={c.midi.join(',')} aria-label={'Hear '+c.name}>▶ Play</button>{lessonFor(c)?<a href={lessonFor(c).href}>{lessonFor(c).label}</a>:<span>Core chord</span>}</div></article>)}</div></div>
 </section>
-<section class="container section"><div class="panel"><h2>Why 120 chords?</h2><p>These are twelve pitch-class roots multiplied by ten common formulas. Enharmonic spelling can depend on harmonic context; the displayed note names follow diatonic chord construction. Not every theoretical spelling has a separate page. This library links to 25 authored lessons; where an enharmonic root is used (for example, D♭ minor versus C♯ minor), the link is explicitly labelled and the note spelling may differ. Additional individual lessons are not automatically generated.</p></div></section>
+<section class="container section"><div class="panel"><h2>Why 120 chords?</h2><p>These are twelve pitch-class roots multiplied by ten common formulas. Enharmonic spelling can depend on harmonic context; the displayed note names follow diatonic chord construction. Not every theoretical spelling has a separate page. This library links to 29 authored lessons; where an enharmonic root is used (for example, D♭ minor versus C♯ minor), the link is explicitly labelled and the note spelling may differ. Additional individual lessons are not automatically generated.</p></div></section>
 <script>
 const s=document.getElementById('atlas-search'),t=document.getElementById('atlas-type'),c=document.getElementById('atlas-count'),cards=[...document.querySelectorAll('.atlas-card')];
 function norm(v){return String(v).toLowerCase().replaceAll('♯','#').replaceAll('♭','b').trim();}
