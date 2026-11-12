@@ -76,7 +76,11 @@ for(const p of paths){
   if(p==='/'){
     if(!html.includes('"@type":"WebSite"')||!html.includes('"name":"Piano Chord Explorer"'))
       issues.push('Homepage missing WebSite name declaration');
+    for(const answer of ['id="piano-chord-definition"','What notes make C major?','How is B minor different from D major?','Is C7 the same as Cmaj7?'])
+      if(!html.includes(answer))issues.push('Missing transparent question-led homepage content: '+answer);
   }
+  if(p==='/about/'&&!html.includes('Source, calculation and review boundaries'))
+    issues.push('Missing source and editorial review transparency on About');
   for(const match of html.matchAll(/<a\b[^>]*\bhref="([^"]*)"/gi)){
     const raw=decode(match[1]);
     if(!raw||raw.startsWith('javascript:')){issues.push('Invalid link on '+p);continue;}
