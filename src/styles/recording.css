@@ -39,3 +39,32 @@
 .recording-theme{flex:0 1 210px;min-width:170px}
 .recording-video-layout canvas{display:block;width:min(100%,220px);height:auto;aspect-ratio:9/16;border-radius:12px;background:#15132d;box-shadow:0 14px 36px -23px #291958}
 @media(max-width:640px){.recording-theme{flex:1 1 100%}.recording-video-layout canvas{width:180px}}
+
+
+/* Replay-seek and locally derived chord segments. The UI remains usable for a monophonic take. */
+.recording-timeline[hidden],.recording-cover-controls[hidden]{display:none!important}
+.recording-timeline{margin-top:19px;padding:18px;border:1px solid #ddd6ef;border-radius:17px;background:rgba(255,255,255,.86);min-width:0}
+.recording-timeline-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.recording-timeline-heading h3{font-size:19px;margin:5px 0;color:#33295d}
+.recording-timeline-heading p{font-size:12px;margin:0;color:#77718b;max-width:560px}
+.recording-timeline-heading output{font-weight:800;color:#4a3f88;white-space:nowrap;font-variant-numeric:tabular-nums}
+.recording-seek-label{display:block;font-size:12px;font-weight:750;color:#514779;margin:14px 0 6px}
+.recording-seek{display:block;width:100%;margin:8px 0;accent-color:#6e5ad5;cursor:pointer;touch-action:pan-y}
+.recording-timeline-track{position:relative;margin:8px 0 13px;height:24px;border-radius:8px;background:#e9e4f7;overflow:hidden}
+.recording-timeline-track button{position:absolute;top:4px;min-height:16px;height:16px;padding:0!important;border:0!important;border-radius:4px;box-shadow:none!important;background:#7761cb!important;opacity:.88;transform:none!important;min-width:2px}
+.recording-timeline-track button.is-current{background:#257d67!important;opacity:1}
+.recording-timeline-cues{display:flex;align-items:stretch;gap:8px;overflow-x:auto;padding:3px 1px 7px;overscroll-behavior-inline:contain}
+.recording-timeline-cues button{display:grid;gap:4px;text-align:left;min-width:95px;flex:0 0 auto;min-height:56px;padding:9px 11px!important;border-radius:11px;color:#403565}
+.recording-timeline-cues button strong{font-size:15px}
+.recording-timeline-cues button small{font-size:11px;color:#79718d;font-variant-numeric:tabular-nums}
+.recording-timeline-cues button.is-current{background:#e0f6ed;border-color:#8ad4b9}
+.recording-timeline-foot{margin:9px 0 0;font-size:11px;color:#726d85;line-height:1.55}
+.recording-cover-studio{display:grid;gap:12px;width:min(100%,240px);min-width:0}
+.recording-cover-studio canvas{width:100%!important;max-width:220px}
+.recording-cover-controls{display:grid;gap:8px;min-width:0}
+.recording-cover-controls label{display:flex;justify-content:space-between;gap:7px;font-size:12px;font-weight:750;color:#4c436f}
+.recording-cover-controls output{font-variant-numeric:tabular-nums}
+.recording-cover-controls input{width:100%;accent-color:#6f58bf}
+.recording-cover-controls button{padding:11px 9px!important;min-height:44px}
+.recording-cover-controls p{font-size:11px;color:#706c81;line-height:1.5;margin:0}
+@media(max-width:640px){.recording-timeline{padding:13px}.recording-cover-studio{width:100%;max-width:240px}.recording-cover-studio canvas{max-width:220px}}

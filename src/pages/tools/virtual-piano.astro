@@ -89,9 +89,17 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       <button id="vp-midi" type="button" disabled>↓ Save MIDI</button>
     </div>
     <div id="vp-message" class="recording-message" role="status" aria-live="polite">Ready to record, up to 90 seconds. Press Record, then play the piano above.</div>
+    <section id="vp-timeline" class="recording-timeline" aria-label="Recorded performance chord timeline" hidden>
+      <div class="recording-timeline-heading"><div><span class="eyebrow">YOUR ORIGINAL PERFORMANCE</span><h3>Listen back by chord</h3><p id="vp-timeline-caption">Scrub the recording or select a recognized chord to replay from that point.</p></div><output id="vp-seek-time" aria-label="Selected replay position">00:00 / 00:00</output></div>
+      <label for="vp-seek" class="recording-seek-label">Replay position</label>
+      <input id="vp-seek" class="recording-seek" type="range" min="0" max="1000" step="1" value="0" disabled aria-label="Seek through the recorded performance"/>
+      <div id="vp-timeline-track" class="recording-timeline-track" role="group" aria-label="Recorded chord time markers"></div>
+      <div id="vp-timeline-cues" class="recording-timeline-cues" role="group" aria-label="Jump to a detected chord"></div>
+      <p class="recording-timeline-foot">Chord names come from notes you actually played. A short or incomplete chord may not receive a label. No microphone recording is analyzed.</p>
+    </section>
     <div class="recording-stage">
       <h3>Make a TikTok / X / Shorts video</h3>
-      <p>Create a 720 × 1280 (9:16) piano-roll video and audio in your browser. Rendering runs in real time; keep this tab open. No automatic social posting or platform authorization.</p>
+      <p>Create a 720 × 1280 (9:16) piano-roll video and audio in your browser. Pick a cover frame and save it as PNG, or export the full performance. Rendering runs in real time; keep this tab open. No automatic social posting or platform authorization.</p>
       <label class="recording-caption-option"><input id="vp-show-chords" type="checkbox" checked /> Show detected chords and guided bar/beat targets in the video <small>(Targets and actually played chords are labelled separately.)</small></label>
       <div class="recording-actions">
         <button id="vp-export" type="button" class="record-main" disabled>🎬 Create 9:16 video</button>
@@ -99,7 +107,15 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       </div>
       <progress id="vp-progress" min="0" max="100" value="0" aria-label="Video rendering progress"></progress>
       <div class="recording-video-layout">
-        <canvas id="vp-poster" width="720" height="1280" hidden aria-label="Preview of the animated 9 by 16 performance video"></canvas>
+        <div class="recording-cover-studio">
+          <canvas id="vp-poster" width="720" height="1280" hidden aria-label="Preview of the selected 9 by 16 cover frame"></canvas>
+          <div id="vp-cover-controls" class="recording-cover-controls" hidden>
+            <label for="vp-cover-position">Select video cover moment <output id="vp-cover-time">00:00</output></label>
+            <input id="vp-cover-position" type="range" min="0" max="1000" value="0" step="1" aria-label="Choose video cover frame" disabled/>
+            <button id="vp-cover-download" type="button" disabled>↓ Save 9:16 PNG cover</button>
+            <p>Downloads the displayed 720 × 1280 frame as PNG. No additional video rendering or upload.</p>
+          </div>
+        </div>
         <video id="vp-preview" controls playsinline preload="metadata" hidden aria-label="Preview of your generated piano performance video"></video>
         <div class="recording-video-side">
           <p id="vp-format" class="recording-muted">Native MP4 is preferred when supported; WebM videos can be converted locally.</p>
