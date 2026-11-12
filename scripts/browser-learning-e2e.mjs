@@ -22,6 +22,84 @@ try{
     assert.equal(res?.status(),200,path+' HTTP');
   };
   const texts=async selector=>page.locator(selector).allTextContents();
+  // Regression: the very first note must honor the volume slider, and held
+  // Enter/Space must release the ORIGINAL key after moving keyboard focus.
+  // An empty second take must keep the previous MIDI and local browser draft.
+  const stabilityCtx=await browser.newContext({viewport:{width:1280,height:850}});
+  const stability=await stabilityCtx.newPage();
+  await stability.addInitScript(()=>{
+    const NativeAudio=window.AudioContext||window.webkitAudioContext;
+    if(NativeAudio){
+      const Monitored=class extends NativeAudio{
+        createGain(){
+          const gain=super.createGain(),connect=gain.connect.bind(gain);
+          gain.connect=(target,...args)=>{
+            if(target===this.destination)window.__firstMasterGain=gain.gain.value;
+            return connect(target,...args);
+          };
+          return gain;
+        }
+      };
+      window.AudioContext=Monitored;
+      if(window.webkitAudioContext)window.webkitAudioContext=Monitored;
+    }
+  });
+  await stability.goto(origin+'/tools/virtual-piano/',{waitUntil:'domcontentloaded'});
+  await stability.locator('#vp-vol').fill('0');
+  await stability.locator('.piano-key[data-midi="60"]').focus();
+  await stability.keyboard.down('Enter');
+  assert.equal(await stability.evaluate(()=>window.__firstMasterGain),0,
+    'Muted before the very first note should connect a 0-gain master');
+  assert.equal(await stability.locator('.piano-key[data-midi="60"].pressed').count(),1);
+  await stability.keyboard.down('ArrowRight');
+  await stability.keyboard.up('ArrowRight');
+  await stability.keyboard.up('Enter');
+  assert.equal(await stability.locator('.piano-key[data-midi="60"].pressed').count(),0,
+    'Enter release after focus moves must release the original note');
+  await stability.locator('.piano-key[data-midi="62"]').focus();
+  await stability.keyboard.down('Space');
+  assert.equal(await stability.locator('.piano-key[data-midi="62"].pressed').count(),1);
+  await stability.keyboard.down('ArrowRight');
+  await stability.keyboard.up('ArrowRight');
+  await stability.keyboard.up('Space');
+  assert.equal(await stability.locator('.piano-key[data-midi="62"].pressed').count(),0,
+    'Space release after focus moves must release the original note');
+  await stability.locator('#vp-vol').fill('60');
+  await stability.locator('#vp-record').click();
+  await stability.locator('.piano-key[data-midi="60"]').focus();
+  await stability.keyboard.down('Enter');
+  await stability.keyboard.up('Enter');
+  await stability.locator('#vp-end-record').click();
+  assert.equal(await stability.locator('#vp-midi').isDisabled(),false,
+    'A valid take must allow MIDI download');
+  await stability.waitForFunction(async()=>{
+    return await new Promise(resolve=>{
+      const r=indexedDB.open('piano-chord-explorer-local-v1');
+      r.onerror=()=>resolve(false);
+      r.onsuccess=()=>{
+        const db=r.result,tx=db.transaction('drafts','readonly'),q=tx.objectStore('drafts').get('latest');
+        q.onsuccess=()=>{resolve(!!q.result?.take?.events?.length);db.close();};
+        q.onerror=()=>{resolve(false);db.close();};
+      };
+    });
+  },null,{timeout:10000});
+  await stability.locator('#vp-record').click();
+  await stability.locator('#vp-end-record').click();
+  assert.equal(await stability.locator('#vp-midi').isDisabled(),false,
+    'Silent overwrite attempts must preserve the former valid take');
+  assert.match(await stability.locator('#vp-message').innerText(),/previous take/i);
+  await stability.reload({waitUntil:'domcontentloaded'});
+  await stability.waitForFunction(()=>!document.getElementById('vp-midi')?.disabled,null,{timeout:8000});
+  assert.match(await stability.locator('#vp-message').innerText(),/Restored the most recent/);
+  await stability.locator('#vp-clear-saved').click();
+  assert.match(await stability.locator('#vp-message').innerText(),/draft cleared/);
+  await stability.reload({waitUntil:'domcontentloaded'});
+  await stability.waitForTimeout(650);
+  assert.equal(await stability.locator('#vp-midi').isDisabled(),true,
+    'Clear saved draft should disable restored MIDI after reload');
+  await stabilityCtx.close();
+  console.log('PASS first-note mute, focus-changing Enter/Space releases, empty-take preservation and IndexedDB recovery');
+
   // Static human-facing answers, source context and AI-search eligible markup.
   await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
   for(const question of ['What is a piano chord?','What notes make C major?',
