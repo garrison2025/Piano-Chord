@@ -82,6 +82,19 @@ try{
   await delay(150);await page.keyboard.up('k');await page.keyboard.up('y');await page.keyboard.up('d');
   await page.locator('#vp-end-record').click();
   assert.equal(await page.locator('#vp-midi').isDisabled(),false);
+  // Ensure target key color is actually painted, not merely a JS class.
+  const hintColor=await page.locator('.piano-key.practice-target.white').first().evaluate(el=>getComputedStyle(el).backgroundImage);
+  const regularColor=await page.locator('.piano-key.white:not(.practice-target)').first().evaluate(el=>getComputedStyle(el).backgroundImage);
+  assert.notEqual(hintColor,regularColor,'Target keys are not visibly differentiated');
+  await page.screenshot({path:'test-results/learning/piano-guided-practice.png',fullPage:true});
+  const mobileGuide=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  const mobilePage=await mobileGuide.newPage();
+  await mobilePage.goto(origin+handoff,{waitUntil:'domcontentloaded'});
+  assert.equal(await mobilePage.locator('#piano-practice').isVisible(),true);
+  const guideWidth=await mobilePage.evaluate(()=>({scroll:document.documentElement.scrollWidth,view:document.documentElement.clientWidth}));
+  assert.ok(guideWidth.scroll<=guideWidth.view+2,'Mobile piano guide overflow: '+JSON.stringify(guideWidth));
+  await mobilePage.screenshot({path:'test-results/learning/piano-guided-practice-mobile.png',fullPage:true});
+  await mobileGuide.close();
   await page.locator('#practice-edit').click();
   assert.deepEqual((await texts('#progression-steps strong')).map(x=>x.trim()),['Am','Dm','E','Am']);
   assert.equal(await page.locator('#prog-bpm').inputValue(),'120');

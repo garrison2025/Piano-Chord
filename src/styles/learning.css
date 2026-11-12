@@ -92,3 +92,9 @@
 .piano-key.practice-target.pressed.black{background:#8b75ed}
 @media(max-width:640px){.practice-bars{grid-template-columns:repeat(2,minmax(0,1fr))}.practice-bar{padding:10px}.practice-bar strong{font-size:20px}.practice-actions button{flex:1 1 43%}}
 @media(prefers-reduced-motion:reduce){.practice-bar{transition:none}.practice-bar.is-current{transform:none}}
+
+/* Scoped Astro piano-key rules may otherwise beat the imported target colors. */
+.piano-key.practice-target.white{background:linear-gradient(#ddfaf0,#8be7c7)!important;border-color:#68c7a8!important}
+.piano-key.practice-target.black{background:linear-gradient(100deg,#2ab792,#136958)!important}
+.piano-key.practice-target.pressed.white{background:#b4a5ff!important}
+.piano-key.practice-target.pressed.black{background:#8b75ed!important}
