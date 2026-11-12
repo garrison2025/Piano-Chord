@@ -142,6 +142,8 @@ const codes={KeyA:0,KeyW:1,KeyS:2,KeyE:3,KeyD:4,KeyF:5,KeyT:6,KeyG:7,KeyY:8,KeyH
 let octave=4,ctx=null,master=null,sustain=false,space=false;
 let recorderHooks=null,practiceGuide=null;
 const voices=new Map(),sources=new Map();
+// A finger remains active while gliding through the keybed's small gaps.
+const glidePointers=new Set();
 function updateChordDetection(){const chord=describeHeldChord([...voices.keys()]);const el=document.getElementById('vp-chord-detect');el.dataset.kind=chord.kind;document.getElementById('vp-chord-name').textContent=chord.title;document.getElementById('vp-chord-notes').textContent=chord.detail;}
 function audio(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C){readout.textContent='Web Audio not supported';return false;}ctx=new C();master=ctx.createGain();master.gain.value=.25;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return true;}
 function on(midi,source){if(midi<21||midi>108||sources.has(source))return;sources.set(source,midi);keys.get(midi)?.classList.add('pressed');if(voices.has(midi))return;if(!audio())return;
@@ -151,7 +153,7 @@ const f=440*Math.pow(2,(midi-69)/12),os=[];for(const [v,type,level] of [[1,'tria
 function release(midi){const v=voices.get(midi);if(!v||!ctx)return;voices.delete(midi);recorderHooks?.noteOff(midi);keys.get(midi)?.classList.remove('pressed');updateChordDetection();const t=ctx.currentTime;try{v.g.gain.cancelScheduledValues(t);v.g.gain.setValueAtTime(Math.max(.0001,v.g.gain.value),t);v.g.gain.exponentialRampToValueAtTime(.0001,t+.22);v.os.forEach(o=>o.stop(t+.3));}catch{}}
 function off(source){const m=sources.get(source);if(m==null)return;sources.delete(source);if(![...sources.values()].includes(m)&&!(sustain||space))release(m);}
 function drain(){if(sustain||space)return;for(const m of [...voices.keys()])if(![...sources.values()].includes(m))release(m);}
-function stop(){sources.clear();for(const m of [...voices.keys()])release(m);readout.textContent='All notes released';}
+function stop(){glidePointers.clear();sources.clear();for(const m of [...voices.keys()])release(m);readout.textContent='All notes released';}
 function jump(m){const b=keys.get(m);if(b)scroll.scrollTo({left:Math.max(0,b.offsetLeft-scroll.clientWidth/2+22),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
 const touchScroll=document.getElementById('vp-touch-scroll');
 const touchGlide=document.getElementById('vp-touch-glide');
@@ -175,12 +177,13 @@ for(const b of keys.values()){
     if(e.button!==0&&e.pointerType==='mouse')return;
     e.preventDefault();
     try{b.setPointerCapture(e.pointerId);}catch{ /* Some assistive pointer synthesizers do not support capture. */ }
+    if(scroll.dataset.touchMode==='glide')glidePointers.add(e.pointerId);
     on(+b.dataset.midi,'p'+e.pointerId);
   });
   b.addEventListener('pointermove',e=>{
     if(scroll.dataset.touchMode!=='glide')return;
     const source='p'+e.pointerId;
-    if(!sources.has(source))return;
+    if(!glidePointers.has(e.pointerId))return;
     e.preventDefault();
     // Pointer capture keeps routing to the original key. Hit-test the
     // physical finger coordinates instead of trusting e.target.
@@ -192,12 +195,12 @@ for(const b of keys.values()){
     if(target!==null)on(target,source);
   });
   for(const name of ['pointerup','pointercancel','lostpointercapture'])
-    b.addEventListener(name,e=>off('p'+e.pointerId));
+    b.addEventListener(name,e=>{glidePointers.delete(e.pointerId);off('p'+e.pointerId);});
 }
 // Fallback if capture is interrupted and the release targets another element.
 // A second release is harmless because off() is idempotent.
 for(const name of ['pointerup','pointercancel'])
-  document.addEventListener(name,e=>off('p'+e.pointerId),true);
+  document.addEventListener(name,e=>{glidePointers.delete(e.pointerId);off('p'+e.pointerId);},true);
 
 document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,textarea,select,a,button:not(.piano-key),[contenteditable]'))return;
 const focus=e.target.closest('.piano-key');if(focus&&['ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();const next=Math.max(21,Math.min(108,+focus.dataset.midi+(e.code==='ArrowRight'?1:-1)));focus.tabIndex=-1;keys.get(next).tabIndex=0;keys.get(next).focus();return;}
@@ -210,7 +213,11 @@ document.addEventListener('keyup',e=>{if(['Enter','Space'].includes(e.code)&&e.t
 function setOctave(v){octave=Math.max(1,Math.min(7,v));document.getElementById('vp-oct').textContent='C'+octave;}
 function updateSustain(){const b=document.getElementById('vp-sustain');b.textContent='Sustain: '+(sustain||space?'On':'Off');b.setAttribute('aria-pressed',String(sustain));drain();}
 document.getElementById('vp-down').addEventListener('click',()=>setOctave(octave-1));document.getElementById('vp-up').addEventListener('click',()=>setOctave(octave+1));document.getElementById('vp-stop').addEventListener('click',stop);document.getElementById('vp-sustain').addEventListener('click',()=>{sustain=!sustain;updateSustain();});
-document.getElementById('vp-vol').addEventListener('input',e=>{if(master)master.gain.value=e.target.value/100*.45;});app.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>jump(+b.dataset.jump)));window.addEventListener('blur',()=>{space=false;stop();updateSustain();});window.addEventListener('pagehide',stop);requestAnimationFrame(()=>jump(60));
+document.getElementById('vp-vol').addEventListener('input',e=>{if(master)master.gain.value=e.target.value/100*.45;});app.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>jump(+b.dataset.jump)));window.addEventListener('blur',()=>{space=false;stop();updateSustain();});window.addEventListener('pagehide',stop);
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){space=false;stop();updateSustain();}
+});
+requestAnimationFrame(()=>jump(60));
 recorderHooks=setupPianoRecorder({on:midi=>on(midi,'replay'+midi),off:midi=>off('replay'+midi),stop,
   onCaptureStart:()=>practiceGuide?.recordingStart(),onCaptureEnd:take=>practiceGuide?.recordingEnd(take)});
 practiceGuide=setupProgressionGuide({keys,scroll});

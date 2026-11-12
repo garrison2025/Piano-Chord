@@ -54,6 +54,12 @@ const siteName='Piano Chord Explorer';
       <div class="container footer-bottom"><span>© {new Date().getFullYear()} Piano Chord Explorer. Original diagrams and explanations.</span><span>Music examples use 12-tone equal temperament.</span></div>
     </footer>
     <div class="visually-hidden" role="status" aria-live="polite" id="app-status"></div>
-    <script src="../scripts/client.js"></script>
+    <script>
+      // The virtual piano runs its own UI. Avoid loading the chord atlas/finder
+      // shared client bundle for this already JS-heavy page.
+      if (window.location.pathname !== '/tools/virtual-piano/') {
+        import('../scripts/client.js');
+      }
+    </script>
   </body>
 </html>
