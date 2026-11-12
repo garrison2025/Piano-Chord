@@ -7,6 +7,9 @@ test('Chord finder identifies root and C/E first and C/G second inversion',()=>{
   assert.equal(describeChordBass(C,'').kind,'unspecified');
   assert.deepEqual([0,4,7].map(pc=>describeChordBass(C,String(pc)).slashName),['C','C/E','C/G']);
   assert.equal(describeChordBass(C,'4').inversion,1);
+  assert.deepEqual(describeChordBass(C,'').playMidi,[60,64,67]);
+  assert.deepEqual(describeChordBass(C,'4').playMidi,[64,67,72]);
+  assert.deepEqual(describeChordBass(C,'7').playMidi,[67,72,76]);
   assert.match(describeChordBass(C,'7').description,/Second inversion/);
 });
 test('non-chord slash bass does not masquerade as an inversion',()=>{
@@ -14,6 +17,7 @@ test('non-chord slash bass does not masquerade as an inversion',()=>{
   assert.equal(d.slashName,'C/D');
   assert.equal(d.kind,'external-bass');
   assert.equal(d.inversion,null);
+  assert.deepEqual(d.playMidi,[50,60,64,67],'External D bass must sound below the C major chord tones');
   assert.throws(()=>describeChordBass(C,'27'),RangeError);
 });
 test('enharmonic root spelling follows chord tones when bass is an inversion',()=>{

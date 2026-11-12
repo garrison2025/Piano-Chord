@@ -118,8 +118,8 @@ function finder(){
         return '<li><strong>'+escapeHtml(detail.slashName)+' — '+escapeHtml(chord.name)+'</strong><br/>'+
           '<small>'+escapeHtml(chord.notes.map(prettyNote).join(' · '))+'</small><br/>'+
           '<small>'+escapeHtml(detail.description)+'</small>'+
-          '<div class="button-row"><button class="btn btn-primary" type="button" data-play-midi="'+chord.midi.join(',')+
-          '" aria-label="Hear '+escapeHtml(chord.name)+' root voicing">▶ Hear</button>'+
+          '<div class="button-row"><button class="btn btn-primary" type="button" data-play-midi="'+detail.playMidi.join(',')+
+          '" aria-label="Hear '+escapeHtml(chord.name)+' '+escapeHtml(detail.description)+'">▶ Hear selected voicing</button>'+
           '<a class="btn" href="'+theory+'">Hear inversions ↗</a></div></li>';
       }).join('')+'</ul>';
   }

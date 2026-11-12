@@ -258,9 +258,14 @@ try{
   await page.locator('#finder-bass').selectOption('4');
   assert.match(await page.locator('#finder-results').innerText(),/C\/E/);
   assert.match(await page.locator('#finder-results').innerText(),/First inversion/);
+  const cMajorFirst=page.locator('#finder-results li').filter({hasText:'C Major'}).first();
+  assert.equal(await cMajorFirst.locator('button[data-play-midi]').getAttribute('data-play-midi'),'64,67,72',
+    'C/E result must audition first inversion, not root position');
   await page.locator('#finder-bass').selectOption('2');
   assert.match(await page.locator('#finder-results').innerText(),/C\/D/);
   assert.match(await page.locator('#finder-results').innerText(),/not an inversion/i);
+  assert.equal(await cMajorFirst.locator('button[data-play-midi]').getAttribute('data-play-midi'),'50,60,64,67',
+    'C/D result must audition the added D bass below the C major chord');
   await page.locator('#clear-pitches').click();
   assert.equal(await page.locator('#finder-bass').inputValue(),'');
   assert.match(await page.locator('#finder-results').innerText(),/0 notes selected/);
