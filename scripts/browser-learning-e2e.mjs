@@ -4,7 +4,8 @@
  */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,existsSync,statSync} from 'node:fs';
+import {join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 
 mkdirSync('test-results/learning',{recursive:true});
@@ -236,8 +237,15 @@ try{
     'Virtual piano must not download the unused chord-atlas client module: '+pianoResources.urls.join(', '));
   assert.ok(!pianoResources.urls.some(u=>/ffmpeg|ffmpeg-core|ffmpeg-worker/.test(u)),
     'Optional video conversion must not download before the user requests conversion');
+  // Python's lightweight static HTTP server does not always expose browser
+  // resource byte sizes, so read the exact requested built JS files from dist.
+  const jsBuiltBytes=pianoResources.urls.filter(u=>u.startsWith('/_astro/')).reduce((n,url)=>{
+    const artifact=join('dist',url.slice(1));
+    return n+(existsSync(artifact)?statSync(artifact).size:0);
+  },0);
+  assert.ok(jsBuiltBytes>0,'Initial JavaScript size must be measurable from the real generated assets');
   console.log('Piano initial JS resources: '+pianoResources.jsCount+
-    ' files / '+Math.round(pianoResources.jsBytes/1024)+' KiB (local HTTP build, not field Core Web Vitals)');
+    ' files / '+Math.round(jsBuiltBytes/1024)+' KiB built JS (uncompressed; local static server, not Core Web Vitals)');
   assert.equal(await page.locator('.piano-key[data-midi]').count(),88);
   assert.equal(await page.locator('#practice-metronome').count(),1);
   await page.locator('#metro-toggle').click();await delay(200);
