@@ -72,3 +72,7 @@ TikTok's [official media transfer guide](https://developers.tiktok.com/docs/en/c
 - No real upload to TikTok/X/Shorts or real device share-sheet acceptance has been verified. No social-account tokens, uploads, databases or paid transcode server were added.
 
 The latest release is ready for physical-device/user-operated upload acceptance tests, **not** for claiming guaranteed cross-platform social publishing.
+
+## Social video visual polish — 2026-11-12
+
+The original browser-only social video renderer now uses accurately proportioned white and black piano keys with falling-note columns aligned to each sounding note. Added on-device poster preview after recording, selectable Midnight/Aurora/Sunset color themes, sounding-note count and playback progress. Themes apply to the next video export and do not alter existing files. No forced watermark, user upload, or third-party audio library was added. Pure renderer unit tests cover 88-key geometry and Canvas drawing; browser E2E remains the production validation gate.

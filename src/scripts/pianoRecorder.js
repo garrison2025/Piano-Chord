@@ -1,12 +1,13 @@
 import {MAX_RECORDING_MS, normalizeEvents, noteIntervals, encodeMidi, safeFilename, chooseVideoFormat} from '../lib/recording.mjs';
 import { CORE_BASE, MP4_WIDTH, MP4_HEIGHT, mp4Args, isSocialMp4 } from '../lib/videoConversion.mjs';
+import { renderPerformanceFrame } from '../lib/performanceVideo.mjs';
 
 /** Browser-only recording studio; no upload, cookie, account or third-party API. */
 export function setupPianoRecorder({on,off,stop}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
-  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
+  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','poster','title','message','clock','preview','progress','format'].map(k => [k,el('vp-'+k)]));
   let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null;
   let playing=false,playFrame=0,playStart=0,playIndex=0;
   let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null,originalWebmFile=null;
@@ -42,7 +43,7 @@ export function setupPianoRecorder({on,off,stop}) {
   }
   function startRecord(){
     if(exporting||converting)return;
-    stopReplay();stop();resetVideo();
+    stopReplay();stop();resetVideo();controls.poster.hidden=true;
     captured=[];take=null;capturing=true;startedAt=performance.now();
     controls.clock.textContent='00:00';
     status('Recording locally. Play the piano; stop when finished (90-second maximum).');
@@ -60,7 +61,7 @@ export function setupPianoRecorder({on,off,stop}) {
     controls.clock.textContent=clock(take.duration);
     const count=noteIntervals(take).length;
     status(count?`Saved ${count} notes locally (${clock(take.duration)}). Replay, export MIDI or create a video.`:'No notes captured. Press Record and play a few piano keys.');
-    updateUI();
+    updatePoster();updateUI();
   }
   function noteOn(midi){if(capturing)captured.push({type:'on',midi,t:performance.now()-startedAt});}
   function noteOff(midi){if(capturing)captured.push({type:'off',midi,t:performance.now()-startedAt});}
@@ -88,50 +89,16 @@ export function setupPianoRecorder({on,off,stop}) {
     if(typeof MediaRecorder==='undefined' || typeof HTMLCanvasElement.prototype.captureStream!=='function')return null;
     return chooseVideoFormat(type=>MediaRecorder.isTypeSupported(type));
   }
-  function drawFrame(ctx,elapsed,notes,title){
-    const w=720,h=1280;
-    const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#15132d');g.addColorStop(.53,'#302451');g.addColorStop(1,'#11172b');
-    ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
-    // Ambient glow, intentionally original graphic assets and no forced watermark.
-    const glow=ctx.createRadialGradient(360,580,15,360,580,470);glow.addColorStop(0,'rgba(143,122,255,.16)');glow.addColorStop(1,'rgba(143,122,255,0)');
-    ctx.fillStyle=glow;ctx.fillRect(0,130,w,1000);
-    ctx.textAlign='center';ctx.fillStyle='#d9ccff';ctx.font='600 21px system-ui';ctx.fillText('MY PIANO PERFORMANCE',360,112);
-    ctx.fillStyle='#ffffff';ctx.font='700 46px system-ui';
-    const label=title.slice(0,48);ctx.fillText(label,360,181,640);
-    ctx.fillStyle='#bcb4df';ctx.font='23px system-ui';ctx.fillText('A little moment at the piano',360,227);
-    const minNote=notes.length?Math.min(...notes.map(n=>n.midi)):60;
-    const maxNote=notes.length?Math.max(...notes.map(n=>n.midi)):72;
-    const range=Math.max(24,Math.min(88,maxNote-minNote+7));
-    const low=Math.max(21,Math.min(109-range,minNote-3));
-    const keyW=640/range, x0=40, pianoTop=958, rollTop=302, keyH=148;
-    ctx.fillStyle='rgba(255,255,255,.035)';ctx.fillRect(x0,rollTop,640,pianoTop-rollTop);
-    ctx.strokeStyle='rgba(220,215,255,.1)';ctx.lineWidth=1;
-    for(let i=0;i<=range;i++){const x=x0+i*keyW;ctx.beginPath();ctx.moveTo(x,rollTop);ctx.lineTo(x,pianoTop+keyH);ctx.stroke();}
-    const elapsedMs=elapsed*1000;
-    const soon=2600;
-    ctx.save();ctx.beginPath();ctx.rect(x0,rollTop,640,pianoTop-rollTop);ctx.clip();
-    for(const n of notes){
-      const x=x0+(n.midi-low)*keyW+1;if(x<x0||x>x0+640)continue;
-      const y=pianoTop-(n.start-elapsedMs)/soon*(pianoTop-rollTop);
-      const len=Math.max(7,(n.end-n.start)/soon*(pianoTop-rollTop));
-      if(y<-len||y-len>pianoTop)continue;
-      const lit=elapsedMs>=n.start && elapsedMs<=n.end;
-      ctx.fillStyle=lit?'#f7ba8c':(['#8e87ff','#87dbd5','#dba6f4'][n.midi%3]);
-      ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=lit?19:7;
-      ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y-len,Math.max(3,keyW-2),len,Math.min(6,keyW/3));else ctx.rect(x,y-len,Math.max(3,keyW-2),len);ctx.fill();
-    }
-    ctx.restore();ctx.shadowBlur=0;
-    ctx.fillStyle='#151427';ctx.fillRect(x0,pianoTop,640,keyH);
-    for(let i=0;i<range;i++){
-      const midi=low+i, black=[1,3,6,8,10].includes(midi%12), active=notes.some(n=>n.midi===midi&&elapsedMs>=n.start&&elapsedMs<=n.end);
-      const x=x0+i*keyW;
-      ctx.fillStyle=active?'#bca8ff':black?'#2b2746':'#f3f0fc';
-      ctx.fillRect(x+1,pianoTop+2,keyW-2,black?92:141);
-    }
-    ctx.strokeStyle='#b5a8f8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x0,pianoTop);ctx.lineTo(x0+640,pianoTop);ctx.stroke();
-    ctx.fillStyle='#e2ddf5';ctx.font='600 23px system-ui';ctx.textAlign='center';
-    const sec=Math.max(0,Math.floor(elapsed));ctx.fillText(`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`,360,1154);
-    ctx.fillStyle='#948daf';ctx.font='18px system-ui';ctx.fillText('Original performance · Recorded in your browser',360,1201);
+  function drawFrame(context,elapsed,notes,title){
+    renderPerformanceFrame(context,elapsed,notes,title,{theme:controls.theme.value,durationMs:take?.duration||0});
+  }
+  function updatePoster(){
+    if(!take || !noteIntervals(take).length){controls.poster.hidden=true;return;}
+    const notes=noteIntervals(take),context=controls.poster.getContext('2d',{alpha:false});
+    if(!context)return;
+    const title=(controls.title.value||'My Piano Session').trim();
+    drawFrame(context,(notes[0].start+100)/1000,notes,title);
+    controls.poster.hidden=false;
   }
   function scheduleAudio(ctx,destination,notes,lead){
     for(const n of notes){
@@ -313,6 +280,8 @@ export function setupPianoRecorder({on,off,stop}) {
     try{await navigator.share({files:[videoFile],title:(controls.title.value||'My Piano Session').slice(0,60)});status('System share sheet closed. Check the destination app for posting status.');}
     catch(error){if(error.name!=='AbortError')status('System share was unavailable; please download and upload manually.');}
   }
+  controls.theme.addEventListener('change',()=>{updatePoster();status('Video style updated. Export again to apply it to the file.');});
+  controls.title.addEventListener('input',updatePoster);
   controls.record.addEventListener('click',startRecord);
   controls['end-record'].addEventListener('click',endRecord);
   controls.replay.addEventListener('click',replay);

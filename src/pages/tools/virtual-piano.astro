@@ -19,6 +19,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       <label class="recording-title" for="vp-title">Your performance title
         <input id="vp-title" type="text" value="My Piano Session" maxlength="60" autocomplete="off" />
       </label>
+      <label class="recording-title recording-theme" for="vp-theme">Video style<select id="vp-theme" aria-label="Video color theme"><option value="midnight">Midnight · purple</option><option value="aurora">Aurora · teal</option><option value="sunset">Sunset · coral</option></select></label>
       <output id="vp-clock" class="recording-time" aria-label="Performance elapsed time">00:00</output>
     </div>
     <div class="recording-actions" role="group" aria-label="Piano performance recording controls">
@@ -37,6 +38,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       </div>
       <progress id="vp-progress" min="0" max="100" value="0" aria-label="Video rendering progress"></progress>
       <div class="recording-video-layout">
+        <canvas id="vp-poster" width="720" height="1280" hidden aria-label="Preview of the animated 9 by 16 performance video"></canvas>
         <video id="vp-preview" controls playsinline preload="metadata" hidden aria-label="Preview of your generated piano performance video"></video>
         <div class="recording-video-side">
           <p id="vp-format" class="recording-muted">Native MP4 is preferred when supported; WebM videos can be converted locally.</p>

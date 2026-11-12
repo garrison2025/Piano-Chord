@@ -33,3 +33,9 @@
 .recording-shell #vp-convert-mp4:not([hidden]){background:#2e6a63;border-color:#2e6a63;color:white}
 .recording-shell #vp-mp4-info{border-left:3px solid #aaa0de;padding-left:10px;margin-top:10px}
 @media(max-width:640px){.recording-shell #vp-convert-mp4{flex:1 1 100%}}
+
+/* Real 9:16 performance poster, shown before expensive video rendering. */
+.recording-title select{width:100%;font-size:16px;border:1px solid #cbc8dc;border-radius:11px;background:#fff;color:#24203c;padding:12px 14px;min-height:46px}
+.recording-theme{flex:0 1 210px;min-width:170px}
+.recording-video-layout canvas{display:block;width:min(100%,220px);height:auto;aspect-ratio:9/16;border-radius:12px;background:#15132d;box-shadow:0 14px 36px -23px #291958}
+@media(max-width:640px){.recording-theme{flex:1 1 100%}.recording-video-layout canvas{width:180px}}
