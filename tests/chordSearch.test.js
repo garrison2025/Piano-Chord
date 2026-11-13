@@ -38,6 +38,6 @@ test('complete chord symbols match exactly while family searches remain fuzzy',(
       query+' should not also match longer or different chord qualities');
   }
   assert.equal(find('sus4').length,12,'Unqualified family search remains broad');
-  assert.equal(find('dim').length,12,'Unqualified diminished family search remains broad');
+  assert.equal(find('dim').length,24,'Broad dim search also includes 12 half-diminished chords');
   assert.equal(find('').length,120,'Empty query shows the full catalog');
 });
