@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/live-preview-smoke.yml'
+      - 'scripts/browser-public-preview-smoke.mjs'
 
 permissions:
   contents: read
@@ -24,10 +25,10 @@ jobs:
           npm install --no-audit --no-fund
           npm install --no-save playwright@1.56.1 --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Verify deployed Cloudflare Pages preview in Chromium
+      - name: Verify live chord search and SEO in Chromium
         env:
           LEARNING_TEST_ORIGIN: https://piano-chord.pages.dev
-        run: node scripts/browser-learning-e2e.mjs
+        run: node scripts/browser-public-preview-smoke.mjs
       - name: Upload browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
