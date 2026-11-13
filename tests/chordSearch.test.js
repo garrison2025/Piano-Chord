@@ -25,3 +25,19 @@ test('canonical flat spelling, empty search and false positives are unchanged',(
   assert.equal(normalizeChordSearch('  C♯maj7  '),'c#maj7');
   assert.equal(find('not-a-chord').length,0);
 });
+
+test('complete chord symbols match exactly while family searches remain fuzzy',()=>{
+  for(const [query,expected] of [
+    ['F♯m','G♭m'],['F#m','G♭m'],['G♭m','G♭m'],
+    ['F#m7','G♭m7'],['F♯m7b5','G♭m7b5'],
+    ['C♯maj7','D♭maj7'],['C#maj7','D♭maj7'],
+    ['G#sus4','A♭sus4'],['Csus4','Csus4'],['C7','C7'],
+    ['Am','Am'],['Bdim','Bdim'],['Caug','Caug']
+  ]){
+    assert.deepEqual(find(query).map(chord=>chord.symbol),[expected],
+      query+' should not also match longer or different chord qualities');
+  }
+  assert.equal(find('sus4').length,12,'Unqualified family search remains broad');
+  assert.equal(find('dim').length,24,'Broad dim search also includes 12 half-diminished chords');
+  assert.equal(find('').length,120,'Empty query shows the full catalog');
+});

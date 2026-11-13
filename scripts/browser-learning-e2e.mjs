@@ -246,6 +246,16 @@ try{
   await page.locator('#atlas-search').fill('F# minor');
   assert.equal(await page.locator('.atlas-card:visible').count(),1);
   assert.match(await page.locator('.atlas-card:visible').innerText(),/G♭m/);
+  for(const [query,expected] of [
+    ['F♯m','G♭m'],['F#m','G♭m'],['F#m7','G♭m7'],['F#m7b5','G♭m7b5']
+  ]){
+    await page.locator('#atlas-search').fill(query);
+    assert.deepEqual((await texts('.atlas-card:visible strong')).map(x=>x.trim()),[expected],
+      query+' must show only the exact chord');
+  }
+  await page.locator('#atlas-search').fill('sus4');
+  assert.equal(await page.locator('.atlas-card:visible').count(),12,
+    'Family search must still show all twelve sus4 chords');
   await page.locator('#atlas-reset').click();
   assert.equal(await page.locator('.atlas-card:visible').count(),120);
   assert.equal(await page.locator('.atlas-card a[href^="/tools/inversion-explorer/?root="]').count(),120);

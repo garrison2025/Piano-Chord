@@ -17,22 +17,23 @@ const lessonFor=c=>{
 <BaseLayout title="120 Piano Chords – Interactive Chord Library" description="Explore and play 120 common piano chords, with correct note spelling. Learn major, minor, seventh, sus2, sus4 and diminished chords free." canonicalPath="/tools/chord-library/" crumbs={[{name:'120 Chords',href:'/tools/chord-library/'}]}>
 <section class="container page-hero"><span class="eyebrow">THE INTERACTIVE CHORD ATLAS</span><h1>120 chords.<br/><em>One place to explore.</em></h1><p class="lead">Twelve roots, ten useful chord families. Every chord can be heard and searched instantly. Our 29 individually authored chord lessons include major, minor, dominant seventh, major seventh and minor seventh examples.</p><div class="button-row"><a class="btn btn-primary" href="/tools/virtual-piano/">Play the 88-key piano ↗</a><a class="btn" href="/chords/">Read chord lessons</a></div></section>
 <section class="container section-compact">
-<div class="panel"><div class="atlas-controls"><label>Find a chord<input id="atlas-search" class="field" type="search" placeholder="Cmaj7, C♯maj7, F# minor, sus4…" autocomplete="off"/></label><label>Chord family<select id="atlas-type" class="field"><option value="all">All ten families</option>{qualities.map(q=><option value={q.id}>{q.name}</option>)}</select></label><button class="btn" type="button" id="atlas-reset">Reset</button></div><p id="atlas-count" role="status" aria-live="polite">120 playable chords</p><p class="help-text">Sharp and flat root aliases are accepted. C♯maj7 finds D♭maj7, displayed using the library's own musical spelling.</p><div class="atlas-grid">{coreChords.map(c=><article class="atlas-card" data-quality={c.quality} data-search={chordSearchFields(c).canonical} data-alias={chordSearchFields(c).alias}><div><strong>{c.symbol}</strong><small>{c.name}</small><small class="atlas-alias-note" hidden>{chordSearchFields(c).equivalentLabel&&`Enharmonic search match: ${chordSearchFields(c).equivalentLabel} — shown as ${c.symbol}`}</small></div><p>{c.notes.map(n=>n.replaceAll('#','♯').replaceAll('b','♭')).join(' · ')}</p><div class="atlas-foot"><button type="button" class="btn btn-primary" data-play-midi={c.midi.join(',')} aria-label={'Hear '+c.name}>▶ Play</button><div class="atlas-links"><a href={'/tools/inversion-explorer/?root='+encodeURIComponent(c.root)+'&quality='+encodeURIComponent(c.quality)}>All inversions ↗</a>{lessonFor(c)&&<a href={lessonFor(c).href}>{lessonFor(c).label}</a>}</div></div></article>)}</div></div>
+<div class="panel"><div class="atlas-controls"><label>Find a chord<input id="atlas-search" class="field" type="search" placeholder="Cmaj7, C♯maj7, F# minor, sus4…" autocomplete="off"/></label><label>Chord family<select id="atlas-type" class="field"><option value="all">All ten families</option>{qualities.map(q=><option value={q.id}>{q.name}</option>)}</select></label><button class="btn" type="button" id="atlas-reset">Reset</button></div><p id="atlas-count" role="status" aria-live="polite">120 playable chords</p><p class="help-text">Sharp and flat root aliases are accepted. C♯maj7 finds D♭maj7, displayed using the library's own musical spelling.</p><div class="atlas-grid">{coreChords.map(c=><article class="atlas-card" data-quality={c.quality} data-chord-key={c.root+':'+c.quality}><div><strong>{c.symbol}</strong><small>{c.name}</small><small class="atlas-alias-note" hidden>{chordSearchFields(c).equivalentLabel&&`Enharmonic search match: ${chordSearchFields(c).equivalentLabel} — shown as ${c.symbol}`}</small></div><p>{c.notes.map(n=>n.replaceAll('#','♯').replaceAll('b','♭')).join(' · ')}</p><div class="atlas-foot"><button type="button" class="btn btn-primary" data-play-midi={c.midi.join(',')} aria-label={'Hear '+c.name}>▶ Play</button><div class="atlas-links"><a href={'/tools/inversion-explorer/?root='+encodeURIComponent(c.root)+'&quality='+encodeURIComponent(c.quality)}>All inversions ↗</a>{lessonFor(c)&&<a href={lessonFor(c).href}>{lessonFor(c).label}</a>}</div></div></article>)}</div></div>
 </section>
 <section class="container section"><div class="panel"><h2>Why 120 chords?</h2><p>Open <a href="/tools/inversion-explorer/">the inversion explorer</a> from any card to hear all three or four voicings, or use the <a href="/tools/chord-finder/">chord finder</a> to identify a selected set of notes. These are twelve pitch-class roots multiplied by ten common formulas. Enharmonic spelling can depend on harmonic context; the displayed note names follow diatonic chord construction. Not every theoretical spelling has a separate page. This library links to 29 authored lessons; where an enharmonic root is used (for example, D♭ minor versus C♯ minor), the link is explicitly labelled and the note spelling may differ. Additional individual lessons are not automatically generated.</p></div></section>
 <script>
-import {explicitTriadQuality} from '../../lib/chordSearch.mjs';
+import {coreChords} from '../../lib/coreCatalog.js';
+import {chordMatchesSearch} from '../../lib/chordSearch.mjs';
 const s=document.getElementById('atlas-search'),t=document.getElementById('atlas-type'),c=document.getElementById('atlas-count'),cards=[...document.querySelectorAll('.atlas-card')];
-function norm(v){return String(v).toLowerCase().replaceAll('♯','#').replaceAll('♭','b').trim().replace(/\s+/g,' ');}
+const chordByKey=new Map(coreChords.map(chord=>[chord.root+':'+chord.quality,chord]));
 function render(){
-  const q=norm(s.value),precise=explicitTriadQuality(q);let n=0;
+  let n=0;
   for(const e of cards){
-    const direct=norm(e.dataset.search).includes(q);
-    const viaAlias=!!q&&!direct&&norm(e.dataset.alias).includes(q);
-    const ok=(t.value==='all'||e.dataset.quality===t.value)&&(!precise||e.dataset.quality===precise)&&(!q||direct||viaAlias);
+    const chord=chordByKey.get(e.dataset.chordKey);
+    const result=chordMatchesSearch(chord,s.value);
+    const ok=(t.value==='all'||e.dataset.quality===t.value)&&result.matches;
     e.hidden=!ok;
     const note=e.querySelector('.atlas-alias-note');
-    if(note)note.hidden=!ok||!viaAlias;
+    if(note)note.hidden=!ok||!result.aliasOnly;
     if(ok)n++;
   }
   c.textContent='Showing '+n+' of '+cards.length+' playable chords';
