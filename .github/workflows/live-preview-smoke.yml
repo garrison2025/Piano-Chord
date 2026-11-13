@@ -1,0 +1,38 @@
+name: Public Preview Browser Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-preview-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  public-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install application and Chromium
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save playwright@1.56.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Verify deployed Cloudflare Pages preview in Chromium
+        env:
+          LEARNING_TEST_ORIGIN: https://piano-chord.pages.dev
+        run: node scripts/browser-learning-e2e.mjs
+      - name: Upload browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-chord-public-preview-browser
+          path: test-results/learning/
+          if-no-files-found: ignore
+          retention-days: 5
