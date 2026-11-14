@@ -16,7 +16,7 @@ const errors=[];
 const getFile=(url)=>path.join(dist,url==='/'?'index.html':url.endsWith('/')?url.slice(1)+'index.html':url.slice(1));
 const read=(p)=>fs.readFileSync(p,'utf8');
 const sitemap=read(path.join(dist,'sitemap.xml'));
-const absoluteSite=(process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev').replace(/\/$/,'');
+const absoluteSite='https://pianochordexplorer.com';
 const canonicalURLs=new Set();
 if(publishedPages.length!==44)errors.push(`Unexpected SEO page inventory: ${publishedPages.length}`);
 for(const url of publishedPages){
