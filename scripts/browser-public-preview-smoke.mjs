@@ -1,11 +1,11 @@
 /**
- * Public Cloudflare preview smoke: verify live deployment (not just a local build).
+ * Public production domain smoke: verify live deployment (not just a local build).
  * Scoped to network-neutral functionality: chord search, page structure, SEO URLs.
  */
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 
-const origin='https://piano-chord.pages.dev';
+const origin='https://pianochordexplorer.com';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try{
   const page=await browser.newPage({viewport:{width:1280,height:800}});
@@ -13,7 +13,10 @@ try{
   assert.equal(response?.status(),200,'Public chord library HTTP status');
   assert.equal(await page.locator('.atlas-card').count(),120,'All 120 chord cards exist');
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),
-    origin+'/tools/chord-library/','Preview canonical is self-consistent');
+    origin+'/tools/chord-library/','Production canonical is self-consistent');
+
+  assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'),
+    origin+'/tools/chord-library/','Production Open Graph URL');
 
   const search=page.locator('#atlas-search');
   for(const [query,expected] of [
@@ -42,7 +45,8 @@ try{
   const locs=[...xml.matchAll(/<url><loc>([^<]+)<\/loc>/g)].map(m=>m[1]);
   assert.equal(locs.length,44,'Expected 44 public sitemap page URLs');
   assert.equal(new Set(locs).size,44,'Unique sitemap page URLs');
-  assert.ok(locs.every(loc=>loc.startsWith(origin+'/')),'Preview sitemap host');
+  assert.ok(locs.every(loc=>loc.startsWith(origin+'/')),'Production sitemap host');
+  assert.ok(!xml.includes('piano-chord.pages.dev'),'No preview hostname in sitemap');
   for(const path of ['/','/chords/b-minor/','/tools/virtual-piano/']){
     const res=await page.request.get(origin+path);
     assert.equal(res.status(),200,path+' HTTP');

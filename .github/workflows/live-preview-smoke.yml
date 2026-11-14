@@ -1,4 +1,4 @@
-name: Public Preview Browser Smoke
+name: Production Domain Browser Smoke
 
 on:
   workflow_dispatch:
@@ -25,15 +25,15 @@ jobs:
           npm install --no-audit --no-fund
           npm install --no-save playwright@1.56.1 --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Verify live chord search and SEO in Chromium
+      - name: Verify production chord search and SEO in Chromium
         env:
-          LEARNING_TEST_ORIGIN: https://piano-chord.pages.dev
+          LEARNING_TEST_ORIGIN: https://pianochordexplorer.com
         run: node scripts/browser-public-preview-smoke.mjs
       - name: Upload browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: piano-chord-public-preview-browser
+          name: piano-chord-production-browser
           path: test-results/learning/
           if-no-files-found: ignore
           retention-days: 5
