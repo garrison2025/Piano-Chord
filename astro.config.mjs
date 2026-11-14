@@ -1,9 +1,10 @@
 import { defineConfig } from 'astro/config';
 
-// Configure PUBLIC_SITE_URL in Cloudflare Pages before production indexing.
-// The fallback is a proposed preview hostname and is NOT proof of deployment.
+// The owner has confirmed that the production domain is purchased and bound.
+// Pin this origin for all production and preview builds: indexing, sitemap,
+// structured data, Open Graph and canonical must not drift with environment vars.
 export default defineConfig({
-  site: process.env.PUBLIC_SITE_URL || 'https://piano-chord.pages.dev',
+  site: 'https://pianochordexplorer.com',
   output: 'static',
   trailingSlash: 'always',
 });
