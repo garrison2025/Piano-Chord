@@ -193,7 +193,7 @@ try{
   // the contextual links must select the right notes in the actual tools.
   await go('/tools/chord-finder/');
   assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'),
-    'https://piano-chord.pages.dev/share-card.png');
+    'https://pianochordexplorer.com/share-card.png');
   assert.equal(await page.locator('meta[name="twitter:card"]').getAttribute('content'),'summary_large_image');
   const previewResponse=await page.request.get(origin+'/share-card.png');
   assert.equal(previewResponse.status(),200,'Local OG image route');
