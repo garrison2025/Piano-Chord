@@ -9,11 +9,22 @@ const origin='https://pianochordexplorer.com';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try{
   const page=await browser.newPage({viewport:{width:1280,height:800}});
-  const response=await page.goto(origin+'/tools/chord-library/',{waitUntil:'domcontentloaded'});
-  assert.equal(response?.status(),200,'Public chord library HTTP status');
+  // Cloudflare Pages deployment may complete after this push-triggered test starts.
+  // Allow a bounded window for the public origin to switch to the new build.
+  const expectedCanonical=origin+'/tools/chord-library/';
+  let liveCanonical='';
+  for(let attempt=0;attempt<13;attempt++){
+    const response=await page.goto(origin+'/tools/chord-library/?deployment-probe='+attempt+'-'+Date.now(),
+      {waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200,'Public chord library HTTP status');
+    liveCanonical=await page.locator('link[rel="canonical"]').getAttribute('href');
+    if(liveCanonical===expectedCanonical)break;
+    console.log('Waiting for Cloudflare production deploy: canonical='+liveCanonical+
+      ' (attempt '+(attempt+1)+'/13)');
+    if(attempt<12)await page.waitForTimeout(10000);
+  }
+  assert.equal(liveCanonical,expectedCanonical,'Production canonical is self-consistent');
   assert.equal(await page.locator('.atlas-card').count(),120,'All 120 chord cards exist');
-  assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),
-    origin+'/tools/chord-library/','Production canonical is self-consistent');
 
   assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'),
     origin+'/tools/chord-library/','Production Open Graph URL');
