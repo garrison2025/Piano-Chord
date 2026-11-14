@@ -10,7 +10,7 @@ import {createChord} from '../src/lib/music.js';
 import {chordQuickAnswer} from '../src/lib/chordQuickAnswer.mjs';
 
 const dist=path.resolve('dist');
-const origin=(process.env.PUBLIC_SITE_URL||'https://piano-chord.pages.dev').replace(/\/$/,'');
+const origin='https://pianochordexplorer.com';
 const sitemap=fs.readFileSync(path.join(dist,'sitemap.xml'),'utf8');
 const paths=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>new URL(m[1].replaceAll('&amp;','&')).pathname);
 const indexable=new Set(paths),issues=[],warnings=[],incoming=new Map(paths.map(p=>[p,new Set()]));
