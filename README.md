@@ -11,7 +11,7 @@ npm run dev
 npm run build
 ```
 
-Cloudflare Pages: connect `garrison2025/Piano-Chord`; build command `npm run build`; output directory `dist`; Node 22 or later. Set `PUBLIC_SITE_URL` to the *actual* canonical HTTPS origin before publishing or submitting the sitemap. The fallback `https://piano-chord.pages.dev` is an unverified proposed project hostname, not an assertion that deployment exists.
+Cloudflare Pages: connect `garrison2025/Piano-Chord`; build command `npm run build`; output directory `dist`; Node 22 or later. The owner-confirmed canonical HTTPS origin is **https://pianochordexplorer.com**, pinned in `astro.config.mjs`; an old Cloudflare `PUBLIC_SITE_URL` environment variable no longer overrides it. Public contact: **contact@pianochordexplorer.com**. Configure permanent hostname redirects at the Cloudflare account level, since Pages static `_redirects` rules are path-based and cannot conditionally match the incoming host.
 
 ## What's included
 
@@ -30,7 +30,7 @@ Research used user-provided Semrush US exports (1,600 positions, 1,142 normalize
 
 1. `npm run check` green in GitHub Actions.
 2. Verify actual mobile and desktop pages, audio controls, and A4/Letter paper print.
-3. Verify deployed canonical origin, 43 intentional HTML URLs, 29 SVG images, robots and sitemap over HTTP 200.
+3. Verify deployed canonical origin, 44 intentional indexable URLs (29 chord lessons and 15 static pages), 29 SVG images, robots and sitemap over HTTP 200.
 4. Submit sitemap to Search Console after the final domain is configured; inspect real indexing and image impressions before expansion.
 
 No ads or analytics are loaded without explicit deployment configuration. Music notation examples are original and contain no third-party sheet music or recordings.
