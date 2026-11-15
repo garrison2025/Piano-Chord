@@ -56,7 +56,7 @@ try{
     cls:Number(p.cls.toFixed(4)),
     longTaskMs:Math.round(p.longTasks),
     resourceCount:resources.length,
-    jsResourceCount:resources.filter(r=>/\\.js(?:\\?|$)/.test(r.name)).length,
+    jsResourceCount:resources.filter(r=>/\.js(?:\?|$)/.test(r.name)).length,
     totalEncodedBytes:Math.round(resources.reduce((sum,r)=>sum+(r.encodedBodySize||0),0)),
     horizontalOverflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2,
     viewportWidth:document.documentElement.clientWidth,
