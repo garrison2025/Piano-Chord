@@ -89,3 +89,21 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 .ear-training-links .text-link{white-space:normal}
 @media(max-width:580px){.ear-training-players{grid-template-columns:1fr;gap:8px}.ear-training-chord{min-height:135px}.ear-training-arrow{text-align:center;transform:rotate(90deg);line-height:1}.ear-training-links .btn{width:100%}}
 @media(prefers-reduced-motion:reduce){.ear-training-chord{transition:none}}
+
+
+/* Mobile lab: the lower decorative orb extended 20px beyond the 390px
+   document viewport. Keep it inside the visual hero without a global
+   overflow-x:hidden rule that would mask real layout mistakes. */
+@media (max-width:580px){
+  .studio-hero .hero-orb-b{left:calc(50% - 125px)}
+}
+
+/* The first twelve atlas cards are kept fully renderable near the top
+   of the interactive library. Skip offscreen card internals only, using
+   a realistic remembered size to avoid zero-height scroll jumps. */
+@supports (content-visibility:auto){
+  .atlas-grid>.atlas-card:nth-child(n+13){
+    content-visibility:auto;
+    contain-intrinsic-size:auto 215px;
+  }
+}
