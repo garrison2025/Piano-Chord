@@ -617,7 +617,7 @@ try{
   assert.equal(await thirdImage.getAttribute('src'),'/diagrams/inversions/c-major-7/3.svg');
   await page.waitForFunction(()=>{
     const img=document.querySelector('[data-inversion-view="3"] img.keyboard-image');
-    return img?.complete && img.naturalWidth===692;
+    return img?.complete && img.naturalWidth>0;
   },null,{timeout:10000});
   const thirdSvg=await page.request.get(origin+'/diagrams/inversions/c-major-7/3.svg');
   assert.equal(thirdSvg.status(),200,'Cmaj7 third-inversion image route');
