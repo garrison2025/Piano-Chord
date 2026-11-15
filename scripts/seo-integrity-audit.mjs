@@ -115,6 +115,10 @@ for(const p of paths){
       issues.push('Publisher contact and sameAs must match verified project sources');
     if(website?.publisher?.['@id']!==publisher?.['@id'])
       issues.push('Website publisher identity must resolve to the homepage Organization');
+    if(webpage?.author?.name!=='Piano Chord Explorer'||
+       webpage.author?.url!==origin+'/about/'||
+       webpage.author?.['@id']!==publisher?.['@id'])
+      issues.push('Homepage author must match its visible, verified publisher profile');
     if(webpage?.dateModified!==CONTENT_UPDATE_DATE||
        !html.includes('datetime="'+CONTENT_UPDATE_DATE+'"'))
       issues.push('Homepage update date must match visible editorial metadata');
