@@ -6,9 +6,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {releaseChords} from '../src/data/chords.js';
-import {createChord,prettyNote} from '../src/lib/music.js';
+import {createChord,prettyNote,prettySymbol} from '../src/lib/music.js';
 import {coreChords} from '../src/lib/coreCatalog.js';
 import {chordQuickAnswer} from '../src/lib/chordQuickAnswer.mjs';
+import {chordAlternateRoots} from '../src/data/chordSeo.js';
 import {priorityChordGuides} from '../src/data/priorityChordGuides.js';
 import {SITE_EMAIL,SITE_SOURCE,CONTENT_UPDATE_DATE,THEORY_REFERENCE} from '../src/data/siteIdentity.js';
 
@@ -188,7 +189,19 @@ for(const p of paths){
       if(!html.includes('href="'+diagram+'"'))
         issues.push('Missing accessible inversion diagram download '+p+' #'+i);
     }
-    const answer=chordQuickAnswer(createChord(chordEntry));
+    const answer=chordQuickAnswer(activeChord);
+    const slashRow=html.match(/<p[^>]*data-slash-chord-symbols[^>]*>(.*?)<\/p>/s)?.[1]||"";
+    for(const inversion of activeChord.inversions.slice(1)){
+      const symbol=prettySymbol(activeChord.symbol)+'/'+prettyNote(inversion.bass);
+      if(!slashRow.includes('>'+symbol+'</strong>'))issues.push('Missing inversion symbol '+symbol+' on '+p);
+    }
+    const alternate=chordAlternateRoots[chordEntry.root];
+    if(alternate){
+      const alias=createChord({root:alternate,quality:activeChord.quality});
+      const notes=alias.notes.map(prettyNote).join(" – ");
+      if(alias.pcs.join()!==activeChord.pcs.join()||!html.includes("("+prettySymbol(alias.symbol)+") on piano</h3>")||!html.includes(">"+notes+"</strong>"))
+        issues.push('Missing or incorrect alternate spelling on '+p);
+    }
     const subject=structured.find(o=>o?.['@type']==='WebPage' && o.mainEntity?.['@type']==='DefinedTerm');
     if(!subject || subject.url!==origin+p ||
       subject.mainEntity.name!==chordEntry.name ||

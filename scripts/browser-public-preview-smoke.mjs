@@ -85,6 +85,22 @@ try{
   await chartPage.close();
   console.log('PASS live, script-free 24-triad and 36-seventh HTML charts at 360 px');
 
+  const spellingPage=await browser.newPage({javaScriptEnabled:false});
+  const spellingUrl=origin+'/chords/d-flat-major/';
+  for(let attempt=0;attempt<13;attempt++){
+    const response=await spellingPage.goto(spellingUrl+'?keyword-release='+Date.now(),{waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200);
+    if(await spellingPage.locator('#alternate-chord-name').count())break;
+    if(attempt<12)await spellingPage.waitForTimeout(10000);
+  }
+  assert.match(await spellingPage.title(),/Db \/ C# Major Piano Chord/);
+  assert.match(await spellingPage.locator('#alternate-chord-name').innerText(),/C-sharp major/);
+  assert.match(await spellingPage.locator('#alternate-chord-name + p').innerText(),/C♯ – E♯ – G♯/);
+  assert.match(await spellingPage.locator('[data-slash-chord-symbols]').innerText(),/D♭\/F, D♭\/A♭/);
+  assert.equal(await spellingPage.locator('link[rel="canonical"]').getAttribute('href'),spellingUrl);
+  await spellingPage.close();
+  console.log('PASS live keyword title, alternate note spellings, slash symbols and canonical');
+
   const sitemap=await page.request.get(origin+'/sitemap.xml');
   assert.equal(sitemap.status(),200,'Public sitemap HTTP');
   const xml=await sitemap.text();

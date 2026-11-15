@@ -5,8 +5,8 @@ import ChordCard from '../../components/ChordCard.astro';
 import {releaseChords} from '../../data/chords.js';
 import {chordLessons} from '../../data/editorials.js';
 import {lessonEarDrills} from '../../data/lessonPathways.js';
-import {chordSearchDescriptions,chordSearchTitles} from '../../data/chordSeo.js';
-import {createChord,prettyNote} from '../../lib/music.js';
+import {chordSearchDescriptions,chordSearchTitles,chordAlternateRoots} from '../../data/chordSeo.js';
+import {createChord,prettyNote,prettySymbol} from '../../lib/music.js';
 import {relatedLessons} from '../../lib/chordRelations.mjs';
 import {lessonPracticeHandoff} from '../../lib/lessonPracticeHandoff.mjs';
 import {chordQuickAnswer} from '../../lib/chordQuickAnswer.mjs';
@@ -52,6 +52,10 @@ const subjectSchema={
     description:quickAnswer.definition
   }
 };
+const alternateRoot=chordAlternateRoots[entry.root];
+const alternateChord=alternateRoot?createChord({root:alternateRoot,quality:chord.quality}):null;
+const alternateName=alternateRoot?alternateRoot.replace('#','-sharp').replace('b','-flat')+' '+chord.quality:null;
+const slashSymbols=chord.inversions.slice(1).map(voicing=>prettySymbol(chord.symbol)+'/'+prettyNote(voicing.bass));
 const heading=`${chord.name} piano chord`;
 const invNames=['Root position','First inversion','Second inversion','Third inversion'];
 const atlasQuality={dominant7:'7',major7:'maj7',minor7:'m7'};
@@ -68,6 +72,11 @@ const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.
       <p data-chord-answer><strong>{quickAnswer.definition}</strong></p>
       <h3>{quickAnswer.inversionQuestion}</h3>
       <p data-inversion-answer>{quickAnswer.inversionAnswer}</p>
+      <p data-slash-chord-symbols>In slash chord notation, the inversions are {slashSymbols.map((symbol,i)=><>{i>0&&", "}<strong>{symbol}</strong></>)}. The note after the slash is the lowest note. <a href="/tools/inversion-explorer/" class="text-link">Explore piano chord inversions</a>.</p>
+      {alternateChord && <aside class="note-explainer" aria-labelledby="alternate-chord-name">
+        <h3 id="alternate-chord-name">How to play {alternateName} ({prettySymbol(alternateChord.symbol)}) on piano</h3>
+        <p>The notes are <strong>{alternateChord.notes.map(prettyNote).join(" – ")}</strong>. On a standard piano, they use the same keys as {chord.name} ({spelled}). Choose the spelling that fits the key of the music.</p>
+      </aside>}
       <p class="help-text">These are reference note spellings in twelve-tone equal temperament, not fixed fingerings. <a href="#listen">See the keys</a>, <a href="#inversions">hear each voicing</a>, or <a href="/guides/how-to-read-piano-chords/">learn chord spelling</a>.</p>
     </article>
   </section>

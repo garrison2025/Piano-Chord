@@ -26,7 +26,7 @@ export const chordSearchDescriptions=Object.freeze({
   "g-sharp-minor": "Learn G♯ minor on piano (G♯–B–D♯) with notes, a keyboard diagram, inversions and a shared-tone comparison with B major.",
   "b-flat-minor": "Play B♭ minor on piano using B♭–D♭–F. View the inversions and hear how D♭ and F connect it smoothly to D♭ major.",
   "c-major-7": "Learn Cmaj7 on piano: C–E–G–B. Hear all four voicings and compare the major seventh B natural with C7's B♭ in a guided listening drill.",
-  "a-minor-7": "Explore the Am7 piano chord A–C–E–G, including four inversions and a listening exercise using the three notes shared with Cmaj7.",
+  "a-minor-7": "Explore the Am7 piano chord A–C–E–G, including root position and three inversions and a listening exercise using the three notes shared with Cmaj7.",
   "d-minor-7": "Learn Dm7 on piano (D–F–A–C), play its four voicings and hear how the shared D and F carry into G7 in a ii–V–I cadence.",
   "g-7": "Play the G7 piano chord G–B–D–F, compare it to Gmaj7 and practice resolving its dominant-seventh sound toward Cmaj7."
 });
@@ -34,13 +34,13 @@ export const chordSearchDescriptions=Object.freeze({
 /** Distinct, query-aligned search titles for the 29 indexable chord lessons. */
 export const chordSearchTitles=Object.freeze({
   "b-minor": "Bm Piano Chord (B Minor): Notes & Inversions",
-  "b-flat-major": "Bb Major Piano Chord: B♭–D–F Keys & Inversions",
+  "b-flat-major": "Bb (B Flat) Major Piano Chord: Notes & Inversions",
   "d-minor": "Dm Piano Chord (D Minor): Notes & Inversions",
   "c-major": "C Major Piano Chord: C–E–G Keys & Inversions",
   "e-minor": "Em Piano Chord (E Minor): Notes & Inversions",
   "b-major": "B Major Piano Chord: B–D♯–F♯ Keys & Inversions",
   "g-minor": "Gm Piano Chord (G Minor): Notes & Inversions",
-  "e-flat-major": "Eb Major Piano Chord: E♭–G–B♭ Notes & Inversions",
+  "e-flat-major": "Eb (E Flat) Major Piano Chord: Notes & Inversions",
   "e-major": "E Major Piano Chord: E–G♯–B Notes & Inversions",
   "d-major": "D Major Piano Chord: D–F♯–A Notes & Inversions",
   "a-minor": "Am Piano Chord (A Minor): Notes & Inversions",
@@ -49,17 +49,22 @@ export const chordSearchTitles=Object.freeze({
   "c-7": "C7 Piano Chord: Dominant 7 Notes & Inversions",
   "c-minor": "Cm Piano Chord (C Minor): Notes & Inversions",
   "f-major": "F Major Piano Chord: F–A–C Keys & Inversions",
-  "d-flat-major": "Db Major Piano Chord: D♭–F–A♭ Notes & Inversions",
-  "g-flat-major": "Gb Major Piano Chord: G♭–B♭–D♭ & Inversions",
-  "a-flat-major": "Ab Major Piano Chord: A♭–C–E♭ & Inversions",
+  "d-flat-major": "Db / C# Major Piano Chord: Notes & Inversions",
+  "g-flat-major": "Gb / F# Major Piano Chord: Notes & Inversions",
+  "a-flat-major": "Ab (A Flat) Major Piano Chord: Notes & Inversions",
   "a-major": "A Major Piano Chord: A–C♯–E Notes & Inversions",
-  "c-sharp-minor": "C#m Piano Chord: C♯–E–G♯ Notes & Inversions",
-  "e-flat-minor": "Ebm Piano Chord: E♭–G♭–B♭ & Inversions",
-  "f-sharp-minor": "F#m Piano Chord: F♯–A–C♯ Notes & Inversions",
-  "g-sharp-minor": "G#m Piano Chord: G♯–B–D♯ Notes & Inversions",
-  "b-flat-minor": "Bbm Piano Chord: B♭–D♭–F Notes & Inversions",
-  "c-major-7": "Cmaj7 Piano Chord: Notes, Keys & Inversions",
-  "a-minor-7": "Am7 Piano Chord: Notes, Keys & Inversions",
-  "d-minor-7": "Dm7 Piano Chord: Notes, Keys & Inversions",
+  "c-sharp-minor": "C#m Piano Chord (C Sharp Minor): Notes & Inversions",
+  "e-flat-minor": "Ebm Piano Chord (E Flat Minor): Notes & Inversions",
+  "f-sharp-minor": "F#m Piano Chord (F Sharp Minor): Notes & Inversions",
+  "g-sharp-minor": "G#m Piano Chord (G Sharp Minor): Notes & Inversions",
+  "b-flat-minor": "Bbm Piano Chord (B Flat Minor): Notes & Inversions",
+  "c-major-7": "Cmaj7 Piano Chord (C Major Seventh): Notes & Inversions",
+  "a-minor-7": "Am7 Piano Chord (A Minor Seventh): Notes & Inversions",
+  "d-minor-7": "Dm7 Piano Chord (D Minor Seventh): Notes & Inversions",
   "g-7": "G7 Piano Chord: Dominant Seventh Notes & Inversions"
+});
+
+/** Common sharp and flat spellings for the accidental roots in the authored triads. */
+export const chordAlternateRoots=Object.freeze({
+  Db:'C#','C#':'Db',Eb:'D#',Gb:'F#','F#':'Gb',Ab:'G#','G#':'Ab',Bb:'A#'
 });
