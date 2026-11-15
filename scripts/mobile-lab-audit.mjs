@@ -70,6 +70,17 @@ try{
      return {tag:el.tagName.toLowerCase(),className:typeof el.className==='string'?el.className.slice(0,90):'',
       right:Math.round(r.right),left:Math.round(r.left),width:Math.round(r.width)};
     }),
+    scrollOverflowCandidates:[...document.querySelectorAll('body *')].filter(el=>{
+      const style=getComputedStyle(el);
+      return el.clientWidth>0&&el.scrollWidth>el.clientWidth+3&&
+        style.overflowX==='visible' && el.getBoundingClientRect().width>0;
+    }).map(el=>{
+      const r=el.getBoundingClientRect();
+      return {tag:el.tagName.toLowerCase(),className:typeof el.className==='string'?el.className.slice(0,90):'',
+        scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,delta:el.scrollWidth-el.clientWidth,
+        left:Math.round(r.left),right:Math.round(r.right)};
+    }).sort((a,b)=>b.delta-a.delta).slice(0,18),
+    bodyScrollWidth:document.body.scrollWidth,
     invalidAboveFoldImages:[...document.images].filter(img=>{
      const b=img.getBoundingClientRect();
      return b.top<innerHeight&&b.bottom>0&&img.complete&&img.naturalWidth===0;
@@ -77,7 +88,10 @@ try{
    };
   });
   assert.ok(result.h1,path+' must have a server-rendered H1');
-  if(result.horizontalOverflow)console.warn('MOBILE OVERFLOW '+path+' '+JSON.stringify(result.overflowCandidates));
+  if(result.horizontalOverflow)console.warn('MOBILE OVERFLOW '+path+' '+JSON.stringify({
+    visible:result.overflowCandidates,scroll:result.scrollOverflowCandidates,
+    bodyScroll:result.bodyScrollWidth,rootScroll:result.documentWidth
+  }));
   if(result.invalidAboveFoldImages)console.warn('BROKEN VISIBLE IMAGES '+path+' '+result.invalidAboveFoldImages);
   const row={path,url:origin+path,network:'synthetic mobile ~1.6 Mbps / 150ms RTT',cpu:'4x slowdown',
     wallDurationMs:Date.now()-start,...result};
