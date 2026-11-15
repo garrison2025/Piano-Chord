@@ -91,3 +91,8 @@ try{
   date:new Date().toISOString(),reports
  },null,2)+'\n');
 }finally{await browser.close();}
+if(process.env.PERF_FAIL_ON_OVERFLOW==='1' &&
+   reports.some(report=>report.horizontalOverflow || report.invalidAboveFoldImages>0)){
+  console.error('Synthetic mobile viewport or visible-image regression found');
+  process.exitCode=1;
+}
