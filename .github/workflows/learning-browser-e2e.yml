@@ -1,6 +1,14 @@
 name: Learning Tools Browser E2E
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/pages/chords/[slug].astro'
+      - 'src/pages/index.astro'
+      - 'src/data/priorityChordGuides.js'
+      - 'src/styles/studio.css'
+      - 'scripts/browser-learning-e2e.mjs'
+      - '.github/workflows/learning-browser-e2e.yml'
   push:
     branches: [main]
     paths:
