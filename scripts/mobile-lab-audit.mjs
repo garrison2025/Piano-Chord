@@ -19,12 +19,29 @@ try{
   });
   const page=await context.newPage();
   await page.addInitScript(()=>{
-   const p=window.__mobileLab={lcpMs:null,cls:0,longTasks:0};
+   const p=window.__mobileLab={lcpMs:null,cls:0,longTasks:0,shiftEvents:[]};
    try{new PerformanceObserver(list=>{
     for(const e of list.getEntries())p.lcpMs=Math.round(e.startTime);
    }).observe({type:'largest-contentful-paint',buffered:true});}catch{}
    try{new PerformanceObserver(list=>{
-    for(const e of list.getEntries())if(!e.hadRecentInput)p.cls+=e.value;
+    for(const e of list.getEntries()){
+      if(e.hadRecentInput)continue;
+      p.cls+=e.value;
+      p.shiftEvents.push({
+        atMs:Math.round(e.startTime),score:Number(e.value.toFixed(4)),
+        sources:(e.sources||[]).slice(0,5).map(source=>({
+          tag:source.node?.tagName?.toLowerCase()||'unknown',
+          className:typeof source.node?.className==='string'?source.node.className.slice(0,75):'',
+          id:source.node?.id||'',
+          oldRect:source.previousRect&&[
+            Math.round(source.previousRect.x),Math.round(source.previousRect.y),
+            Math.round(source.previousRect.width),Math.round(source.previousRect.height)],
+          newRect:source.currentRect&&[
+            Math.round(source.currentRect.x),Math.round(source.currentRect.y),
+            Math.round(source.currentRect.width),Math.round(source.currentRect.height)]
+        }))
+      });
+    }
    }).observe({type:'layout-shift',buffered:true});}catch{}
    try{new PerformanceObserver(list=>{
     for(const e of list.getEntries())p.longTasks+=e.duration;
@@ -54,6 +71,7 @@ try{
     fcpMs:Math.round(fcp?.startTime||0),
     lcpMs:p.lcpMs,
     cls:Number(p.cls.toFixed(4)),
+    layoutShiftSources:p.shiftEvents.slice(0,12),
     longTaskMs:Math.round(p.longTasks),
     resourceCount:resources.length,
     jsResourceCount:resources.filter(r=>/\.js(?:\?|$)/.test(r.name)).length,
