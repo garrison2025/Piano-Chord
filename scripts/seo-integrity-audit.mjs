@@ -128,6 +128,11 @@ for(const p of paths){
       issues.push('Homepage must include semantic chord formula table and steps');
     if(!html.includes('href="'+THEORY_REFERENCE.url+'"'))
       issues.push('Homepage must cite the independently published theory reference');
+    if(!html.includes('class="theory-reference-quote"')||
+       !html.includes('cite="'+THEORY_REFERENCE.url+'"')||
+       !html.includes('A three-note chord whose pitch classes can be arranged as thirds is called a triad.')||
+       !html.includes('A triad is not just any three keys pressed together.'))
+      issues.push('Homepage must expose an accurate, attributed definition with its educational explanation');
   }
   if(p.startsWith('/tools/')){
     const tool=schemaType('WebApplication');
