@@ -122,3 +122,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
     text-align:center;
   }
 }
+
+/* Existing concept cards explain full chord note names. On a 390px
+   viewport their old two-column grid forced min-content text overflow.
+   Give each card its own readable row instead of hiding the overflow. */
+@media (max-width:580px){
+  #piano-chord-explained .card-grid{grid-template-columns:minmax(0,1fr)}
+  #piano-chord-explained .card-grid>.panel{min-width:0}
+}
