@@ -87,11 +87,16 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       <button id="vp-end-record" type="button" class="record-danger" disabled>■ Stop recording</button>
       <button id="vp-replay" type="button" disabled>▶ Replay</button>
       <button id="vp-midi" type="button" disabled>↓ Save MIDI</button>
-      <button id="vp-recover" type="button" hidden>Recover interrupted recording</button>
-      <button id="vp-clear-saved" type="button">Clear saved draft</button>
+      <button id="vp-clear-saved" type="button">Clear finished draft</button>
     </div>
     <div id="vp-message" class="recording-message" role="status" aria-live="polite">Ready to record, up to 90 seconds. Press Record, then play the piano above.</div>
-    <p class="recording-muted">This browser keeps the latest finished recording and a separate checkpoint for an interrupted recording when storage is available. Download important MIDI and video files before leaving; browser storage may be cleared. Generated video files are not backed up automatically.</p>
+    <div id="vp-interrupted" class="recording-actions" hidden>
+      <label class="recording-title" for="vp-draft-picker">Interrupted recordings</label>
+      <select id="vp-draft-picker"></select>
+      <button id="vp-recover" type="button">Recover interrupted recording</button>
+      <button id="vp-discard-draft" type="button">Discard selected draft</button>
+    </div>
+    <p class="recording-muted">This browser keeps the latest finished recording and separate drafts for interrupted recordings when storage is available. Download important MIDI and video files before leaving; browser storage may be cleared. Generated video files are not backed up automatically.</p>
     <section id="vp-timeline" class="recording-timeline" aria-label="Recorded performance chord timeline" hidden>
       <div class="recording-timeline-heading"><div><span class="eyebrow">YOUR ORIGINAL PERFORMANCE</span><h3>Listen back by chord</h3><p id="vp-timeline-caption">Scrub the recording or select a recognized chord to replay from that point.</p></div><output id="vp-seek-time" aria-label="Selected replay position">00:00 / 00:00</output></div>
       <label for="vp-seek" class="recording-seek-label">Replay position</label>
@@ -128,6 +133,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
           </div>
           <p id="vp-mp4-info" class="recording-muted">Optional conversion downloads about 30 MB on first use; it stays on your device and can be memory-intensive.</p>
           <p class="recording-muted">Read <a href="/open-source/">open-source, codec and privacy notices</a>.</p>
+          <p id="vp-video-name" class="recording-muted" hidden></p>
           <div class="recording-actions"><button id="vp-download" type="button" disabled>↓ Download video</button><button id="vp-share" type="button" disabled>Share via device</button><button id="vp-download-webm" type="button" hidden disabled>↓ Download original WebM</button></div>
           <p class="recording-muted">If your phone doesn't support file sharing, download the video and upload it manually in TikTok, X or YouTube Shorts. You control the title, video and publication. No mandatory promotional watermark is added.</p>
         </div>

@@ -43,20 +43,36 @@ export async function clearLatestTake(){
   return useStore('readwrite',store=>store.delete('latest'));
 }
 
-const INTERRUPTED_KEY='piano-chord-explorer-interrupted-v1';
+const LEGACY_INTERRUPTED_KEY='piano-chord-explorer-interrupted-v1';
+const INTERRUPTED_PREFIX=LEGACY_INTERRUPTED_KEY+':';
+const interruptedKey=id=>id==='legacy'?LEGACY_INTERRUPTED_KEY:INTERRUPTED_PREFIX+id;
 
-// Synchronous storage also works during pagehide, when a new IndexedDB
-// transaction might not have time to commit. The finished take stays separate.
-export function saveInterruptedTake(take,title){
-  const value=JSON.stringify({take,title:String(title||'').slice(0,60)});
-  localStorage.setItem(INTERRUPTED_KEY,value);
-  return value;
+// Keep unrelated sessions independent, including during synchronous pagehide saves.
+export function saveInterruptedTake(id,take,title){
+  const value=JSON.stringify({take,title:String(title||'').slice(0,60),updatedAt:Date.now()});
+  localStorage.setItem(interruptedKey(id),value);
 }
-export function loadInterruptedTake(){
-  const value=localStorage.getItem(INTERRUPTED_KEY);
-  return value?{...JSON.parse(value),value}:null;
+export function loadInterruptedTakes(){
+  const drafts=[];
+  for(let index=0;index<localStorage.length;index++){
+    const key=localStorage.key(index);
+    if(!key||(key!==LEGACY_INTERRUPTED_KEY&&!key.startsWith(INTERRUPTED_PREFIX)))continue;
+    const value=localStorage.getItem(key);
+    if(!value)continue;
+    try{
+      const saved=JSON.parse(value);
+      if(!Array.isArray(saved?.take?.events)||!saved.take.events.length)continue;
+      const id=key===LEGACY_INTERRUPTED_KEY?'legacy':key.slice(INTERRUPTED_PREFIX.length);
+      drafts.push({id,value,take:saved.take,title:saved.title,updatedAt:Number(saved.updatedAt)||0});
+    }catch{
+      // A malformed checkpoint must not block recovery of other takes.
+    }
+  }
+  return drafts.sort((a,b)=>b.updatedAt-a.updatedAt||a.id.localeCompare(b.id));
 }
-export function clearInterruptedTake(value){
-  if(value && localStorage.getItem(INTERRUPTED_KEY)===value)
-    localStorage.removeItem(INTERRUPTED_KEY);
+export function clearInterruptedTake(id,expectedValue){
+  const key=interruptedKey(id);
+  if(expectedValue!==undefined&&localStorage.getItem(key)!==expectedValue)return false;
+  localStorage.removeItem(key);
+  return true;
 }

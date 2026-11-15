@@ -103,19 +103,42 @@ try{
   await stability.reload({waitUntil:'domcontentloaded'});
   await stability.waitForFunction(()=>!document.getElementById('vp-midi')?.disabled,null,{timeout:8000});
   assert.match(await stability.locator('#vp-message').innerText(),/Restored the most recent/);
+  await stability.locator('#vp-title').fill('First interrupted take');
   await stability.locator('#vp-record').click();
   await stability.locator('#vp-scroll').focus();
   await stability.keyboard.down('s');
   await stability.keyboard.up('s');
+  const secondTab=await stabilityCtx.newPage();
+  await secondTab.goto(stability.url(),{waitUntil:'domcontentloaded'});
+  await secondTab.locator('#vp-message').getByText(/Restored the most recent/).waitFor();
+  await secondTab.locator('#vp-title').fill('Second interrupted take');
+  await secondTab.locator('#vp-record').click();
+  await secondTab.locator('#vp-scroll').focus();
+  await secondTab.keyboard.down('d');
+  await secondTab.keyboard.up('d');
+  await secondTab.reload({waitUntil:'domcontentloaded'});
   await stability.reload({waitUntil:'domcontentloaded'});
   await stability.locator('#vp-message').getByText(/Restored the most recent/).waitFor();
+  const draftPicker=stability.locator('#vp-draft-picker');
+  const firstDraft=draftPicker.locator('option').filter({hasText:'First interrupted take'});
+  const secondDraft=draftPicker.locator('option').filter({hasText:'Second interrupted take'});
+  const firstDraftId=await firstDraft.getAttribute('value');
+  const secondDraftId=await secondDraft.getAttribute('value');
+  assert.notEqual(firstDraftId,secondDraftId);
+  await draftPicker.selectOption(firstDraftId);
   await stability.locator('#vp-recover').click();
+  assert.equal(await stability.locator('#vp-title').inputValue(),'First interrupted take');
   await stability.locator('#vp-message').getByText(/Recovered the interrupted recording/).waitFor();
   const recoveredMidi=stability.waitForEvent('download');
   await stability.locator('#vp-midi').click();
   assert.match((await recoveredMidi).suggestedFilename(),/\.mid$/);
   await stability.locator('#vp-clear-saved').click();
   await stability.locator('#vp-message').getByText(/draft cleared/).waitFor({timeout:8000});
+  assert.equal(await draftPicker.locator('option').count(),2);
+  await stability.locator('#vp-discard-draft').click();
+  await secondTab.waitForFunction(()=>document.querySelectorAll('#vp-draft-picker option').length===1);
+  assert.equal(await draftPicker.inputValue(),secondDraftId);
+  await stability.locator('#vp-discard-draft').click();
   await stability.reload({waitUntil:'domcontentloaded'});
   await stability.waitForTimeout(650);
   assert.equal(await stability.locator('#vp-midi').isDisabled(),true,
@@ -281,8 +304,17 @@ try{
   console.log('PASS scales, key spelling, keyboard and sound controls');
 
   // 120-family atlas -> theoretical inversions -> playable examples -> live recognition.
-  await go('/tools/chord-library/');
+  await go('/tools/chord-library/?q=F%23m&qa=link#atlas-search');
   assert.equal(await page.locator('.atlas-card').count(),120);
+  assert.equal(await page.locator('#atlas-search').inputValue(),'F#m');
+  assert.deepEqual(await texts('.atlas-card:visible strong'),['G\u266dm']);
+  await page.locator('#atlas-search').fill('F#m7');
+  const atlasUrl=new URL(page.url());
+  assert.equal(atlasUrl.searchParams.get('q'),'F#m7');
+  assert.equal(atlasUrl.searchParams.get('qa'),'link');
+  assert.equal(atlasUrl.hash,'#atlas-search');
+  await page.reload({waitUntil:'domcontentloaded'});
+  assert.equal(await page.locator('#atlas-search').inputValue(),'F#m7');
   await page.locator('#atlas-search').fill('C♯maj7');
   assert.equal(await page.locator('.atlas-card:visible').count(),1);
   assert.match(await page.locator('.atlas-card:visible').innerText(),/D♭maj7/);
@@ -301,6 +333,7 @@ try{
   assert.equal(await page.locator('.atlas-card:visible').count(),12,
     'Family search must still show all twelve sus4 chords');
   await page.locator('#atlas-reset').click();
+  assert.equal(new URL(page.url()).searchParams.has('q'),false);
   assert.equal(await page.locator('.atlas-card:visible').count(),120);
   assert.equal(await page.locator('.atlas-card a[href^="/tools/inversion-explorer/?root="]').count(),120);
   // Offscreen card paint can be deferred, but scrolling must materialize

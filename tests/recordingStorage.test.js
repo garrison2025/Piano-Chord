@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {saveLatestTake,loadLatestTake,clearLatestTake} from '../src/lib/recordingStorage.mjs';
+import {saveLatestTake,loadLatestTake,clearLatestTake,saveInterruptedTake,loadInterruptedTakes,clearInterruptedTake} from '../src/lib/recordingStorage.mjs';
 
 function simulatedIdb(){
   const previous=globalThis.indexedDB;
@@ -57,4 +57,33 @@ test('clear resolves on transaction commit, not request success; abort rejects',
 test('load also waits for transaction completion',async()=>{
   await scenario('get',true);
   await scenario('get',false);
+});
+
+test('interrupted takes save independently and old drafts can still be recovered',()=>{
+  const previous=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+  const data=new Map();
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{
+    get length(){return data.size;},
+    key:index=>[...data.keys()][index],
+    setItem:(key,value)=>data.set(key,value),
+    getItem:key=>data.get(key)??null,
+    removeItem:key=>data.delete(key)
+  }});
+  try{
+    const take={duration:500,events:[{type:'on',midi:60,t:0},{type:'off',midi:60,t:500}]};
+    data.set('piano-chord-explorer-interrupted-v1',JSON.stringify({take,title:'Old draft'}));
+    data.set('piano-chord-explorer-interrupted-v1:broken','{');
+    saveInterruptedTake('a',take,'Tab A');
+    saveInterruptedTake('b',take,'Tab B');
+    const drafts=loadInterruptedTakes();
+    assert.deepEqual(drafts.map(d=>d.id).sort(),['a','b','legacy']);
+    const a=drafts.find(d=>d.id==='a');
+    saveInterruptedTake('a',take,'Updated Tab A');
+    assert.equal(clearInterruptedTake('a',a.value),false);
+    assert.equal(clearInterruptedTake('b'),true);
+    assert.deepEqual(loadInterruptedTakes().map(d=>[d.id,d.title]),[['a','Updated Tab A'],['legacy','Old draft']]);
+  }finally{
+    if(previous)Object.defineProperty(globalThis,'localStorage',previous);
+    else delete globalThis.localStorage;
+  }
 });

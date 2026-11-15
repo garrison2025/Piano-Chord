@@ -2,16 +2,16 @@ import {MAX_RECORDING_MS, normalizeEvents, noteIntervals, encodeMidi, safeFilena
 import { CORE_BASE, MP4_WIDTH, MP4_HEIGHT, mp4Args, isSocialMp4 } from '../lib/videoConversion.mjs';
 import { renderPerformanceFrame } from '../lib/performanceVideo.mjs';
 import {buildChordTimeline,soundingNotesAt,suggestCoverTime} from '../lib/recordingTimeline.mjs';
-import {loadLatestTake,saveLatestTake,clearLatestTake,saveInterruptedTake,loadInterruptedTake,clearInterruptedTake} from '../lib/recordingStorage.mjs';
+import {loadLatestTake,saveLatestTake,clearLatestTake,saveInterruptedTake,loadInterruptedTakes,clearInterruptedTake} from '../lib/recordingStorage.mjs';
 
 /** Browser-only recording studio; no upload, cookie, account or third-party API. */
 export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   const el = id => document.getElementById(id);
   const root = el('vp-recording-studio');
   if (!root) return {noteOn(){},noteOff(){}};
-  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','show-chords','poster','title','message','clock','preview','progress','format','timeline','timeline-caption','timeline-track','timeline-cues','seek','seek-time','cover-controls','cover-position','cover-time','cover-download','clear-saved','recover'].map(k => [k,el('vp-'+k)]));
+  const controls = Object.fromEntries(['record','end-record','replay','midi','export','share','download','cancel-export','convert-mp4','cancel-mp4','mp4-info','download-webm','theme','show-chords','poster','title','message','clock','preview','progress','format','timeline','timeline-caption','timeline-track','timeline-cues','seek','seek-time','cover-controls','cover-position','cover-time','cover-download','clear-saved','interrupted','draft-picker','recover','discard-draft','video-name'].map(k => [k,el('vp-'+k)]));
   let capturing=false, captured=[],startedAt=0,timer=null,timeout=null,take=null,videoGuide=null,pendingGuide=null;
-  let checkpoint=null,checkpointCount=0,interrupted=null;
+  let recordingId=null,checkpointCount=0,interrupted=[];
   let playing=false,playFrame=0,playStart=0,playIndex=0,playhead=0;
   let chordSegments=[],timelineMarkers=[],selectedCoverTime=0;
   let exporting=false,shouldCancel=false,previewUrl=null,videoFile=null,originalWebmFile=null;
@@ -36,8 +36,12 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   function updateUI(){
     const hasNotes=Boolean(take && noteIntervals(take).length);
     controls.record.disabled=capturing||exporting||converting;
-    controls.recover.hidden=!interrupted;
-    controls.recover.disabled=capturing||exporting||converting;
+    controls.interrupted.hidden=!interrupted.length;
+    for(const key of ['draft-picker','recover','discard-draft']){
+      controls[key].disabled=capturing||exporting||converting;
+    }
+    controls['video-name'].hidden=!videoFile;
+    controls['video-name'].textContent=videoFile?.name||'';
     controls['clear-saved'].disabled=capturing;
     controls['end-record'].disabled=!capturing;
     controls.replay.disabled=!hasNotes||capturing||exporting||converting;
@@ -144,7 +148,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   function checkpointRecording(){
     if(!capturing||!captured.length||captured.length===checkpointCount)return;
     try{
-      checkpoint=saveInterruptedTake(captureSnapshot(),controls.title.value);
+      saveInterruptedTake(recordingId,captureSnapshot(),controls.title.value);
       checkpointCount=captured.length;
     }catch{
       status('Recording in this tab. Browser checkpoint storage is unavailable. Stop and download MIDI before leaving.');
@@ -155,7 +159,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     stopReplay();stop();
     // Keep the previous valid take, cover and exported video until a new take
     // actually contains notes. This also preserves all downloads during retries.
-    captured=[];pendingGuide=null;checkpoint=null;checkpointCount=0;
+    captured=[];pendingGuide=null;recordingId=crypto.randomUUID();checkpointCount=0;
     capturing=true;startedAt=performance.now();
     controls.clock.textContent='00:00';
     status('Recording locally. Previous valid take and video are preserved until a new recording contains notes. Download important files before leaving.');
@@ -183,16 +187,18 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
       updateTimeline();updatePoster();
       const previousVideo=videoFile?' Previous exported video remains downloadable until replacement.':'';
       status(`Recorded ${count} notes in this tab (${clock(take.duration)}). Saving browser draft… Download MIDI for a permanent copy.`+previousVideo);
-      const capturedTake=take,storedTitle=controls.title.value,savedCheckpoint=checkpoint;
-      const previousInterrupted=interrupted?.value;
-      interrupted=null;
+      const capturedTake=take,storedTitle=controls.title.value,finishedId=recordingId;
       enqueueDraft(
         async ()=>{
           await saveLatestTake(capturedTake,storedTitle);
-          try{clearInterruptedTake(savedCheckpoint||previousInterrupted);}catch{}
+          try{clearInterruptedTake(finishedId);}catch{}
+          refreshInterrupted();
         },
         ()=>{if(take===capturedTake)status(`Saved ${count} notes to this browser's local draft after storage commit. Download MIDI for a permanent copy.`+previousVideo);},
-        ()=>{if(take===capturedTake)status('Recording retained in this tab, but browser draft storage failed. Download MIDI before leaving.');}
+        ()=>{
+          refreshInterrupted();
+          if(take===capturedTake)status('Recording retained in this tab, but browser draft storage failed. Download MIDI before leaving.');
+        }
       );
     }else{
       controls.clock.textContent=take?clock(take.duration):'00:00';
@@ -435,7 +441,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
       if(exitCode!==0)throw new Error('The encoder did not complete successfully');
       const mp4=await ffmpeg.readFile('take.mp4');
       if(!isSocialMp4(mp4))throw new Error('MP4 video or audio codec validation failed');
-      const converted=new File([mp4],safeFilename(controls.title.value)+'.mp4',{type:'video/mp4'});
+      const converted=new File([mp4],sourceFile.name.replace(/.webm$/i,'')+'.mp4',{type:'video/mp4'});
       if(previewUrl)URL.revokeObjectURL(previewUrl);
       videoFile=converted;previewUrl=URL.createObjectURL(converted);
       controls.preview.src=previewUrl;controls.preview.hidden=false;
@@ -469,7 +475,7 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     if(typeof navigator.share!=='function'||typeof navigator.canShare!=='function'||!navigator.canShare({files:[videoFile]})){
       status('File sharing is not available in this browser. Download your video, then upload it in TikTok or X.');return;
     }
-    try{await navigator.share({files:[videoFile],title:(controls.title.value||'My Piano Session').slice(0,60)});status('System share sheet closed. Check the destination app for posting status.');}
+    try{await navigator.share({files:[videoFile],title:videoFile.name.replace(/.[^.]+$/,'')});status('System share sheet closed. Check the destination app for posting status.');}
     catch(error){if(error.name!=='AbortError')status('System share was unavailable; please download and upload manually.');}
   }
   controls.theme.addEventListener('change',()=>{updatePoster();status('Video style updated. Export again to apply it to the file.');});
@@ -490,14 +496,10 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
   controls.midi.addEventListener('click',midi);
   controls['clear-saved'].addEventListener('click',()=>{
     if(capturing)return;
-    let savedCheckpoint;
-    try{savedCheckpoint=loadInterruptedTake()?.value;}catch{}
-    interrupted=null;
-    updateUI();
-    status('Clearing saved browser draft… Current recording and downloads stay available.');
+    status('Clearing the finished browser draft…');
     enqueueDraft(
-      async ()=>{await clearLatestTake();clearInterruptedTake(savedCheckpoint);},
-      ()=>status('Saved browser draft cleared after storage commit. Your current open take and downloads are unchanged.'),
+      clearLatestTake,
+      ()=>status('Finished browser draft cleared after storage commit. Your open take and interrupted drafts remain available.'),
       ()=>status('Browser draft could not be cleared. Check site data settings.')
     );
   });
@@ -510,21 +512,43 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     updateTimeline();updatePoster();updateUI();
     status(message);
   }
-  try{interrupted=loadInterruptedTake();}catch{}
-  controls.recover.addEventListener('click',()=>{
-    if(!interrupted||capturing||exporting||converting)return;
-    stopReplay();
-    const saved=interrupted;
-    interrupted=null;
-    restoreTake(saved,'Recovered the interrupted recording. Download MIDI to keep a permanent copy.');
+  function refreshInterrupted(){
+    const picker=controls['draft-picker'],selected=picker.value;
+    try{interrupted=loadInterruptedTakes();}catch{}
+    picker.replaceChildren(...interrupted.map(saved=>{
+      const option=document.createElement('option');
+      const date=saved.updatedAt?new Date(saved.updatedAt).toLocaleString():'Earlier recording';
+      option.value=saved.id;
+      option.textContent=[saved.title||'Untitled recording',clock(saved.take.duration),date].join(' · ');
+      return option;
+    }));
+    if(interrupted.some(saved=>saved.id===selected))picker.value=selected;
     updateUI();
+  }
+  const selectedDraft=()=>interrupted.find(saved=>saved.id===controls['draft-picker'].value);
+  window.addEventListener('storage',refreshInterrupted);
+  controls.recover.addEventListener('click',()=>{
+    const saved=selectedDraft();
+    if(!saved||capturing||exporting||converting)return;
+    stopReplay();
+    restoreTake(saved,'Recovered the interrupted recording. Download MIDI to keep a permanent copy.');
   });
+  controls['discard-draft'].addEventListener('click',()=>{
+    const saved=selectedDraft();
+    if(!saved||capturing||exporting||converting)return;
+    try{
+      const cleared=clearInterruptedTake(saved.id,saved.value);
+      refreshInterrupted();
+      status(cleared?'Selected interrupted draft discarded.':'Draft changed in another tab. Review the updated list.');
+    }catch{status('Interrupted draft could not be discarded. Check site data settings.');}
+  });
+  refreshInterrupted();
   const initialDraftRevision=draftRevision;
   loadLatestTake().catch(()=>null).then(saved=>{
     if(capturing||take||draftRevision!==initialDraftRevision)return;
     if(saved){
       restoreTake(saved,'Restored the most recent locally saved recording. Download MIDI to keep a permanent copy.');
-    }else if(interrupted){
+    }else if(interrupted.length===1){
       controls.recover.click();
     }
   });
@@ -542,7 +566,8 @@ export function setupPianoRecorder({on,off,stop,onCaptureStart,onCaptureEnd}) {
     checkpointRecording();
     if(event.persisted && capturing){
       capturing=false;
-      try{interrupted=loadInterruptedTake();}catch{}
+      refreshInterrupted();
+      if(interrupted.some(saved=>saved.id===recordingId))controls['draft-picker'].value=recordingId;
       try{onCaptureEnd?.(captureSnapshot());}catch{}
       status('Recording interrupted. Choose Recover interrupted recording to listen back.');
       updateUI();

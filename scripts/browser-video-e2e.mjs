@@ -87,6 +87,9 @@ try{
 
   await page.locator('#vp-export').click();
   await page.locator('#vp-convert-mp4').waitFor({state:'visible',timeout:stress?seconds*1000+60000:30000});
+  const sourceName=await page.locator('#vp-video-name').innerText();
+  assert.match(sourceName,/\.webm$/i);
+  await page.locator('#vp-title').fill('Different current title');
   await page.locator('#vp-convert-mp4').click();
   const deadline=Date.now()+(stress?900000:360000);
   let success=false;
@@ -101,6 +104,8 @@ try{
   }
   assert.ok(success,'WASM MP4 conversion timed out: '+await page.locator('#vp-message').textContent());
   const [mp4Download]=await Promise.all([page.waitForEvent('download',{timeout:20000}),page.locator('#vp-download').click()]);
+  assert.equal(mp4Download.suggestedFilename(),sourceName.replace(/\.webm$/i,'.mp4'));
+  assert.equal(await page.locator('#vp-video-name').innerText(),mp4Download.suggestedFilename());
   await mp4Download.saveAs(outputDir+'/converted.mp4');
   const [webmDownload]=await Promise.all([page.waitForEvent('download',{timeout:20000}),page.locator('#vp-download-webm').click()]);
   await webmDownload.saveAs(outputDir+'/original.webm');
