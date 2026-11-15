@@ -81,7 +81,11 @@ try{
   assert.equal(await chartPage.locator('#seventh-notes tbody td').count(),36);
   assert.match(await chartPage.locator('#seventh-notes td').filter({has:chartPage.getByRole('link',{name:'C Major 7th piano chord',exact:true})}).innerText(),/C – E – G – B/);
   assert.equal(await chartPage.locator('a[href="/downloads/piano-chord-24-triads-a4.pdf"]').count(),1);
-  assert.equal(await chartPage.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
+  const chartWidth=await chartPage.evaluate(async()=>{
+    await document.fonts.ready;
+    return {viewport:window.innerWidth,document:document.documentElement.scrollWidth};
+  });
+  assert.ok(chartWidth.document<=chartWidth.viewport,'Piano chord chart must fit the mobile viewport: '+JSON.stringify(chartWidth));
   await chartPage.close();
   console.log('PASS live, script-free 24-triad and 36-seventh HTML charts at 360 px');
 

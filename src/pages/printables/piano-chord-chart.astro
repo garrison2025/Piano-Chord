@@ -16,7 +16,7 @@ const charts=[
 ];
 ---
 <BaseLayout title="Printable Piano Chord Chart PDF | Free Notes & Diagrams" description="Download a free printable piano chord chart PDF in A4 or US Letter. Look up 24 major and minor chords and 36 seventh chords by note and keyboard diagram." canonicalPath="/printables/piano-chord-chart/" crumbs={[{name:'Printable Chord Chart',href:'/printables/piano-chord-chart/'}]}>
-  <div class="container page-hero print-chart-hero"><span class="eyebrow">Free printable resource</span><h1>Printable piano chord charts<br/>with notes and free PDFs.</h1><p class="lead">Download print-ready A4 or US Letter PDF charts for all 24 major and minor triads and 36 common seventh chords. Use the note tables for quick lookup or print the illustrated starter sheet.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print starter chart</button><a class="btn" href="#triad-notes">Major and minor chord notes</a><a class="btn" href="#seventh-notes">Seventh chord notes</a></div></div>
+  <div class="container page-hero print-chart-hero"><span class="eyebrow">Free printable resource</span><h1>Piano chord charts<br/>with free printable PDFs.</h1><p class="lead">Download print-ready A4 or US Letter PDF charts for all 24 major and minor triads and 36 common seventh chords. Use the note tables for quick lookup or print the illustrated starter sheet.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print starter chart</button><a class="btn" href="#triad-notes">Major and minor chord notes</a><a class="btn" href="#seventh-notes">Seventh chord notes</a></div></div>
   <section class="container section-compact printable-downloads" aria-labelledby="download-charts-title">
     <div class="section-head"><div><span class="eyebrow">FREE PDF DOWNLOADS</span><h2 id="download-charts-title">Choose a complete chord chart</h2><p>Each file is a single-page vector PDF with chord spellings and a one-octave keyboard map. Choose the paper size that matches your printer.</p></div></div>
     <div class="card-grid">
@@ -62,10 +62,11 @@ const charts=[
 <style>
 .print-chart-heading{display:none}
 .chord-note-reference{display:grid;gap:18px}
-.chord-note-panel{scroll-margin-top:6rem}
+.chord-note-panel{min-width:0;scroll-margin-top:6rem}
 .chord-note-panel h2{margin:0 0 12px}
-.chord-note-table{width:100%;border-collapse:collapse;font-size:clamp(.74rem,2.2vw,.95rem)}
+.chord-note-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:clamp(.74rem,2.2vw,.95rem)}
 .chord-note-table th,.chord-note-table td{padding:.55em .28em;vertical-align:top;text-align:left;border-bottom:1px solid #dbe3de}
+.chord-note-table th:first-child{width:12%}
 .chord-note-table a{font-weight:700;text-decoration:underline}
 .chord-note-table td span{display:block;line-height:1.45}
 @media(max-width:520px){.chord-note-panel{padding:12px}}
