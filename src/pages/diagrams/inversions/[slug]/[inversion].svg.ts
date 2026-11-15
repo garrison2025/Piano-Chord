@@ -1,6 +1,6 @@
-import {releaseChords} from '../../../data/chords.js';
-import {createChord} from '../../../lib/music.js';
-import {keyboardSvg} from '../../../lib/pianoSvg.js';
+import {releaseChords} from '../../../../data/chords.js';
+import {createChord} from '../../../../lib/music.js';
+import {keyboardSvg} from '../../../../lib/pianoSvg.js';
 
 // Separate, stable image URLs for the educational inversion figures.
 // These are images, not extra indexable chord lesson pages.
