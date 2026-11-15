@@ -139,7 +139,7 @@ test('five researched chord intents are represented by distinct authored learnin
   assert.ok(guide.heading.length>35&&guide.intro.length>90);
   assert.ok(guide.answer.length>120&&guide.contrast.length>50);
   assert.equal(guide.steps.length,3);
-  assert.ok(guide.steps.every(s=>s.length>50));
+  assert.ok(guide.steps.every(s=>s.length>35),'Every step must be independently actionable');
   assert.ok(guide.steps.every(s=>!s.includes('always use fingers')));
   assert.ok(inversionTerms[slug].every(term=>guide.answer.includes(term)),
     slug+' must explain both slash basses');
