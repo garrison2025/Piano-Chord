@@ -120,3 +120,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
   #piano-chord-explained .card-grid{grid-template-columns:minmax(0,1fr)}
   #piano-chord-explained .card-grid>.panel{min-width:0}
 }
+
+/* Slow-mobile font swap changed the two hero CTAs from two lines to one,
+   shifting the entire preview up by ~62px. Keep the action stack fixed. */
+@media (max-width:580px){
+  .studio-hero .hero-buttons{flex-direction:column;align-items:stretch}
+  .studio-hero .hero-buttons .btn{width:100%;min-width:0}
+}
