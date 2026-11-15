@@ -137,6 +137,56 @@ try{
     await mobileContext.close();
   }
   console.log('PASS deployed five priority lessons and 390px no-horizontal-overflow');
+
+  // Wait for the actual GEO/credibility release, not just a canonical that was
+  // already correct on the previous version.
+  let geoReady=false;
+  for(let attempt=0;attempt<13;attempt++){
+    const response=await page.goto(origin+'/?geo-release='+Date.now(),
+      {waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200,'GEO production homepage HTTP');
+    geoReady=await page.locator('#chord-reference-table table.theory-reference-table').count()===1;
+    if(geoReady)break;
+    if(attempt<12){
+      console.log('Waiting for GEO reference table and schema to deploy');
+      await page.waitForTimeout(10000);
+    }
+  }
+  assert.equal(geoReady,true,'GEO source-cited reference table must be published');
+  assert.equal(await page.locator('.theory-reference-table tbody tr').count(),5);
+  const structured=await page.locator('script[type="application/ld+json"]').allTextContents();
+  const entities=structured.map(raw=>JSON.parse(raw));
+  for(const type of ['WebSite','Organization','WebPage'])
+    assert.ok(entities.some(s=>s['@type']===type),'Production home schema missing '+type);
+  assert.ok(entities.find(s=>s['@type']==='Organization')?.sameAs
+    ?.includes('https://github.com/garrison2025/Piano-Chord'),
+    'Public sameAs must identify the verified source project');
+  assert.ok(await page.locator('a[href="/terms/"]').count()>0);
+  assert.ok(await page.locator('a[href="/privacy/"]').count()>0);
+  assert.ok(await page.locator('a[href="https://open-musictheory.github.io/docs/fundamentals/triads/"]').count()>0);
+
+  const llms=await page.request.get(origin+'/llms.txt');
+  assert.equal(llms.status(),200,'Public llms.txt HTTP');
+  assert.match(await llms.text(),/^# Piano Chord Explorer/m);
+  const terms=await page.request.get(origin+'/terms/');
+  assert.equal(terms.status(),200,'Public terms HTTP');
+  assert.match(await terms.text(),/name="robots" content="noindex,follow"/);
+  for(const checkPath of ['/chords/b-minor/','/guides/how-to-read-piano-chords/']){
+    const resp=await page.goto(origin+checkPath+'?geo-release='+Date.now(),
+      {waitUntil:'domcontentloaded'});
+    assert.equal(resp?.status(),200);
+    const entry=(await page.locator('script[type="application/ld+json"]').allTextContents())
+      .map(s=>JSON.parse(s)).find(s=>s['@type']==='Article');
+    assert.ok(entry,'Published article metadata missing on '+checkPath);
+    assert.equal(entry.dateModified,'2026-11-15');
+    assert.equal(entry.author?.url,origin+'/about/');
+    assert.ok(await page.locator('time[datetime="2026-11-15"]').count()>0);
+  }
+  await page.goto(origin+'/tools/chord-finder/',{waitUntil:'domcontentloaded'});
+  const app=(await page.locator('script[type="application/ld+json"]').allTextContents())
+    .map(s=>JSON.parse(s)).find(s=>s['@type']==='WebApplication');
+  assert.equal(app?.offers?.price,'0','Tool schema must describe a free app');
+  console.log('PASS deployed source-backed table, organization links, articles, free tool schema, llms and Terms');
 }finally{
   await browser.close();
 }

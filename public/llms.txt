@@ -1,0 +1,39 @@
+# Piano Chord Explorer
+
+> A free English-language piano chord reference and browser-based practice website. The site includes 29 independently authored chord lessons, 120 searchable chord formulas, an 88-key virtual piano, original SVG diagrams, and local recording/export.
+
+Canonical website: https://pianochordexplorer.com/
+Content language: en
+Contact: contact@pianochordexplorer.com
+
+## Start here
+
+- [Home](https://pianochordexplorer.com/): what the site offers; common chord formulas and learning paths.
+- [Chord lessons](https://pianochordexplorer.com/chords/): links to 29 authored triad and seventh-chord lessons.
+- [Reading piano chord diagrams](https://pianochordexplorer.com/guides/how-to-read-piano-chords/): notes, chord qualities and inversions.
+- [Seventh chords explained](https://pianochordexplorer.com/guides/seventh-chords-piano/): dominant, major, minor and half-diminished sevenths.
+- [Chord finder](https://pianochordexplorer.com/tools/chord-finder/): identify a supported chord from three or four pitch classes.
+- [120-chord library](https://pianochordexplorer.com/tools/chord-library/): interactive major, minor, seventh, suspended and diminished formulas.
+- [88-key piano](https://pianochordexplorer.com/tools/virtual-piano/): play, record and export on your device.
+- [Printable piano chord chart](https://pianochordexplorer.com/printables/piano-chord-chart/): a printable sixteen-chord visual reference.
+
+## Five practical starter lessons
+
+- [B minor (Bm)](https://pianochordexplorer.com/chords/b-minor/)
+- [B-flat major (Bb)](https://pianochordexplorer.com/chords/b-flat-major/)
+- [D minor (Dm)](https://pianochordexplorer.com/chords/d-minor/)
+- [E minor (Em)](https://pianochordexplorer.com/chords/e-minor/)
+- [G major (G)](https://pianochordexplorer.com/chords/g-major/)
+
+## Theory, limitations and transparency
+
+- Chord formulas use twelve-tone equal temperament. Note spelling depends on harmonic context; enharmonic keys can have different theoretical names.
+- Original illustrations show one reference voicing, not a prescribed fingering or an acoustic piano sample.
+- Browser-based chord detection covers supported three- and four-note families; it does not infer every possible chord function.
+- [About, sources and corrections](https://pianochordexplorer.com/about/)
+- [Privacy](https://pianochordexplorer.com/privacy/)
+- [Terms of use](https://pianochordexplorer.com/terms/)
+- [Open-source notices](https://pianochordexplorer.com/open-source/)
+- [Official project source](https://github.com/garrison2025/Piano-Chord)
+
+This optional text index complements the HTML pages and sitemap; it is not a permission statement, a claim of third-party endorsement or a substitute for robots.txt.

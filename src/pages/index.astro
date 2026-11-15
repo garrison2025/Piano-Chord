@@ -4,6 +4,7 @@ import PianoKeyboard from '../components/PianoKeyboard.astro';
 import ChordCard from '../components/ChordCard.astro';
 import {releaseChords} from '../data/chords.js';
 import {createChord,prettyNote} from '../lib/music.js';
+import {CONTENT_UPDATE_DATE,THEORY_REFERENCE} from '../data/siteIdentity.js';
 const picks=['b-minor','c-major','c-7'].map(slug=>createChord(releaseChords.find(e=>e.slug===slug)));
 const spotlightNames=['B minor','C major','C seventh'];
 const beginnerChordPaths=[
@@ -102,6 +103,43 @@ const beginnerChordPaths=[
           <p>{chord.task}</p>
           <p><a class="text-link" href={chord.href}>Explore {chord.name} on piano ↗</a></p>
         </article>)}
+      </div>
+    </div>
+  </section>
+  <section class="section-compact theory-reference" id="chord-reference-table" aria-labelledby="formula-table-heading">
+    <div class="container">
+      <div class="section-head"><div>
+        <span class="eyebrow">REFERENCE · VERIFIED NOTE FORMULAS</span>
+        <h2 id="formula-table-heading">Major, minor and seventh chords: a quick comparison</h2>
+        <p>Every interval is measured in semitones upward from the chord root. Use the note spelling and lesson link to hear the actual harmony; this table is a beginner reference, not a universal fingering chart.</p>
+      </div></div>
+      <div class="theory-table-scroll" role="region" aria-label="Chord quality and semitone formula comparison" tabindex="0">
+        <table class="theory-reference-table">
+          <caption>Common piano chord qualities, exact intervals and playable examples</caption>
+          <thead><tr><th scope="col">Chord quality</th><th scope="col">Intervals from root</th><th scope="col">Example notes</th><th scope="col">Hear and practise</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Major triad</th><td>0 · 4 · 7</td><td>C · E · G</td><td><a href="/chords/c-major/">C major piano chord</a></td></tr>
+            <tr><th scope="row">Minor triad</th><td>0 · 3 · 7</td><td>B · D · F♯</td><td><a href="/chords/b-minor/">B minor piano chord</a></td></tr>
+            <tr><th scope="row">Dominant seventh</th><td>0 · 4 · 7 · 10</td><td>C · E · G · B♭</td><td><a href="/chords/c-7/">C7 piano chord</a></td></tr>
+            <tr><th scope="row">Major seventh</th><td>0 · 4 · 7 · 11</td><td>C · E · G · B</td><td><a href="/chords/c-major-7/">Cmaj7 piano chord</a></td></tr>
+            <tr><th scope="row">Minor seventh</th><td>0 · 3 · 7 · 10</td><td>A · C · E · G</td><td><a href="/chords/a-minor-7/">Am7 piano chord</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="two-col theory-reference-notes">
+        <article class="panel prose">
+          <h3>Three steps to use the table</h3>
+          <ol>
+            <li>Find the root note in the example, then locate that key on the piano.</li>
+            <li>Count the listed semitone distances to identify the chord tones.</li>
+            <li>Open the linked lesson, listen to root position and try its inversions.</li>
+          </ol>
+        </article>
+        <aside class="panel prose">
+          <h3>How the information is sourced</h3>
+          <p>Formulas and original diagrams are calculated from our chord-note definitions. For independent music-theory background on triads, seventh chords and chord symbols, see <a href={THEORY_REFERENCE.url} rel="noopener noreferrer">{THEORY_REFERENCE.name}</a>.</p>
+          <p>Maintained by <a href="/about/">Piano Chord Explorer</a> · Content updated <time datetime={CONTENT_UPDATE_DATE}>November 15, 2026</time>. This reference does not imply external review or endorsement. <a href="/about/">Read our method and limitations</a>.</p>
+        </aside>
       </div>
     </div>
   </section>

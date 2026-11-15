@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import {CONTENT_UPDATE_DATE,THEORY_REFERENCE} from '../../data/siteIdentity.js';
 import PianoKeyboard from '../../components/PianoKeyboard.astro';
 import {releaseChords} from '../../data/chords.js';
 import {createChord,prettyNote} from '../../lib/music.js';
@@ -137,4 +138,13 @@ setupSeventhPractice();
 .seventh-step button{align-self:start}
 @media(max-width:700px){.seventh-card .button-row{flex-direction:column;align-items:stretch}.seventh-card .btn{white-space:normal}}
 </style>
+
+<section class="container section-compact" id="editorial-notes">
+ <div class="panel prose">
+  <span class="eyebrow">AUTHOR &amp; INDEPENDENT REFERENCE</span>
+  <h2>Source notes and updates</h2>
+  <p>Prepared and maintained by <a href="/about/">Piano Chord Explorer</a>; this learning page was updated <time datetime={CONTENT_UPDATE_DATE}>November 15, 2026</time>. Note formulas and original diagrams are generated from our music-theory data, not from a third-party endorsement.</p>
+  <p>For an independently published explanation of triads, seventh chords and bass-note naming, see <a href={THEORY_REFERENCE.url} rel="noopener noreferrer">{THEORY_REFERENCE.name}</a>. The reference is for further reading; its authors have not endorsed or reviewed this website.</p>
+ </div>
+</section>
 </BaseLayout>

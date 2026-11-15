@@ -133,14 +133,24 @@ const privacyPage=read(getFile('/privacy/'));
 if(!privacyPage.includes('name="robots" content="noindex,follow"'))
   errors.push('Privacy route must be noindex');
 if(sitemap.includes('/privacy/'))errors.push('Noindex privacy page must be excluded from sitemap');
+const termsFile=getFile('/terms/');
+if(!fs.existsSync(termsFile))errors.push('Terms route must be built');
+else if(!read(termsFile).includes('name="robots" content="noindex,follow"'))
+  errors.push('Terms route must be noindex');
+if(sitemap.includes('/terms/'))errors.push('Noindex terms page must be excluded from sitemap');
+const llmsFile=path.join(dist,'llms.txt');
+if(!fs.existsSync(llmsFile))errors.push('Root llms.txt must exist');
+else if(!read(llmsFile).startsWith('# Piano Chord Explorer'))
+  errors.push('Root llms.txt must describe the real piano website');
 const home=read(getFile('/'));
 if(!home.includes('"@type":"WebSite"')||!home.includes('"url":"'+absoluteSite+'/"'))
  errors.push('Homepage missing canonical WebSite JSON-LD');
 const aboutPage=read(getFile('/about/'));
 if(!aboutPage.includes('github.com/garrison2025/Piano-Chord/issues/new'))
   errors.push('About page must have a verifiable public feedback route');
-if(!home.includes('href="/about/"')||!home.includes('href="/privacy/"'))
-  errors.push('Main site footer must link to About and Privacy');
+if(!home.includes('href="/about/"')||!home.includes('href="/privacy/"')||
+   !home.includes('href="/terms/"'))
+  errors.push('Main site footer must link to About, Privacy and Terms');
 for(const file of [
  'piano-chord-24-triads-a4.pdf','piano-chord-24-triads-letter.pdf',
  'piano-chord-36-sevenths-a4.pdf','piano-chord-36-sevenths-letter.pdf'
