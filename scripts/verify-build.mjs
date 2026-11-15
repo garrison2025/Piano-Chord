@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { releaseChords } from '../src/data/chords.js';
+import {createChord} from '../src/lib/music.js';
 import {lessonEarDrills} from '../src/data/lessonPathways.js';
 import {chordSearchDescriptions,chordSearchTitles} from '../src/data/chordSeo.js';
 import {lessonPracticeHandoff} from '../src/lib/lessonPracticeHandoff.mjs';
@@ -57,15 +58,36 @@ for(const entry of releaseChords){
    if((html.match(/class="ear-training-chord"/g)||[]).length!==2)errors.push('Pair needs two playable chords: '+entry.slug);
  }else errors.push('Missing specifically authored drill for '+entry.slug);
 }
-for(const {slug} of releaseChords){
- const svgPath=path.join(dist,'diagrams',slug+'.svg');
- if(!fs.existsSync(svgPath)){errors.push(`Missing SVG diagram: ${slug}`);continue;}
- const svg=read(svgPath);
- if(!svg.includes('<svg') || !svg.includes('<title') || !svg.includes('<desc'))errors.push(`Invalid SVG content: ${slug}`);
- if(!sitemap.includes(`/diagrams/${slug}.svg`))errors.push(`SVG omitted from image sitemap: ${slug}`);
+let expectedImages=0;
+for(const entry of releaseChords){
+ const {slug}=entry;
+ const chord=createChord(entry);
+ const lessonHtml=read(getFile('/chords/'+slug+'/'));
+ const imageUrls=[
+   '/diagrams/'+slug+'.svg',
+   ...chord.inversions.slice(1).map((_,i)=>'/diagrams/inversions/'+slug+'/'+(i+1)+'.svg')
+ ];
+ expectedImages+=imageUrls.length;
+ for(const [i,url] of imageUrls.entries()){
+   const svgPath=path.join(dist,url.slice(1));
+   if(!fs.existsSync(svgPath)){errors.push('Missing SVG diagram: '+url);continue;}
+   const svg=read(svgPath);
+   if(!svg.includes('<svg')||!svg.includes('<title')||!svg.includes('<desc')||
+      !svg.includes('Highlighted piano keys:'))
+     errors.push('Invalid accessible SVG diagram: '+url);
+   if(!sitemap.includes('<image:loc>'+absoluteSite+url+'</image:loc>'))
+     errors.push('SVG omitted from image sitemap: '+url);
+   if(!lessonHtml.includes('src="'+url+'"'))
+     errors.push('Chord lesson missing indexable img element: '+url);
+   if(i>0&&!lessonHtml.includes('href="'+url+'"'))
+     errors.push('Chord lesson missing inversion diagram download: '+url);
+   if(i>0&&!svg.includes('inversion '+i))
+     errors.push('Wrong inversion-specific SVG title: '+url);
+ }
 }
 if((sitemap.match(/<url>/g)||[]).length!==publishedPages.length)errors.push(`Sitemap has ${(sitemap.match(/<url>/g)||[]).length} HTML URLs but ${publishedPages.length} pages are published`);
-if((sitemap.match(/<image:image>/g)||[]).length!==releaseChords.length)errors.push('Sitemap image count must match chord lesson count');
+if((sitemap.match(/<image:image>/g)||[]).length!==expectedImages)
+ errors.push('Sitemap image count must match all original plus inversion diagrams: '+expectedImages);
 const pianoHtml=read(path.join(dist,'tools/virtual-piano/index.html'));
 if((pianoHtml.match(/data-midi="[0-9]+"/g)||[]).length!==88)errors.push('Virtual piano must contain 88 key buttons');
 const atlasHtml=read(path.join(dist,'tools/chord-library/index.html'));
