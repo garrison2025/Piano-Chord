@@ -190,7 +190,7 @@ for(const p of paths){
         issues.push('Missing accessible inversion diagram download '+p+' #'+i);
     }
     const answer=chordQuickAnswer(activeChord);
-    const slashRow=html.match(/<p[^>]*data-slash-chord-symbols[^>]*>(.*?)<\/p>/s)?.[1]||"";
+    const slashRow=html.match(/<p\b[^>]*data-slash-chord-symbols[^>]*>(.*?)<\/p>/s)?.[1]||"";
     for(const inversion of activeChord.inversions.slice(1)){
       const symbol=prettySymbol(activeChord.symbol)+'/'+prettyNote(inversion.bass);
       if(!slashRow.includes('>'+symbol+'</strong>'))issues.push('Missing inversion symbol '+symbol+' on '+p);
