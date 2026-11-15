@@ -45,6 +45,25 @@ test('keyboard SVG includes original image and accessible labels',()=>{
   assert.equal((svg.match(/<rect x=/g)||[]).length,36);
 });
 
+test('all 92 static lesson diagrams distinguish their inversion and bass-note voicings',()=>{
+ let images=0;
+ for(const entry of releaseChords){
+   const chord=createChord(entry);
+   for(const [i,voicing] of chord.inversions.entries()){
+     const svg=keyboardSvg(chord,{inversion:i});
+     assert.ok(svg.includes('Highlighted piano keys: '+voicing.notes.map(prettyNote).join(' · ')+'.'),
+       entry.slug+' inversion '+i+' theory spelling');
+     assert.ok(svg.includes('ttl-'+entry.slug+'-'+i),entry.slug+' inversion '+i+' accessible title');
+     assert.equal((svg.match(/<rect x=/g)||[]).length,36,entry.slug+' key count');
+     assert.deepEqual(voicing.midi,[...voicing.midi].sort((a,b)=>a-b),
+       entry.slug+' inversion '+i+' must ascend from '+voicing.bass);
+     if(i>0)assert.match(svg,new RegExp('inversion '+i));
+     images++;
+   }
+ }
+ assert.equal(images,92);
+});
+
 test('all 29 SEO chord lessons contain distinct authored exercises',()=>{
  const lessons=releaseChords.map(x=>chordLessons[x.slug]);
  assert(lessons.every(x=>x && x.character.length>60 && x.comparison.length>70 && x.exercise.length>70 && x.pitfall.length>50));
