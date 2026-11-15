@@ -188,6 +188,29 @@ try{
   await practicePage.screenshot({path:'test-results/learning/mobile-chord-ear-drill.png',fullPage:true});
   await practiceMobile.close();
   console.log('PASS authored ear drills and preselected A/B comparisons across lesson families, 390px mobile layout');
+  // Browser-level SEO acceptance for five distinct high-demand lesson intents.
+  for(const slug of ['b-minor','b-flat-major','d-minor','e-minor','g-major']){
+    await go('/chords/'+slug+'/');
+    const guide=page.locator('[data-priority-chord="'+slug+'"]');
+    assert.equal(await guide.count(),1,slug+' must have one original extended guide');
+    assert.equal(await guide.locator('ol li').count(),3,slug+' must have three actionable steps');
+    assert.ok(await guide.locator('a[href^="/tools/chord-compare/"]').count()>=1,
+      slug+' must link to a real side-by-side listening tool');
+  }
+  await go('/');
+  assert.equal(await page.locator('#beginner-piano-chords article a[href^="/chords/"]').count(),5,
+    'Homepage must link five reviewed beginner lessons');
+  const homeMobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  const homeMobilePage=await homeMobile.newPage();
+  await homeMobilePage.goto(origin+'/',{waitUntil:'domcontentloaded'});
+  const homeWidths=await homeMobilePage.evaluate(()=>({
+    scroll:document.documentElement.scrollWidth,view:document.documentElement.clientWidth
+  }));
+  assert.ok(homeWidths.scroll<=homeWidths.view+2,
+    'Mobile homepage must not horizontally overflow: '+JSON.stringify(homeWidths));
+  await homeMobilePage.screenshot({path:'test-results/learning/mobile-homepage-first-viewport.png'});
+  await homeMobile.close();
+  console.log('PASS five authored SEO pathways and no 390px homepage overflow');
 
   // SEO-relevant examples must be legible without client execution; then
   // the contextual links must select the right notes in the actual tools.
@@ -259,6 +282,14 @@ try{
   await page.locator('#atlas-reset').click();
   assert.equal(await page.locator('.atlas-card:visible').count(),120);
   assert.equal(await page.locator('.atlas-card a[href^="/tools/inversion-explorer/?root="]').count(),120);
+  // Offscreen card paint can be deferred, but scrolling must materialize
+  // the complete note labels and preserve every Play action.
+  const lastAtlasCard=page.locator('.atlas-card').last();
+  await lastAtlasCard.scrollIntoViewIfNeeded();
+  assert.equal(await lastAtlasCard.locator('strong').isVisible(),true,
+    'Last offscreen chord remains readable after scrolling');
+  await lastAtlasCard.locator('button[data-play-midi]').click();
+  assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
   await page.locator('#atlas-type').selectOption('m7b5');
   assert.equal(await page.locator('.atlas-card:visible').count(),12);
   await page.locator('#atlas-reset').click();

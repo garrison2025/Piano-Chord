@@ -10,6 +10,7 @@ import {createChord,prettyNote} from '../../lib/music.js';
 import {relatedLessons} from '../../lib/chordRelations.mjs';
 import {lessonPracticeHandoff} from '../../lib/lessonPracticeHandoff.mjs';
 import {chordQuickAnswer} from '../../lib/chordQuickAnswer.mjs';
+import {priorityChordGuides} from '../../data/priorityChordGuides.js';
 export function getStaticPaths(){return releaseChords.map(entry=>({params:{slug:entry.slug},props:{entry}}));}
 const {entry}=Astro.props;
 const chord=createChord(entry);
@@ -26,6 +27,7 @@ const thirdKind=['minor','minor7'].includes(chord.quality)?'minor':'major';
 const seventhKind=chord.quality==='major7'?'major seventh':'minor seventh';
 const description=chordSearchDescriptions[entry.slug];
 const quickAnswer=chordQuickAnswer(chord);
+const priorityGuide=priorityChordGuides[entry.slug]||null;
 const lessonUrl=new URL('/chords/'+entry.slug+'/',Astro.site||Astro.url).toString();
 const subjectSchema={
   '@context':'https://schema.org',
@@ -78,6 +80,29 @@ const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.
   <section id="practice" class="container section-compact lesson-practice"><div class="two-col"><article class="prose"><span class="eyebrow">Learn the shape</span><h2>How to play {prettyNote(chord.symbol)} on piano</h2><p>First, find <strong>{prettyNote(chord.root)}</strong>, the root of this chord. Then add <strong>{prettyNote(chord.notes[1])}</strong>, the {thirdKind} third. Add <strong>{prettyNote(chord.notes[2])}</strong> to complete the triad. {chord.notes.length===4?`The fourth note, ${prettyNote(chord.notes[3])}, is a ${seventhKind} above the root.`:''}</p><p>Play the notes together to hear the harmony, or one at a time to hear how the intervals form the chord. Start at a comfortable octave; the diagram shows one reference voicing, not the only valid place to play it.</p><h3>What makes {prettyNote(chord.symbol)} distinctive?</h3><p>{lesson.character}</p><h3>How does {prettyNote(chord.symbol)} compare with a related chord?</h3><p>{lesson.comparison}</p><h3>A practice exercise for {prettyNote(chord.symbol)}</h3><p>{lesson.exercise}</p><h3>One mistake to avoid</h3><p>{lesson.pitfall}</p><p>Finger numbers depend on your hand size, octave and musical context; there isn't one universally correct fingering for every voicing.</p></article>
       <aside class="panel"><h3>Practice beyond this chord</h3><p>Compare the notes with another harmony, or keep a printed reference on your music stand.</p><div style="display:grid;gap:10px"><a class="btn" href={compareHref}>⇄ {drillPartner?"Compare with "+prettyNote(drillPartner.symbol):"Compare this chord"}</a><a class="btn" href={progressionHandoff.href}>♫ {progressionHandoff.label}</a><p class="help-text" style="margin:0">{progressionHandoff.description}</p><a class="btn" href="/printables/piano-chord-chart/">↓ Printable chord chart</a><a class="btn" href="/guides/how-to-read-piano-chords/">↗ Read chord diagrams</a>{chord.notes.length===4&&<a class="btn" href="/guides/seventh-chords-piano/">♬ Compare seventh chords</a>}</div></aside></div>
   </section>
+  {priorityGuide && <section class="container section-compact priority-chord-guide" id="beginner-guide" aria-labelledby="priority-guide-heading" data-priority-chord={entry.slug}>
+    <div class="section-head">
+      <div><span class="eyebrow">PRACTICAL PIANO LESSON · BEGINNER GUIDE</span><h2 id="priority-guide-heading">{priorityGuide.heading}</h2><p>{priorityGuide.intro}</p></div>
+    </div>
+    <div class="two-col">
+      <article class="panel prose">
+        <h3>{priorityGuide.question}</h3>
+        <p>{priorityGuide.answer}</p>
+        <p><a class="text-link" href="#inversions">See and play each bass-note inversion above ↗</a></p>
+        <h3>Common note-name mistake</h3>
+        <p>{priorityGuide.contrast}</p>
+      </article>
+      <aside class="panel prose">
+        <h3>{priorityGuide.exerciseTitle}</h3>
+        <ol>{priorityGuide.steps.map(step=><li>{step}</li>)}</ol>
+        <p>Listen to each change before increasing the tempo. This is a note-learning exercise, not a fixed fingering instruction.</p>
+        <div class="button-row no-print">
+          <a class="btn btn-primary" href={priorityGuide.compareHref}>{priorityGuide.compareLabel} ↗</a>
+          <a class="btn" href={priorityGuide.nextHref}>{priorityGuide.nextLabel} ↗</a>
+        </div>
+      </aside>
+    </div>
+  </section>}
   {drill && drillPartner && <section id="ear-training" class="container section-compact lesson-ear-training" aria-labelledby="ear-training-heading">
     <div class="panel ear-training-panel">
       <div class="ear-training-intro">

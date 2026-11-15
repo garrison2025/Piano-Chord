@@ -96,6 +96,47 @@ try{
   assert.match(rules,/User-agent:\s*\*/);
   assert.ok(rules.includes('Sitemap: '+origin+'/sitemap.xml'));
   console.log('PASS 44 sitemap URLs, tested public pages and robots');
+
+  // SEO/UX rollout: verify current production HTML, not merely a merged commit.
+  // The CSS/lesson release doesn't change canonical, so wait for its own marker.
+  let liveHomeContent=false;
+  for(let attempt=0;attempt<13;attempt++){
+    const response=await page.goto(origin+'/?priority-release='+Date.now(),
+      {waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200,'Production homepage status');
+    liveHomeContent=await page.locator('#beginner-piano-chords article').count()===5;
+    if(liveHomeContent)break;
+    if(attempt<12){
+      console.log('Waiting for five new priority lesson links on Cloudflare');
+      await page.waitForTimeout(10000);
+    }
+  }
+  assert.equal(liveHomeContent,true,'Five priority chord learning links must be publicly deployed');
+  for(const slug of ['b-minor','b-flat-major','d-minor','e-minor','g-major']){
+    const lesson=await page.request.get(origin+'/chords/'+slug+'/?priority-release='+Date.now());
+    assert.equal(lesson.status(),200,slug+' priority lesson status');
+    const html=await lesson.text();
+    assert.ok(html.includes('data-priority-chord="'+slug+'"'),
+      slug+' extended guide must be published on the live host');
+    assert.ok(html.includes('id="beginner-guide"'),
+      slug+' must include an original guided-learning section');
+  }
+  const mobileContext=await browser.newContext({
+    viewport:{width:390,height:844},isMobile:true,hasTouch:true
+  });
+  try{
+    const mobile=await mobileContext.newPage();
+    await mobile.goto(origin+'/?mobile-release='+Date.now(),{waitUntil:'domcontentloaded'});
+    const widths=await mobile.evaluate(()=>({
+      documentWidth:document.documentElement.scrollWidth,
+      viewportWidth:document.documentElement.clientWidth
+    }));
+    assert.ok(widths.documentWidth<=widths.viewportWidth+2,
+      'Published mobile homepage must not scroll horizontally: '+JSON.stringify(widths));
+  }finally{
+    await mobileContext.close();
+  }
+  console.log('PASS deployed five priority lessons and 390px no-horizontal-overflow');
 }finally{
   await browser.close();
 }

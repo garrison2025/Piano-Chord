@@ -89,3 +89,41 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 .ear-training-links .text-link{white-space:normal}
 @media(max-width:580px){.ear-training-players{grid-template-columns:1fr;gap:8px}.ear-training-chord{min-height:135px}.ear-training-arrow{text-align:center;transform:rotate(90deg);line-height:1}.ear-training-links .btn{width:100%}}
 @media(prefers-reduced-motion:reduce){.ear-training-chord{transition:none}}
+
+
+/* Mobile lab: the lower decorative orb extended 20px beyond the 390px
+   document viewport. Keep it inside the visual hero without a global
+   overflow-x:hidden rule that would mask real layout mistakes. */
+@media (max-width:580px){
+  .studio-hero .hero-orb-b{left:calc(50% - 125px)}
+}
+
+/* Five curated learning cards need a single comfortable reading column
+   on narrow phones. Forced two-column min-content was expanding the page. */
+@media (max-width:580px){
+  #beginner-piano-chords .card-grid{grid-template-columns:minmax(0,1fr)}
+  #beginner-piano-chords .card-grid>.panel{min-width:0}
+  .priority-chord-guide .two-col{grid-template-columns:minmax(0,1fr)}
+  .priority-chord-guide .two-col>.panel{min-width:0}
+  .priority-chord-guide .button-row>.btn{
+    max-width:100%;
+    white-space:normal;
+    overflow-wrap:break-word;
+    text-align:center;
+  }
+}
+
+/* Existing concept cards explain full chord note names. On a 390px
+   viewport their old two-column grid forced min-content text overflow.
+   Give each card its own readable row instead of hiding the overflow. */
+@media (max-width:580px){
+  #piano-chord-explained .card-grid{grid-template-columns:minmax(0,1fr)}
+  #piano-chord-explained .card-grid>.panel{min-width:0}
+}
+
+/* Slow-mobile font swap changed the two hero CTAs from two lines to one,
+   shifting the entire preview up by ~62px. Keep the action stack fixed. */
+@media (max-width:580px){
+  .studio-hero .hero-buttons{flex-direction:column;align-items:stretch}
+  .studio-hero .hero-buttons .btn{width:100%;min-width:0}
+}

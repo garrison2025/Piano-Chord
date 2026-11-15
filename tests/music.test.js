@@ -118,3 +118,41 @@ test('selected seventh chords have distinct four-note spelling and four voicings
  assert.notDeepEqual(chordNotes('C','dominant7'),chordNotes('C','major7'));
  assert.notDeepEqual(chordNotes('A','minor7'),chordNotes('A','major7'));
 });
+
+
+import {priorityChordGuides} from '../src/data/priorityChordGuides.js';
+test('five researched chord intents are represented by distinct authored learning pathways',()=>{
+ const slugs=['b-minor','b-flat-major','d-minor','e-minor','g-major'];
+ assert.deepEqual(Object.keys(priorityChordGuides),slugs);
+ const links=new Set(),exercises=new Set(),questions=new Set();
+ const inversionTerms={
+  'b-minor':['Bm/D','Bm/F♯'],
+  'b-flat-major':['Bb/D','Bb/F'],
+  'd-minor':['Dm/F','Dm/A'],
+  'e-minor':['Em/G','Em/B'],
+  'g-major':['G/B','G/D']
+ };
+ for(const slug of slugs){
+  const guide=priorityChordGuides[slug];
+  const entry=releaseChords.find(e=>e.slug===slug);
+  assert.ok(entry,slug+' must have a real authored lesson');
+  assert.ok(guide.heading.length>35&&guide.intro.length>90);
+  assert.ok(guide.answer.length>120&&guide.contrast.length>50);
+  assert.equal(guide.steps.length,3);
+  assert.ok(guide.steps.every(s=>s.length>35),'Every step must be independently actionable');
+  assert.ok(guide.steps.every(s=>!s.includes('always use fingers')));
+  assert.ok(inversionTerms[slug].every(term=>guide.answer.includes(term)),
+    slug+' must explain both slash basses');
+  assert.ok(guide.intro.includes(prettyNote(entry.root)),
+    slug+' root spelling must agree with music theory');
+  const url=new URL(guide.compareHref,'https://pianochordexplorer.com');
+  assert.equal(url.pathname,'/tools/chord-compare/');
+  assert.equal(url.searchParams.get('a'),slug);
+  assert.ok(releaseChords.some(e=>e.slug===url.searchParams.get('b')));
+  assert.ok(releaseChords.some(e=>'/chords/'+e.slug+'/'===guide.nextHref));
+  links.add(guide.nextHref);exercises.add(guide.steps.join(' '));questions.add(guide.question);
+ }
+ assert.equal(exercises.size,5,'Exercises may not be lightly spun duplicates');
+ assert.equal(questions.size,5,'Each page must answer a distinct bass-note task');
+ assert.equal(links.size,5,'Distinct pedagogical handoffs are expected');
+});
