@@ -11,6 +11,8 @@ import {relatedLessons} from '../../lib/chordRelations.mjs';
 import {lessonPracticeHandoff} from '../../lib/lessonPracticeHandoff.mjs';
 import {chordQuickAnswer} from '../../lib/chordQuickAnswer.mjs';
 import {priorityChordGuides} from '../../data/priorityChordGuides.js';
+import {articleSchema} from '../../lib/geoSchema.mjs';
+import {CONTENT_UPDATE_DATE,THEORY_REFERENCE} from '../../data/siteIdentity.js';
 export function getStaticPaths(){return releaseChords.map(entry=>({params:{slug:entry.slug},props:{entry}}));}
 const {entry}=Astro.props;
 const chord=createChord(entry);
@@ -29,6 +31,12 @@ const description=chordSearchDescriptions[entry.slug];
 const quickAnswer=chordQuickAnswer(chord);
 const priorityGuide=priorityChordGuides[entry.slug]||null;
 const lessonUrl=new URL('/chords/'+entry.slug+'/',Astro.site||Astro.url).toString();
+const articleMetadata=articleSchema({
+  path:'/chords/'+entry.slug+'/',
+  headline:chordSearchTitles[entry.slug],
+  description,
+  image:'/diagrams/'+entry.slug+'.svg'
+});
 const subjectSchema={
   '@context':'https://schema.org',
   '@type':'WebPage',
@@ -51,6 +59,7 @@ const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.
 ---
 <BaseLayout title={chordSearchTitles[entry.slug]} description={description} canonicalPath={`/chords/${entry.slug}/`} crumbs={[{name:'Chord Library',href:'/chords/'},{name:chord.name,href:`/chords/${entry.slug}/`}] }>
   <script type="application/ld+json" set:html={JSON.stringify(subjectSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(articleMetadata)} />
   <div class="container page-hero lesson-hero"><span class="eyebrow">THE CHORD ATLAS / {chord.qualityName.toUpperCase()}</span><h1>{heading}</h1><p class="lead">The <strong>{prettyNote(chord.symbol)}</strong> chord is built from <strong>{spelled}</strong>. See the exact keys, hear how they sound together, and explore how the chord changes when you move its lowest note.</p><div class="lesson-facts"><span><b>{chord.notes.length}</b> notes</span><span><b>{chord.inversions.length}</b> voicings</span><span><b>Free</b> to play &amp; print</span></div><nav class="lesson-jumps no-print" aria-label="On this page"><a href="#listen">01 <span>Listen</span> ↘</a><a href="#inversions">02 <span>Inversions</span> ↘</a><a href="#practice">03 <span>Practice</span> ↘</a>{drillPartner&&<a href="#ear-training">04 <span>Ear drill</span> ↘</a>}</nav></div>
   <section id="chord-quick-answer" class="container section-compact" aria-labelledby="chord-answer-title">
     <article class="panel prose">
@@ -132,5 +141,13 @@ const inversionHref='/tools/inversion-explorer/?root='+encodeURIComponent(chord.
       <p class="help-text">Play each button after the previous sound fades. The exercise checks your listening; it does not record or score your performance.</p>
     </div>
   </section>}
+  <section class="container section-compact" id="editorial-notes" aria-labelledby="editorial-notes-heading">
+    <div class="panel prose">
+      <span class="eyebrow">SOURCE NOTES &amp; ATTRIBUTION</span>
+      <h2 id="editorial-notes-heading">How this {prettyNote(chord.symbol)} lesson is maintained</h2>
+      <p>Written and maintained by <a href="/about/">Piano Chord Explorer</a>. Content and metadata updated <time datetime={CONTENT_UPDATE_DATE}>November 15, 2026</time>. The exact note names and SVG keyboard diagrams are derived from this site's twelve-tone chord definitions and checked with automated tests. They are educational examples, not universal fingerings.</p>
+      <p>Independent background on chord qualities and slash-bass notation: <a href={THEORY_REFERENCE.url} rel="noopener noreferrer">{THEORY_REFERENCE.name}</a>. The reference does not imply that its authors reviewed or endorsed this lesson. For corrections, contact <a href="mailto:contact@pianochordexplorer.com">contact@pianochordexplorer.com</a>.</p>
+    </div>
+  </section>
   <section class="container section-compact"><div class="section-head"><div><span class="eyebrow">Keep exploring</span><h2>Related piano chords</h2></div></div><div class="card-grid">{related.map(e=><ChordCard entry={e}/>)}</div></section>
 </BaseLayout>
