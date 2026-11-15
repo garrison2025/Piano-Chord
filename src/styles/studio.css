@@ -127,3 +127,51 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
   .studio-hero .hero-buttons{flex-direction:column;align-items:stretch}
   .studio-hero .hero-buttons .btn{width:100%;min-width:0}
 }
+
+
+/* Citation-ready reference data remains readable without ever widening the
+   390px mobile viewport. The table scrolls inside its own labelled region. */
+.theory-reference .section-head{margin-bottom:18px}
+.theory-table-scroll{
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  background:#fff;
+  border:1px solid #e2dfed;
+  border-radius:17px;
+  box-shadow:0 10px 24px -23px #30265d;
+}
+.theory-table-scroll:focus-visible{outline:3px solid #6657cb;outline-offset:3px}
+.theory-reference-table{
+  border-collapse:collapse;
+  width:100%;
+  min-width:610px;
+  text-align:left;
+  font-size:14px;
+  line-height:1.55;
+}
+.theory-reference-table caption{
+  text-align:left;
+  padding:16px 18px;
+  font-weight:700;
+  font-size:13px;
+  color:#55516c;
+}
+.theory-reference-table th,.theory-reference-table td{
+  padding:13px 17px;
+  border-top:1px solid #eeebf2;
+  vertical-align:top;
+}
+.theory-reference-table thead th{color:#504590;background:#f8f6fd}
+.theory-reference-table tbody th{color:#302a53;font-weight:750}
+.theory-reference-table td:nth-child(2){white-space:nowrap;font-variant-numeric:tabular-nums}
+.theory-reference-table a{color:#4f42a5;text-decoration:underline;text-underline-offset:3px}
+.theory-reference-table a:hover{color:#31277e}
+.theory-reference-notes{margin-top:18px;align-items:stretch}
+.theory-reference-notes .panel{min-width:0}
+.theory-reference-notes li{margin-bottom:8px;line-height:1.7}
+@media(max-width:580px){
+  .theory-reference-notes{grid-template-columns:minmax(0,1fr)}
+  .theory-reference-table{min-width:570px;font-size:13px}
+  .theory-reference-table th,.theory-reference-table td{padding:11px 12px}
+}
