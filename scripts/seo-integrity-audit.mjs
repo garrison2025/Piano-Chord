@@ -17,6 +17,24 @@ const indexable=new Set(paths),issues=[],warnings=[],incoming=new Map(paths.map(
 const titles=new Map(),descriptions=new Map();
 const rows=[];
 const chordByPath=new Map(releaseChords.map(e=>['/chords/'+e.slug+'/',e]));
+const expectedImageUrls=releaseChords.flatMap(entry=>{
+ const chord=createChord(entry);
+ return [
+   origin+'/diagrams/'+entry.slug+'.svg',
+   ...chord.inversions.slice(1).map((_,i)=>
+     origin+'/diagrams/inversions/'+entry.slug+'/'+(i+1)+'.svg')
+ ];
+});
+const imageUrls=[...sitemap.matchAll(/<image:loc>([^<]+)<\/image:loc>/g)].map(x=>x[1]);
+if(imageUrls.length!==expectedImageUrls.length||
+   new Set(imageUrls).size!==imageUrls.length||
+   expectedImageUrls.some(x=>!imageUrls.includes(x)))
+ issues.push('Image sitemap must include exactly '+expectedImageUrls.length+' distinct chord voicing SVGs');
+for(const imageUrl of expectedImageUrls){
+ const relative=imageUrl.slice(origin.length);
+ const filename=path.join(dist,relative.slice(1));
+ if(!fs.existsSync(filename))issues.push('Missing image sitemap asset '+imageUrl);
+}
 function decode(s){return String(s??'').replaceAll('&amp;','&').replaceAll('&quot;','"').replaceAll('&#39;',"'");}
 function fileFor(p){return path.join(dist,p==='/'?'index.html':p.slice(1)+'index.html');}
 function attr(html,pat){return decode(html.match(pat)?.[1]);}
@@ -89,6 +107,14 @@ for(const p of paths){
   }
   const chordEntry=chordByPath.get(p);
   if(chordEntry){
+    const activeChord=createChord(chordEntry);
+    for(let i=1;i<activeChord.inversions.length;i++){
+      const diagram='/diagrams/inversions/'+chordEntry.slug+'/'+i+'.svg';
+      if(!html.includes('src="'+diagram+'"'))
+        issues.push('Missing indexable standalone inversion <img> '+p+' #'+i);
+      if(!html.includes('href="'+diagram+'"'))
+        issues.push('Missing accessible inversion diagram download '+p+' #'+i);
+    }
     const answer=chordQuickAnswer(createChord(chordEntry));
     const subject=structured.find(o=>o?.['@type']==='WebPage' && o.mainEntity?.['@type']==='DefinedTerm');
     if(!subject || subject.url!==origin+p ||
