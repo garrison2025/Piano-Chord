@@ -7,7 +7,7 @@ import PianoKeyboard from '../../components/PianoKeyboard.astro';
 const starter=coreChordKeyboard(coreChordByKey.get('C:major'));
 ---
 <BaseLayout title="Piano Chord Inversion Explorer | All 120 Chords & Slash Bass Notes" description="Explore root position and piano inversions for 120 chords across ten families. Hear each voicing, view correctly spelled notes and identify slash-chord bass notes." canonicalPath="/tools/inversion-explorer/" crumbs={[{name:'Inversion Explorer',href:'/tools/inversion-explorer/'}]}>
-  <div class="container page-hero tool-hero"><span class="eyebrow">120 CHORDS · 10 FAMILIES</span><h1>Move the bass.<br/>Keep the harmony.</h1><p class="lead">From major and minor triads to suspended and half-diminished sevenths: every chord in our 120-chord atlas has a root position and all of its inversions. Select a chord to see its lowest note and hear each voicing.</p></div>
+  <div class="container page-hero tool-hero"><span class="eyebrow">120 CHORDS · 10 FAMILIES</span><h1>Piano chord inversions<br/>with playable voicings.</h1><p class="lead">From major and minor triads to suspended and half-diminished sevenths: every chord in our 120-chord atlas has a root position and all of its inversions. Select a chord to see its lowest note and hear each voicing.</p></div>
   <section class="container section-compact"><div class="two-col">
     <div class="panel tool-panel"><label for="inversion-chord" class="input-label">Choose one of 120 chords</label><select class="field" id="inversion-chord">
       {roots.map(root=><optgroup label={prettyNote(root)+' chords'}>{qualities.map(q=>{

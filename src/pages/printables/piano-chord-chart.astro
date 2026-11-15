@@ -1,10 +1,22 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import {starterPrintableChords} from '../../data/chords.js';
+import {releaseChords,starterPrintableChords} from '../../data/chords.js';
 import {createChord,prettyNote} from '../../lib/music.js';
+import {coreChords,roots} from '../../lib/coreCatalog.js';
+const lessonQuality={dominant7:'7',major7:'maj7',minor7:'m7'};
+const lessonByChord=new Map(releaseChords.map(entry=>[entry.root+':'+(lessonQuality[entry.quality]||entry.quality),entry]));
+const chordByRootAndQuality=new Map(coreChords.map(chord=>[chord.root+':'+chord.quality,chord]));
+const charts=[
+  {id:'triad-notes',title:'Major and minor piano chord chart',columns:[
+    {quality:'major',heading:'Major'},{quality:'minor',heading:'Minor'}
+  ]},
+  {id:'seventh-notes',title:'Seventh piano chord chart',columns:[
+    {quality:'7',heading:'Dominant 7'},{quality:'maj7',heading:'Major 7'},{quality:'m7',heading:'Minor 7'}
+  ]}
+];
 ---
-<BaseLayout title="Free Printable Piano Chord Charts | 24 Triads & 36 Sevenths" description="Download free one-page A4 and US Letter piano chord charts: all 24 major and minor triads plus 36 common seventh chords, with note spellings and keyboard maps." canonicalPath="/printables/piano-chord-chart/" crumbs={[{name:'Printable Chord Chart',href:'/printables/piano-chord-chart/'}]}>
-  <div class="container page-hero print-chart-hero"><span class="eyebrow">Free printable resource</span><h1>Piano chord charts<br/>for your music stand.</h1><p class="lead">Download print-ready A4 or US Letter PDF charts for all 24 major and minor triads and 36 common seventh chords. Keep the original 16-chord illustrated starter sheet below for a compact first reference.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print starter chart</button><a class="btn" href="/chords/">Browse chord lessons</a></div></div>
+<BaseLayout title="Piano Chord Charts: Notes & Free Printable PDFs" description="Look up the notes of 24 major and minor chords and 36 seventh chords. Download free A4 or US Letter piano chord charts with keyboard diagrams." canonicalPath="/printables/piano-chord-chart/" crumbs={[{name:'Printable Chord Chart',href:'/printables/piano-chord-chart/'}]}>
+  <div class="container page-hero print-chart-hero"><span class="eyebrow">Free printable resource</span><h1>Piano chord charts<br/>with notes and free PDFs.</h1><p class="lead">Download print-ready A4 or US Letter PDF charts for all 24 major and minor triads and 36 common seventh chords. Use the note tables for quick lookup or print the illustrated starter sheet.</p><div class="button-row no-print"><button type="button" class="btn btn-primary" id="print-charts">↗ Print starter chart</button><a class="btn" href="#triad-notes">Major and minor chord notes</a><a class="btn" href="#seventh-notes">Seventh chord notes</a></div></div>
   <section class="container section-compact printable-downloads" aria-labelledby="download-charts-title">
     <div class="section-head"><div><span class="eyebrow">FREE PDF DOWNLOADS</span><h2 id="download-charts-title">Choose a complete chord chart</h2><p>Each file is a single-page vector PDF with chord spellings and a one-octave keyboard map. Choose the paper size that matches your printer.</p></div></div>
     <div class="card-grid">
@@ -25,7 +37,22 @@ import {createChord,prettyNote} from '../../lib/music.js';
         </div>
       </article>
     </div>
-    <p class="help-text">PDFs are generated as static files during the site build. No account, upload, server-side conversion or paid PDF API is required.</p>
+  </section>
+  <section class="container section-compact chord-note-reference" aria-label="Piano chord note reference">
+    <p>Read the notes from low to high in root position. For an inversion, put a different chord tone in the bass. The links open a full lesson where available or the matching chord in the playable library.</p>
+    {charts.map(chart=><div id={chart.id} class="panel chord-note-panel">
+      <h2 id={chart.id+"-heading"}>{chart.title}</h2>
+      <table aria-labelledby={chart.id+"-heading"} class="chord-note-table">
+        <thead><tr><th scope="col">Root</th>{chart.columns.map(column=><th scope="col">{column.heading}</th>)}</tr></thead>
+        <tbody>{roots.map(root=><tr><th scope="row">{prettyNote(root)}</th>{chart.columns.map(column=>{
+          const key=root+":"+column.quality;
+          const chord=chordByRootAndQuality.get(key)!;
+          const lesson=lessonByChord.get(key);
+          const href=lesson?"/chords/"+lesson.slug+"/":"/tools/chord-library/?q="+encodeURIComponent(chord.symbol);
+          return <td><a href={href} aria-label={chord.name+" piano chord"}>{chord.symbol}</a><span>{chord.notes.map(prettyNote).join(" – ")}</span></td>;
+        })}</tr>)}</tbody>
+      </table>
+    </div>)}
   </section>
   <section class="container section-compact print-chart-page"><div class="panel"><div class="section-head no-print"><div><h2>16-chord reference</h2><p>Each diagram covers a reference keyboard range, with its notes written beside it.</p></div></div><div class="print-chart-heading" aria-hidden="true"><strong>Piano Chord Explorer</strong><span>16 original chord diagrams · Notes &amp; keys</span></div><div class="print-sheet print-chart-grid">
   {starterPrintableChords.map(entry=>{const c=createChord(entry);return <article class="print-cell"><strong>{prettyNote(c.symbol)} · {c.qualityName}</strong><span>{c.notes.map(prettyNote).join(' – ')}</span><img src={`/diagrams/${entry.slug}.svg`} alt={`${c.name}: ${c.notes.map(prettyNote).join(', ')}`} width="692" height="195" loading="lazy" /></article>})}
@@ -34,8 +61,16 @@ import {createChord,prettyNote} from '../../lib/music.js';
 
 <style>
 .print-chart-heading{display:none}
+.chord-note-reference{display:grid;gap:18px}
+.chord-note-panel{scroll-margin-top:6rem}
+.chord-note-panel h2{margin:0 0 12px}
+.chord-note-table{width:100%;border-collapse:collapse;font-size:clamp(.74rem,2.2vw,.95rem)}
+.chord-note-table th,.chord-note-table td{padding:.55em .28em;vertical-align:top;text-align:left;border-bottom:1px solid #dbe3de}
+.chord-note-table a{font-weight:700;text-decoration:underline}
+.chord-note-table td span{display:block;line-height:1.45}
+@media(max-width:520px){.chord-note-panel{padding:12px}}
 @media print {
-  :global(.printable-downloads){display:none!important}
+  :global(.printable-downloads),:global(.chord-note-reference){display:none!important}
   /* The page size is chosen in the native browser print dialog. Both A4 and
      US Letter portrait retain four compact columns within 10mm margins. */
   @page{size:auto;margin:10mm}

@@ -68,6 +68,23 @@ try{
   assert.equal(await page.locator('.atlas-card:visible').count(),120,'Reset restores all chords');
   console.log('PASS live fuzzy search, family selection, and 120-card reset');
 
+  const chartUrl=origin+'/printables/piano-chord-chart/';
+  const chartPage=await browser.newPage({viewport:{width:360,height:800},javaScriptEnabled:false});
+  for(let attempt=0;attempt<13;attempt++){
+    const response=await chartPage.goto(chartUrl+'?chart-release='+Date.now(),{waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200,'Production chord chart HTTP');
+    if(await chartPage.locator('#seventh-notes').count())break;
+    if(attempt<12)await chartPage.waitForTimeout(10000);
+  }
+  assert.equal(await chartPage.locator('link[rel="canonical"]').getAttribute('href'),chartUrl);
+  assert.equal(await chartPage.locator('#triad-notes tbody td').count(),24);
+  assert.equal(await chartPage.locator('#seventh-notes tbody td').count(),36);
+  assert.match(await chartPage.locator('#seventh-notes td').filter({has:chartPage.getByRole('link',{name:'C Major 7th piano chord',exact:true})}).innerText(),/C – E – G – B/);
+  assert.equal(await chartPage.locator('a[href="/downloads/piano-chord-24-triads-a4.pdf"]').count(),1);
+  assert.equal(await chartPage.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
+  await chartPage.close();
+  console.log('PASS live, script-free 24-triad and 36-seventh HTML charts at 360 px');
+
   const sitemap=await page.request.get(origin+'/sitemap.xml');
   assert.equal(sitemap.status(),200,'Public sitemap HTTP');
   const xml=await sitemap.text();

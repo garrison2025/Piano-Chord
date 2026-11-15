@@ -6,7 +6,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {releaseChords} from '../src/data/chords.js';
-import {createChord} from '../src/lib/music.js';
+import {createChord,prettyNote} from '../src/lib/music.js';
+import {coreChords} from '../src/lib/coreCatalog.js';
 import {chordQuickAnswer} from '../src/lib/chordQuickAnswer.mjs';
 import {priorityChordGuides} from '../src/data/priorityChordGuides.js';
 import {SITE_EMAIL,SITE_SOURCE,CONTENT_UPDATE_DATE,THEORY_REFERENCE} from '../src/data/siteIdentity.js';
@@ -207,6 +208,20 @@ for(const p of paths){
       issues.push('Homepage missing WebSite name declaration');
     for(const answer of ['id="piano-chord-definition"','What notes make C major?','How is B minor different from D major?','Is C7 the same as Cmaj7?'])
       if(!html.includes(answer))issues.push('Missing transparent question-led homepage content: '+answer);
+  }
+  if(p==='/printables/piano-chord-chart/'){
+    for(const [section,qualities] of [['triad-notes',['major','minor']],['seventh-notes',['7','maj7','m7']]]){
+      const start=html.indexOf('id="'+section+'"');
+      const chart=start<0?'':html.slice(start,html.indexOf('</table>',start));
+      const chords=coreChords.filter(chord=>qualities.includes(chord.quality));
+      if((chart.match(/<td\b/g)||[]).length!==chords.length)
+        issues.push('Wrong number of HTML chart entries in '+section);
+      for(const chord of chords){
+        const notes=chord.notes.map(prettyNote).join(' – ');
+        if(!chart.includes('>'+chord.symbol+'</a>')||!chart.includes('>'+notes+'</span>'))
+          issues.push('Missing chord chart notes or link for '+chord.symbol+' in '+section);
+      }
+    }
   }
   if(p==='/about/'&&!html.includes('Source, calculation and review boundaries'))
     issues.push('Missing source and editorial review transparency on About');
