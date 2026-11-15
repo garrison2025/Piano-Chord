@@ -16,7 +16,7 @@ export function chordSearchFields(chord){
 /** A complete chord symbol (such as F#m, F#m7 or C#maj7) is exact.
  * Root-only searches and family terms (such as F# or sus4) remain fuzzy. */
 function explicitChordSymbol(value){
-  const match=/^([a-g](?:#|b)?)([a-z0-9]+)$/.exec(normalizeChordSearch(value));
+  const match=/^([a-g](?:#|b)?) *([a-z0-9]+)$/.exec(normalizeChordSearch(value));
   if(!match)return null;
   const quality=qualities.find(q=>q.s && normalizeChordSearch(q.s)===match[2]);
   return quality?{root:match[1],quality:quality.id}:null;

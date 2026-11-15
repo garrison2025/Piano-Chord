@@ -42,3 +42,21 @@ export async function loadLatestTake(){
 export async function clearLatestTake(){
   return useStore('readwrite',store=>store.delete('latest'));
 }
+
+const INTERRUPTED_KEY='piano-chord-explorer-interrupted-v1';
+
+// Synchronous storage also works during pagehide, when a new IndexedDB
+// transaction might not have time to commit. The finished take stays separate.
+export function saveInterruptedTake(take,title){
+  const value=JSON.stringify({take,title:String(title||'').slice(0,60)});
+  localStorage.setItem(INTERRUPTED_KEY,value);
+  return value;
+}
+export function loadInterruptedTake(){
+  const value=localStorage.getItem(INTERRUPTED_KEY);
+  return value?{...JSON.parse(value),value}:null;
+}
+export function clearInterruptedTake(value){
+  if(value && localStorage.getItem(INTERRUPTED_KEY)===value)
+    localStorage.removeItem(INTERRUPTED_KEY);
+}

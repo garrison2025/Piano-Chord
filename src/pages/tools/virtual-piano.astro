@@ -87,10 +87,11 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
       <button id="vp-end-record" type="button" class="record-danger" disabled>■ Stop recording</button>
       <button id="vp-replay" type="button" disabled>▶ Replay</button>
       <button id="vp-midi" type="button" disabled>↓ Save MIDI</button>
+      <button id="vp-recover" type="button" hidden>Recover interrupted recording</button>
       <button id="vp-clear-saved" type="button">Clear saved draft</button>
     </div>
     <div id="vp-message" class="recording-message" role="status" aria-live="polite">Ready to record, up to 90 seconds. Press Record, then play the piano above.</div>
-    <p class="recording-muted">The latest valid MIDI take is kept as a local browser draft when storage is available. Empty recordings do not erase it. Download important MIDI and video files before leaving; browser storage may be cleared. Generated video files are not backed up automatically.</p>
+    <p class="recording-muted">This browser keeps the latest finished recording and a separate checkpoint for an interrupted recording when storage is available. Download important MIDI and video files before leaving; browser storage may be cleared. Generated video files are not backed up automatically.</p>
     <section id="vp-timeline" class="recording-timeline" aria-label="Recorded performance chord timeline" hidden>
       <div class="recording-timeline-heading"><div><span class="eyebrow">YOUR ORIGINAL PERFORMANCE</span><h3>Listen back by chord</h3><p id="vp-timeline-caption">Scrub the recording or select a recognized chord to replay from that point.</p></div><output id="vp-seek-time" aria-label="Selected replay position">00:00 / 00:00</output></div>
       <label for="vp-seek" class="recording-seek-label">Replay position</label>
@@ -134,7 +135,7 @@ const keys=Array.from({length:88},(_,i)=>{const midi=i+21;const b=black.has(midi
     </div>
   </div>
 </section>
-<section class="container section"><div class="tool-grid"><div class="panel"><h2>Play with computer keys</h2><p><strong>A W S E D F T G Y H U J K O L P ;</strong> map to the chromatic notes beginning at C4. Press <strong>Z/X</strong> to shift the octave and hold <strong>Space</strong> for sustain. Play several keys together for chords.</p><p>Shortcuts are inactive while typing in form fields. Focus an on-screen key and use the arrow keys to move, then Enter or Space to play it.</p></div><div class="panel"><h2>Play with touch or mouse</h2><p>Touch multiple keys at once to play a chord. <strong>Scroll keys</strong> lets you swipe horizontally through the 88-key range; <strong>Glide to play</strong> turns that swipe into a sequence of notes while keeping independent fingers on their own keys. Use Low, Middle or High C, or switch back to Scroll, to reach other registers.</p><p>This lightweight version uses synthesized tones so it does not need copyrighted piano recordings or a sample download.</p></div></div></section>
+<section class="container section"><div class="tool-grid"><div class="panel"><h2>Play with computer keys</h2><p><strong>A W S E D F T G Y H U J K O L P ;</strong> map to the chromatic notes beginning at C4. Press <strong>Z/X</strong> to shift the octave and hold <strong>Space</strong> for sustain. Play several keys together for chords.</p><p>Focus the piano keyboard area to enable these shortcuts. Outside the keyboard area, Space scrolls the page as usual. Focus an on-screen key and use the arrow keys to move, then Enter or Space to play it.</p></div><div class="panel"><h2>Play with touch or mouse</h2><p>Touch multiple keys at once to play a chord. <strong>Scroll keys</strong> lets you swipe horizontally through the 88-key range; <strong>Glide to play</strong> turns that swipe into a sequence of notes while keeping independent fingers on their own keys. Use Low, Middle or High C, or switch back to Scroll, to reach other registers.</p><p>This lightweight version uses synthesized tones so it does not need copyrighted piano recordings or a sample download.</p></div></div></section>
 <script>
 import {setupPianoRecorder} from '../../scripts/pianoRecorder.js';
 import {setupProgressionGuide} from '../../scripts/progressionGuide.js';
@@ -187,6 +188,7 @@ for(const b of keys.values()){
     if(e.button!==0&&e.pointerType==='mouse')return;
     e.preventDefault();
     try{b.setPointerCapture(e.pointerId);}catch{ /* Some assistive pointer synthesizers do not support capture. */ }
+    if(e.pointerType==='mouse')scroll.focus({preventScroll:true});
     if(scroll.dataset.touchMode==='glide')glidePointers.add(e.pointerId);
     on(+b.dataset.midi,'p'+e.pointerId);
   });
@@ -212,7 +214,7 @@ for(const b of keys.values()){
 for(const name of ['pointerup','pointercancel'])
   document.addEventListener(name,e=>{glidePointers.delete(e.pointerId);off('p'+e.pointerId);},true);
 
-document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,textarea,select,a,button:not(.piano-key),[contenteditable]'))return;
+document.addEventListener('keydown',e=>{if(!scroll.contains(e.target)||e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,textarea,select,a,button:not(.piano-key),[contenteditable]'))return;
 const focus=e.target.closest('.piano-key');if(focus&&['ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();const next=Math.max(21,Math.min(108,+focus.dataset.midi+(e.code==='ArrowRight'?1:-1)));focus.tabIndex=-1;keys.get(next).tabIndex=0;keys.get(next).focus();return;}
 if(focus&&['Enter','Space'].includes(e.code)){
   e.preventDefault();

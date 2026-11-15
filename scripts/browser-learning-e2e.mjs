@@ -45,6 +45,16 @@ try{
     }
   });
   await stability.goto(origin+'/tools/virtual-piano/',{waitUntil:'domcontentloaded'});
+  const outsideKeys=await stability.evaluate(()=>{
+    return ['Space','KeyA'].map(code=>{
+      const event=new KeyboardEvent('keydown',{code,bubbles:true,cancelable:true});
+      document.body.dispatchEvent(event);
+      document.body.dispatchEvent(new KeyboardEvent('keyup',{code,bubbles:true}));
+      return event.defaultPrevented;
+    });
+  });
+  assert.deepEqual(outsideKeys,[false,false],'Piano shortcuts must leave keys outside the keyboard alone');
+  assert.equal(await stability.locator('.piano-key.pressed').count(),0);
   await stability.locator('#vp-vol').fill('0');
   await stability.locator('.piano-key[data-midi="60"]').focus();
   await stability.keyboard.down('Enter');
@@ -93,6 +103,17 @@ try{
   await stability.reload({waitUntil:'domcontentloaded'});
   await stability.waitForFunction(()=>!document.getElementById('vp-midi')?.disabled,null,{timeout:8000});
   assert.match(await stability.locator('#vp-message').innerText(),/Restored the most recent/);
+  await stability.locator('#vp-record').click();
+  await stability.locator('#vp-scroll').focus();
+  await stability.keyboard.down('s');
+  await stability.keyboard.up('s');
+  await stability.reload({waitUntil:'domcontentloaded'});
+  await stability.locator('#vp-message').getByText(/Restored the most recent/).waitFor();
+  await stability.locator('#vp-recover').click();
+  await stability.locator('#vp-message').getByText(/Recovered the interrupted recording/).waitFor();
+  const recoveredMidi=stability.waitForEvent('download');
+  await stability.locator('#vp-midi').click();
+  assert.match((await recoveredMidi).suggestedFilename(),/\.mid$/);
   await stability.locator('#vp-clear-saved').click();
   await stability.locator('#vp-message').getByText(/draft cleared/).waitFor({timeout:8000});
   await stability.reload({waitUntil:'domcontentloaded'});
@@ -270,7 +291,7 @@ try{
   assert.equal(await page.locator('.atlas-card:visible').count(),1);
   assert.match(await page.locator('.atlas-card:visible').innerText(),/G♭m/);
   for(const [query,expected] of [
-    ['F♯m','G♭m'],['F#m','G♭m'],['F#m7','G♭m7'],['F#m7b5','G♭m7b5']
+    ['F♯m','G♭m'],['F#m','G♭m'],['F# m','G♭m'],['F#m7','G♭m7'],['F#m7b5','G♭m7b5']
   ]){
     await page.locator('#atlas-search').fill(query);
     assert.deepEqual((await texts('.atlas-card:visible strong')).map(x=>x.trim()),[expected],
