@@ -74,6 +74,35 @@ for(const p of paths){
     issues.push('Every indexable page must link both policy pages: '+p);
   if(!html.includes('href="mailto:'+SITE_EMAIL+'"'))
     issues.push('Missing owner-confirmed contact address in footer: '+p);
+  if(p.startsWith('/chords/')&&p!=='/chords/'){
+    if(!html.includes('id="chord-quick-answer"')||
+       !html.includes('data-chord-answer')||!html.includes('data-inversion-answer'))
+      issues.push('Missing human-readable GEO notes and inversions on '+p);
+    if(!html.includes('How does ')||!html.includes('compare with a related chord?'))
+      issues.push('Missing original chord relationship explanation on '+p);
+  }
+  if(!html.includes('rel="preconnect" href="https://fonts.googleapis.com"')||
+     !html.includes('rel="preconnect" href="https://fonts.gstatic.com"'))
+    issues.push('Missing Google Fonts resource preconnect on '+p);
+  if(!/<html\b[^>]*lang="en"/i.test(html))issues.push('Missing page language on '+p);
+  if(/<meta\s+name="robots"\s+content="[^"]*noindex/i.test(html))issues.push('Indexable sitemap page incorrectly noindex: '+p);
+  if(/<meta\s+name="robots"\s+content="[^"]*nosnippet/i.test(html))issues.push('AI-search eligible page prohibits snippets: '+p);
+  if(title?.length>70)warnings.push('Long title '+title.length+' chars on '+p);
+  if(description?.length>185)warnings.push('Long description '+description.length+' chars on '+p);
+  const imageTags=[...html.matchAll(/<img\b[^>]*>/gi)].map(m=>m[0]);
+  for(const tag of imageTags)
+    if(!/\balt="[^"]+"/i.test(tag))issues.push('Missing descriptive img alt on '+p+': '+tag.slice(0,85));
+  let schemaCount=0,structured=[];
+  for(const match of html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)){
+    try {
+      const value=JSON.parse(match[1]);schemaCount++;structured.push(value);
+      if(!value['@context']||!value['@type'])issues.push('Incomplete JSON-LD on '+p);
+      if(value['@type']==='BreadcrumbList'){
+        for(const item of value.itemListElement||[])
+          if(!item.item?.startsWith(origin+'/'))issues.push('Broken BreadcrumbList item on '+p);
+      }
+    }catch(e){issues.push('Malformed JSON-LD on '+p+': '+e.message);}
+  }
   // Schema must describe actually visible content; counts alone are not evidence.
   const schemaType=t=>structured.find(o=>o?.['@type']===t);
   if(p==='/'){
@@ -115,35 +144,6 @@ for(const p of paths){
       issues.push('Educational Article schema has no matching visible attribution: '+p);
     if(article&&'datePublished' in article)
       issues.push('Do not infer original publication dates from metadata update: '+p);
-  }
-  if(p.startsWith('/chords/')&&p!=='/chords/'){
-    if(!html.includes('id="chord-quick-answer"')||
-       !html.includes('data-chord-answer')||!html.includes('data-inversion-answer'))
-      issues.push('Missing human-readable GEO notes and inversions on '+p);
-    if(!html.includes('How does ')||!html.includes('compare with a related chord?'))
-      issues.push('Missing original chord relationship explanation on '+p);
-  }
-  if(!html.includes('rel="preconnect" href="https://fonts.googleapis.com"')||
-     !html.includes('rel="preconnect" href="https://fonts.gstatic.com"'))
-    issues.push('Missing Google Fonts resource preconnect on '+p);
-  if(!/<html\b[^>]*lang="en"/i.test(html))issues.push('Missing page language on '+p);
-  if(/<meta\s+name="robots"\s+content="[^"]*noindex/i.test(html))issues.push('Indexable sitemap page incorrectly noindex: '+p);
-  if(/<meta\s+name="robots"\s+content="[^"]*nosnippet/i.test(html))issues.push('AI-search eligible page prohibits snippets: '+p);
-  if(title?.length>70)warnings.push('Long title '+title.length+' chars on '+p);
-  if(description?.length>185)warnings.push('Long description '+description.length+' chars on '+p);
-  const imageTags=[...html.matchAll(/<img\b[^>]*>/gi)].map(m=>m[0]);
-  for(const tag of imageTags)
-    if(!/\balt="[^"]+"/i.test(tag))issues.push('Missing descriptive img alt on '+p+': '+tag.slice(0,85));
-  let schemaCount=0,structured=[];
-  for(const match of html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)){
-    try {
-      const value=JSON.parse(match[1]);schemaCount++;structured.push(value);
-      if(!value['@context']||!value['@type'])issues.push('Incomplete JSON-LD on '+p);
-      if(value['@type']==='BreadcrumbList'){
-        for(const item of value.itemListElement||[])
-          if(!item.item?.startsWith(origin+'/'))issues.push('Broken BreadcrumbList item on '+p);
-      }
-    }catch(e){issues.push('Malformed JSON-LD on '+p+': '+e.message);}
   }
   if(p.startsWith('/chords/')&&p!=='/chords/'){
     if(!html.includes('id="chord-quick-answer"')||
