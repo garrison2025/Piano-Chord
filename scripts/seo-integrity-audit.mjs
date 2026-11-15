@@ -8,6 +8,7 @@ import path from 'node:path';
 import {releaseChords} from '../src/data/chords.js';
 import {createChord} from '../src/lib/music.js';
 import {chordQuickAnswer} from '../src/lib/chordQuickAnswer.mjs';
+import {priorityChordGuides} from '../src/data/priorityChordGuides.js';
 
 const dist=path.resolve('dist');
 const origin='https://pianochordexplorer.com';
@@ -105,6 +106,20 @@ for(const p of paths){
        !html.includes('"@type":"DefinedTerm"'))
       issues.push('Chord page missing music term subject JSON-LD: '+p);
   }
+  const priority=chordByPath.get(p)?priorityChordGuides[chordByPath.get(p).slug]:null;
+  if(priority){
+    const slug=chordByPath.get(p).slug;
+    if(!html.includes('id="beginner-guide"')||
+       !html.includes('data-priority-chord="'+slug+'"'))
+      issues.push('Priority lesson lacks its human-readable guide: '+p);
+    if(!html.includes(priority.heading)||!html.includes(priority.question)||
+       !priority.steps.every(step=>html.includes(step)))
+      issues.push('Priority lesson is missing its individual exercises: '+p);
+    if(!html.replaceAll('&amp;','&').includes('href="'+priority.compareHref+'"'))
+      issues.push('Priority lesson has no correct pairwise chord compare: '+p);
+    if(!html.includes('href="'+priority.nextHref+'"'))
+      issues.push('Priority lesson has no next authored chord: '+p);
+  }
   const chordEntry=chordByPath.get(p);
   if(chordEntry){
     const activeChord=createChord(chordEntry);
@@ -126,6 +141,11 @@ for(const p of paths){
       issues.push('GEO visible note/inversion answers disagree with the theory engine: '+p);
   }
   if(p==='/'){
+    for(const slug of Object.keys(priorityChordGuides))
+      if(!html.includes('href="/chords/'+slug+'/'))
+        issues.push('Homepage should link to researched priority lesson: '+slug);
+    if(!html.includes('id="beginner-piano-chords"'))
+      issues.push('Homepage lacks visible high-demand beginner chord pathways');
     if(!html.includes('"@type":"WebSite"')||!html.includes('"name":"Piano Chord Explorer"'))
       issues.push('Homepage missing WebSite name declaration');
     for(const answer of ['id="piano-chord-definition"','What notes make C major?','How is B minor different from D major?','Is C7 the same as Cmaj7?'])
