@@ -98,16 +98,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
   .studio-hero .hero-orb-b{left:calc(50% - 125px)}
 }
 
-/* The first twelve atlas cards are kept fully renderable near the top
-   of the interactive library. Skip offscreen card internals only, using
-   a realistic remembered size to avoid zero-height scroll jumps. */
-@supports (content-visibility:auto){
-  .atlas-grid>.atlas-card:nth-child(n+13){
-    content-visibility:auto;
-    contain-intrinsic-size:auto 215px;
-  }
-}
-
 /* Five curated learning cards need a single comfortable reading column
    on narrow phones. Forced two-column min-content was expanding the page. */
 @media (max-width:580px){
