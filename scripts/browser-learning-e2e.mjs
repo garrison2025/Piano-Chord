@@ -282,6 +282,14 @@ try{
   await page.locator('#atlas-reset').click();
   assert.equal(await page.locator('.atlas-card:visible').count(),120);
   assert.equal(await page.locator('.atlas-card a[href^="/tools/inversion-explorer/?root="]').count(),120);
+  // Offscreen card paint can be deferred, but scrolling must materialize
+  // the complete note labels and preserve every Play action.
+  const lastAtlasCard=page.locator('.atlas-card').last();
+  await lastAtlasCard.scrollIntoViewIfNeeded();
+  assert.equal(await lastAtlasCard.locator('strong').isVisible(),true,
+    'Last offscreen chord remains readable after scrolling');
+  await lastAtlasCard.locator('button[data-play-midi]').click();
+  assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
   await page.locator('#atlas-type').selectOption('m7b5');
   assert.equal(await page.locator('.atlas-card:visible').count(),12);
   await page.locator('#atlas-reset').click();
