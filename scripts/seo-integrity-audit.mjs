@@ -9,6 +9,7 @@ import {releaseChords} from '../src/data/chords.js';
 import {createChord} from '../src/lib/music.js';
 import {chordQuickAnswer} from '../src/lib/chordQuickAnswer.mjs';
 import {priorityChordGuides} from '../src/data/priorityChordGuides.js';
+import {SITE_EMAIL,SITE_SOURCE,CONTENT_UPDATE_DATE,THEORY_REFERENCE} from '../src/data/siteIdentity.js';
 
 const dist=path.resolve('dist');
 const origin='https://pianochordexplorer.com';
@@ -46,6 +47,7 @@ function addUnique(map,value,p,label){
 }
 if(paths.length!==44||indexable.size!==44)issues.push('Expected 44 unique public indexable pages, got '+paths.length);
 if(sitemap.includes('<loc>'+origin+'/privacy/</loc>'))issues.push('Privacy must not be included in sitemap');
+if(sitemap.includes('<loc>'+origin+'/terms/</loc>'))issues.push('Noindex Terms must not be in the sitemap');
 if(sitemap.includes('<loc>'+origin+'/404/</loc>'))issues.push('404 must not be included in sitemap');
 for(const p of paths){
   const filename=fileFor(p);
@@ -68,6 +70,52 @@ for(const p of paths){
   if(!html.includes('name="twitter:card" content="summary_large_image"'))
     issues.push('Twitter/X must use large image card on '+p);
   if(headings!==1)issues.push('Must have exactly one H1 on '+p+': '+headings);
+  if(!html.includes('href="/terms/"')||!html.includes('href="/privacy/"'))
+    issues.push('Every indexable page must link both policy pages: '+p);
+  if(!html.includes('href="mailto:'+SITE_EMAIL+'"'))
+    issues.push('Missing owner-confirmed contact address in footer: '+p);
+  // Schema must describe actually visible content; counts alone are not evidence.
+  const schemaType=t=>structured.find(o=>o?.['@type']===t);
+  if(p==='/'){
+    const website=schemaType('WebSite');
+    const publisher=schemaType('Organization');
+    const webpage=schemaType('WebPage');
+    if(!website||!publisher||!webpage)
+      issues.push('Homepage missing WebSite, Organization or WebPage entity schema');
+    if(publisher?.email!==SITE_EMAIL||!publisher.sameAs?.includes(SITE_SOURCE))
+      issues.push('Publisher contact and sameAs must match verified project sources');
+    if(website?.publisher?.['@id']!==publisher?.['@id'])
+      issues.push('Website publisher identity must resolve to the homepage Organization');
+    if(webpage?.dateModified!==CONTENT_UPDATE_DATE||
+       !html.includes('datetime="'+CONTENT_UPDATE_DATE+'"'))
+      issues.push('Homepage update date must match visible editorial metadata');
+    if(!html.includes('<table class="theory-reference-table"')||
+       !html.includes('<thead>')||!html.includes('<tbody>')||
+       !html.includes('<th scope="row">')||!html.includes('<ol>'))
+      issues.push('Homepage must include semantic chord formula table and steps');
+    if(!html.includes('href="'+THEORY_REFERENCE.url+'"'))
+      issues.push('Homepage must cite the independently published theory reference');
+  }
+  if(p.startsWith('/tools/')){
+    const tool=schemaType('WebApplication');
+    if(!tool||tool.url!==origin+p||tool.offers?.price!=='0'||
+       tool.isAccessibleForFree!==true)
+      issues.push('Tool page requires valid, factual free WebApplication schema: '+p);
+  }
+  if((p.startsWith('/chords/')&&p!=='/chords/')||p.startsWith('/guides/')){
+    const article=schemaType('Article');
+    if(!article||article.mainEntityOfPage!==origin+p||
+       article.author?.url!==origin+'/about/'||
+       article.dateModified!==CONTENT_UPDATE_DATE||
+       article.citation?.[0]?.url!==THEORY_REFERENCE.url)
+      issues.push('Educational Article schema must match author, date and source: '+p);
+    if(!html.includes('href="'+THEORY_REFERENCE.url+'"')||
+       !html.includes('datetime="'+CONTENT_UPDATE_DATE+'"')||
+       !html.includes('href="/about/"'))
+      issues.push('Educational Article schema has no matching visible attribution: '+p);
+    if(article&&'datePublished' in article)
+      issues.push('Do not infer original publication dates from metadata update: '+p);
+  }
   if(p.startsWith('/chords/')&&p!=='/chords/'){
     if(!html.includes('id="chord-quick-answer"')||
        !html.includes('data-chord-answer')||!html.includes('data-inversion-answer'))
@@ -177,6 +225,20 @@ if(!/User-agent:\s*\*\s*\nAllow:\s*\//.test(robots)||/Disallow:\s*\//i.test(robo
   issues.push('Public robots rules block or fail to allow broad search crawlers');
 const privacy=fs.readFileSync(fileFor('/privacy/'),'utf8');
 if(!privacy.includes('name="robots" content="noindex,follow"'))issues.push('Privacy must be noindex');
+const termsFile=fileFor('/terms/');
+if(!fs.existsSync(termsFile))issues.push('Terms page missing');
+else if(!fs.readFileSync(termsFile,'utf8').includes('name="robots" content="noindex,follow"'))
+ issues.push('Terms must be noindex to avoid thin legal pages in indexable sitemap');
+const llmsFile=path.join(dist,'llms.txt');
+if(!fs.existsSync(llmsFile))issues.push('Optional site guide llms.txt missing');
+else{
+  const guide=fs.readFileSync(llmsFile,'utf8');
+  if(!guide.startsWith('# Piano Chord Explorer')||!guide.includes(SITE_EMAIL)||
+     !guide.includes(origin+'/chords/')||!guide.includes(origin+'/terms/'))
+   issues.push('llms.txt must describe the actual brand, contact and live navigation');
+  if(guide.includes('piano-chord.pages.dev'))
+   issues.push('llms.txt must not advertise the retired preview URL');
+}
 const notFound=fs.readFileSync(path.join(dist,'404.html'),'utf8');
 if(!notFound.includes('name="robots" content="noindex,follow"'))issues.push('404 must be noindex');
 const pngPath=path.join(dist,'share-card.png');
