@@ -26,10 +26,25 @@ jobs:
           npm install --no-audit --no-fund
           npm install --no-save playwright@1.56.1 --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Measure public mobile pages under repeatable synthetic throttling
-        run: node scripts/mobile-lab-audit.mjs
+      - name: Record current production mobile baseline
+        run: |
+          node scripts/mobile-lab-audit.mjs
+          mv test-results/performance/mobile-lab.json test-results/performance/production-reference.json
         env:
           PERF_ORIGIN: https://pianochordexplorer.com
+      - name: Build proposed static site
+        run: npm run build
+      - name: Start static preview
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist >/tmp/piano-mobile-preview.log 2>&1 &
+          sleep 2
+      - name: Measure proposed mobile build and reject viewport overflow
+        run: |
+          node scripts/mobile-lab-audit.mjs
+          mv test-results/performance/mobile-lab.json test-results/performance/proposed-build.json
+        env:
+          PERF_ORIGIN: http://127.0.0.1:4173
+          PERF_FAIL_ON_OVERFLOW: '1'
       - name: Save baseline results
         if: always()
         uses: actions/upload-artifact@v4
