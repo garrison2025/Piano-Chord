@@ -58,6 +58,33 @@ try{
   assert.equal(new Set(locs).size,44,'Unique sitemap page URLs');
   assert.ok(locs.every(loc=>loc.startsWith(origin+'/')),'Production sitemap host');
   assert.ok(!xml.includes('piano-chord.pages.dev'),'No preview hostname in sitemap');
+  // An image SEO release is complete only when the live public sitemap and SVGs update.
+  let liveImageCount=(xml.match(/<image:image>/g)||[]).length;
+  if(liveImageCount!==92){
+    for(let attempt=0;attempt<12;attempt++){
+      await page.waitForTimeout(10000);
+      const fresh=await page.request.get(origin+'/sitemap.xml?image-release='+Date.now());
+      assert.equal(fresh.status(),200,'Live sitemap availability during deployment');
+      liveImageCount=((await fresh.text()).match(/<image:image>/g)||[]).length;
+      if(liveImageCount===92)break;
+    }
+  }
+  assert.equal(liveImageCount,92,'Production sitemap must list 92 chord position images');
+  for(const [slug,inversion,notes] of [
+    ['b-minor',1,'D · F♯ · B'],['c-major-7',3,'B · C · E · G']
+  ]){
+    const imagePath='/diagrams/inversions/'+slug+'/'+inversion+'.svg';
+    const image=await page.request.get(origin+imagePath);
+    assert.equal(image.status(),200,imagePath+' live HTTP');
+    assert.match(image.headers()['content-type']||'',/image\/svg\+xml/);
+    assert.ok((await image.text()).includes('Highlighted piano keys: '+notes),
+      imagePath+' live spelled notes');
+    const lesson=await page.request.get(origin+'/chords/'+slug+'/');
+    assert.equal(lesson.status(),200,slug+' live lesson');
+    assert.ok((await lesson.text()).includes('src="'+imagePath+'"'),
+      slug+' live HTML must link inversion image via img src');
+  }
+  console.log('PASS 92 published images, representative SVG routes and HTML image references');
   for(const path of ['/','/chords/b-minor/','/tools/virtual-piano/']){
     const res=await page.request.get(origin+path);
     assert.equal(res.status(),200,path+' HTTP');
