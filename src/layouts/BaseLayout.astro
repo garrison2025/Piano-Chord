@@ -2,9 +2,16 @@
 import '../styles/global.css';
 import '../styles/studio.css';
 import {navigation} from '../data/chords.js';
+import {SITE_NAME,CONTENT_UPDATE_DATE} from '../data/siteIdentity.js';
+import {publisherSchema,webSiteSchema,homePageSchema,toolSchema,articleSchema} from '../lib/geoSchema.mjs';
 const {title='Piano Chord Explorer',description='Learn piano chords through clear notes, interactive keyboards, inversions, and original printable diagrams.',canonicalPath=Astro.url.pathname,crumbs=[],noindex=false}=Astro.props;
 const canonical=new URL(canonicalPath,Astro.site || Astro.url).toString();
-const siteName='Piano Chord Explorer';
+const siteName=SITE_NAME;
+const isHome=canonicalPath==='/';
+const isTool=/^\/tools\/[a-z-]+\/$/.test(canonicalPath);
+const isGuide=/^\/guides\/[a-z0-9-]+\/$/.test(canonicalPath);
+const guideImage=canonicalPath==='/guides/how-to-read-piano-chords/'?'/diagrams/c-major.svg':
+  canonicalPath==='/guides/seventh-chords-piano/'?'/diagrams/c-major-7.svg':undefined;
 const shareImage=new URL('/share-card.png',Astro.site || Astro.url).toString();
 ---
 <!DOCTYPE html>
@@ -33,13 +40,13 @@ const shareImage=new URL('/share-card.png',Astro.site || Astro.url).toString();
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={shareImage} />
     <title>{title}</title>
-    {Astro.url.pathname==='/' && <script type="application/ld+json" set:html={JSON.stringify({
-      '@context':'https://schema.org',
-      '@type':'WebSite',
-      name:siteName,
-      url:new URL('/',Astro.site || Astro.url).toString(),
-      inLanguage:'en'
-    })} />}
+    {isHome && <script type="application/ld+json" set:html={JSON.stringify(publisherSchema())} />}
+    {isHome && <script type="application/ld+json" set:html={JSON.stringify(webSiteSchema())} />}
+    {isHome && <script type="application/ld+json" set:html={JSON.stringify(homePageSchema(description))} />}
+    {isTool && <script type="application/ld+json" set:html={JSON.stringify(toolSchema(canonicalPath,title,description))} />}
+    {isGuide && <script type="application/ld+json" set:html={JSON.stringify(articleSchema({
+      path:canonicalPath,headline:title,description,image:guideImage
+    }))} />}
     {crumbs.length>0 && <script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{ '@type':'ListItem',position:1,name:'Home',item:new URL('/',Astro.site||Astro.url).toString()},...crumbs.map((x,i)=>({'@type':'ListItem',position:i+2,name:x.name,item:new URL(x.href,Astro.site||Astro.url).toString()}))]})} />}
   </head>
   <body>
@@ -66,7 +73,7 @@ const shareImage=new URL('/share-card.png',Astro.site || Astro.url).toString();
       <div class="container footer-top">
         <div><a href="/" class="brand footer-brand"><span class="brand-mark" aria-hidden="true">♩</span><span class="brand-type">Piano Chord <strong>Explorer.</strong></span></a><p>Understand the notes. Hear the harmony.<br/>Practice one chord at a time.</p></div>
         <div class="footer-col"><strong>Explore</strong><a href="/chords/">All chords</a><a href="/tools/chord-finder/">Chord finder</a><a href="/tools/virtual-piano/">Virtual piano</a><a href="/tools/chord-library/">120 chord atlas</a><a href="/tools/chord-compare/">Compare chords</a><a href="/tools/scales-and-keys/">Scales &amp; Keys</a><a href="/tools/chord-progressions/">Progression trainer</a><a href="/tools/metronome/">Metronome</a></div>
-        <div class="footer-col"><strong>Learn</strong><a href="/guides/how-to-read-piano-chords/">Reading chord diagrams</a><a href="/guides/seventh-chords-piano/">Seventh chord types</a><a href="/tools/inversion-explorer/">Chord inversions</a><a href="/printables/piano-chord-chart/">Printable chart</a><a href="/open-source/">Open-source notices</a><a href="/about/">About &amp; feedback</a><a href="/privacy/">Privacy</a><a href="mailto:contact@pianochordexplorer.com">Contact</a></div>
+        <div class="footer-col"><strong>Learn</strong><a href="/guides/how-to-read-piano-chords/">Reading chord diagrams</a><a href="/guides/seventh-chords-piano/">Seventh chord types</a><a href="/tools/inversion-explorer/">Chord inversions</a><a href="/printables/piano-chord-chart/">Printable chart</a><a href="/open-source/">Open-source notices</a><a href="/about/">About &amp; feedback</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="mailto:contact@pianochordexplorer.com">Contact</a></div>
       </div>
       <div class="container footer-bottom"><span>© {new Date().getFullYear()} Piano Chord Explorer. Original diagrams and explanations.</span><span>Music examples use 12-tone equal temperament.</span></div>
     </footer>
