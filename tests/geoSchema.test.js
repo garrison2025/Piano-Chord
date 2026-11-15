@@ -28,6 +28,9 @@ test('homepage WebPage declares only visible subjects and a genuine update date'
  assert.equal(homepage.about.length,3);
  assert.equal(homepage.url,SITE_ORIGIN+'/');
  assert.equal(homepage.publisher['@id'],publisherSchema()['@id']);
+ assert.equal(homepage.author.name,SITE_NAME);
+ assert.equal(homepage.author['@id'],publisherSchema()['@id']);
+ assert.equal(homepage.author.url,SITE_ORIGIN+'/about/');
 });
 
 test('eight browser tools describe their real functionality without fabricated reviews',()=>{
