@@ -161,6 +161,9 @@ try{
   assert.ok(entities.find(s=>s['@type']==='Organization')?.sameAs
     ?.includes('https://github.com/garrison2025/Piano-Chord'),
     'Public sameAs must identify the verified source project');
+  const homePage=entities.find(s=>s['@type']==='WebPage');
+  assert.equal(homePage?.author?.url,origin+'/about/','Published homepage author must resolve');
+  assert.equal(homePage?.dateModified,'2026-11-15');
   assert.ok(await page.locator('a[href="/terms/"]').count()>0);
   assert.ok(await page.locator('a[href="/privacy/"]').count()>0);
   assert.ok(await page.locator('a[href="https://open-musictheory.github.io/docs/fundamentals/triads/"]').count()>0);
