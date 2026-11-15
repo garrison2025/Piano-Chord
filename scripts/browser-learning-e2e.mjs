@@ -613,6 +613,15 @@ try{
   await go('/chords/c-major-7/');
   await page.locator('[data-inversion-button="3"]').click();
   assert.equal(await page.locator('[data-inversion-view="3"]').isVisible(),true);
+  const thirdImage=page.locator('[data-inversion-view="3"] img.keyboard-image');
+  assert.equal(await thirdImage.getAttribute('src'),'/diagrams/inversions/c-major-7/3.svg');
+  await page.waitForFunction(()=>{
+    const img=document.querySelector('[data-inversion-view="3"] img.keyboard-image');
+    return img?.complete && img.naturalWidth===692;
+  },null,{timeout:10000});
+  const thirdSvg=await page.request.get(origin+'/diagrams/inversions/c-major-7/3.svg');
+  assert.equal(thirdSvg.status(),200,'Cmaj7 third-inversion image route');
+  assert.match(await thirdSvg.text(),/Highlighted piano keys: B · C · E · G/);
   await page.locator('[data-inversion-view="3"] button[data-play-midi]').click();
   await delay(200);
   assert.match(await page.locator('#app-status').innerText(),/Playing chord/);
