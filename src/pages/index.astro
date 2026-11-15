@@ -6,6 +6,14 @@ import {releaseChords} from '../data/chords.js';
 import {createChord,prettyNote} from '../lib/music.js';
 const picks=['b-minor','c-major','c-7'].map(slug=>createChord(releaseChords.find(e=>e.slug===slug)));
 const spotlightNames=['B minor','C major','C seventh'];
+const beginnerChordPaths=[
+  {href:'/chords/b-minor/',symbol:'Bm',name:'B minor',notes:'B – D – F♯',task:'Locate the F♯ key and compare Bm with D major.'},
+  {href:'/chords/b-flat-major/',symbol:'B♭',name:'B-flat major',notes:'B♭ – D – F',task:'Find the black-key root and hear Bb change to G minor.'},
+  {href:'/chords/d-minor/',symbol:'Dm',name:'D minor',notes:'D – F – A',task:'Try Dm/A with A in the bass, then switch to F major.'},
+  {href:'/chords/e-minor/',symbol:'Em',name:'E minor',notes:'E – G – B',task:'Keep two common notes while changing Em to G major.'},
+  {href:'/chords/g-major/',symbol:'G',name:'G major',notes:'G – B – D',task:'Hear G/B and G/D and contrast B natural with B♭.'}
+];
+
 ---
 <BaseLayout title="Learn Piano Chords Visually | Piano Chord Explorer" description="Play a free 88-key piano, explore 120 chords and 24 major/minor scales, practise progressions and record shareable performances. No signup." canonicalPath="/">
   <section class="hero studio-hero">
@@ -78,6 +86,23 @@ const spotlightNames=['B minor','C major','C seventh'];
         </article>
       </div>
       <p class="help-text">These definitions describe pitch classes in twelve-tone equal temperament. For sources, notation rules and limits of the browser instrument, read <a href="/about/">how Piano Chord Explorer works</a>.</p>
+    </div>
+  </section>
+  <section class="section-compact" id="beginner-piano-chords" aria-labelledby="beginner-chord-pathways">
+    <div class="container">
+      <div class="section-head"><div>
+        <span class="eyebrow">START WITH REAL KEYS</span>
+        <h2 id="beginner-chord-pathways">Five piano chords to practise first</h2>
+        <p>Learn each chord by its notes, then hear a closely related harmony. These five lessons include playable inversions, a concrete listening drill and an original keyboard diagram.</p>
+      </div></div>
+      <div class="card-grid">
+        {beginnerChordPaths.map(chord=><article class="panel">
+          <h3>{chord.symbol} · {chord.name}</h3>
+          <p><strong>{chord.notes}</strong></p>
+          <p>{chord.task}</p>
+          <p><a class="text-link" href={chord.href}>Explore {chord.name} on piano ↗</a></p>
+        </article>)}
+      </div>
     </div>
   </section>
   <section class="section print-section"><div class="container"><div class="cta-band"><div class="cta-copy"><span class="eyebrow">03 / TAKE IT OFFLINE</span><h2>Make room for<br/>a little practice.</h2><p>Bring 16 beautifully clear chord diagrams to your music stand. No account, no fuss.</p><a class="btn btn-light btn-large" href="/printables/piano-chord-chart/">Get the printable chart <span aria-hidden="true">↗</span></a></div><div class="cta-sheet" aria-hidden="true"><div class="sheet-top"><span>Piano Chord Explorer</span><span>CHORD SHEET / 01</span></div><div class="sheet-title">The essentials.</div><div class="sheet-chords"><span>C</span><span>Dm</span><span>Em</span><span>F</span><span>G</span><span>Am</span></div><div class="sheet-keys">{Array.from({length:13},(_,i)=><i class={i===0||i===3||i===7?'selected':''}></i>)}</div><div class="sheet-footer">Learn it. Play it. Love it.</div></div></div></div></section>
