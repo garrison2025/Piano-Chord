@@ -26,7 +26,9 @@ export function homePageSchema(description){
   '@context':'https://schema.org','@type':'WebPage','@id':absolute('/#webpage'),
   name:'Learn Piano Chords Visually | Piano Chord Explorer',url:absolute('/'),
   description,inLanguage:'en',isPartOf:{'@id':websiteId},
-  publisher:publisherRef(),dateModified:CONTENT_UPDATE_DATE,
+  publisher:publisherRef(),
+  author:{'@type':'Organization','@id':publisherId,name:SITE_NAME,url:absolute('/about/')},
+  dateModified:CONTENT_UPDATE_DATE,
   about:[
    {'@type':'Thing',name:'Piano chords'},
    {'@type':'Thing',name:'Chord inversions'},
