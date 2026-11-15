@@ -12,13 +12,14 @@ try{
   // Cloudflare Pages deployment may complete after this push-triggered test starts.
   // Allow a bounded window for the public origin to switch to the new build.
   const expectedCanonical=origin+'/tools/chord-library/';
-  let liveCanonical='';
+  let liveCanonical='',queryRestored=false;
   for(let attempt=0;attempt<13;attempt++){
-    const response=await page.goto(origin+'/tools/chord-library/?deployment-probe='+attempt+'-'+Date.now(),
+    const response=await page.goto(expectedCanonical+'?q=F%23m&deployment-probe='+attempt+'-'+Date.now()+'#atlas-search',
       {waitUntil:'domcontentloaded'});
     assert.equal(response?.status(),200,'Public chord library HTTP status');
     liveCanonical=await page.locator('link[rel="canonical"]').getAttribute('href');
-    if(liveCanonical===expectedCanonical)break;
+    queryRestored=(await page.locator('#atlas-search').inputValue())==='F#m';
+    if(liveCanonical===expectedCanonical&&queryRestored)break;
     console.log('Waiting for Cloudflare production deploy: canonical='+liveCanonical+
       ' (attempt '+(attempt+1)+'/13)');
     if(attempt<12)await page.waitForTimeout(10000);
@@ -30,6 +31,23 @@ try{
     origin+'/tools/chord-library/','Production Open Graph URL');
 
   const search=page.locator('#atlas-search');
+  assert.ok(queryRestored,'Production restores F#m from the shared URL');
+  assert.deepEqual(await page.locator('.atlas-card:visible strong').allTextContents(),['G\u266dm']);
+  const deploymentProbe=new URL(page.url()).searchParams.get('deployment-probe');
+  await search.fill('F#m7');
+  const updatedUrl=new URL(page.url());
+  assert.equal(updatedUrl.searchParams.get('q'),'F#m7');
+  assert.equal(updatedUrl.searchParams.get('deployment-probe'),deploymentProbe);
+  assert.equal(updatedUrl.hash,'#atlas-search');
+  await page.reload({waitUntil:'domcontentloaded'});
+  assert.equal(await search.inputValue(),'F#m7');
+  assert.deepEqual(await page.locator('.atlas-card:visible strong').allTextContents(),['G\u266dm7']);
+  await page.locator('#atlas-reset').click();
+  const resetUrl=new URL(page.url());
+  assert.equal(resetUrl.searchParams.has('q'),false);
+  assert.equal(resetUrl.searchParams.get('deployment-probe'),deploymentProbe);
+  assert.equal(resetUrl.hash,'#atlas-search');
+  console.log('PASS live shared query, reload, reset and preserved URL parts');
   for(const [query,expected] of [
     ['F♯m',['G♭m']],['F#m',['G♭m']],['F# minor',['G♭m']],
     ['F#m7',['G♭m7']],['F#m7b5',['G♭m7b5']],
