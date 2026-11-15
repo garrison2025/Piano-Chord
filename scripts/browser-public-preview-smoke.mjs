@@ -154,6 +154,12 @@ try{
   }
   assert.equal(geoReady,true,'GEO source-cited reference table must be published');
   assert.equal(await page.locator('.theory-reference-table tbody tr').count(),5);
+  const theoryQuote=page.locator('#chord-reference-table blockquote.theory-reference-quote');
+  assert.equal(await theoryQuote.count(),1,'Public citation quote must be visible and distinct');
+  assert.equal(await theoryQuote.getAttribute('cite'),
+    'https://open-musictheory.github.io/docs/fundamentals/triads/');
+  assert.match(await theoryQuote.innerText(),/A three-note chord whose pitch classes can be arranged as thirds is called a triad/);
+  assert.ok(await theoryQuote.locator('a[href^="https://open-musictheory.github.io/"]').count()===1);
   const structured=await page.locator('script[type="application/ld+json"]').allTextContents();
   const entities=structured.map(raw=>JSON.parse(raw));
   for(const type of ['WebSite','Organization','WebPage'])
